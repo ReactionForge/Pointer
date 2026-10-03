@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 import winreg
-from pointer.paths import ROOT
+from pointer.paths import ROOT, FROZEN
 from pointer.cursor.settings import _write_bytes
 from . import engine, scheme, startup
 
@@ -22,6 +22,7 @@ class WindowsBackend:
     def __init__(self, data_root, install_root):
         self.data_root, self.install_root = Path(data_root), Path(install_root)
         self.backup = self.data_root / 'original-cursor-settings.json'
+        self.engine_root = self.install_root if FROZEN else ROOT
 
     def startup_enabled(self):
         value = _run_value()
@@ -42,7 +43,7 @@ class WindowsBackend:
         return {'registry': {'cursor_values': scheme.read_values(scheme.KEY_PATH),
                              'scheme_name': scheme.ADAPTIVE_SCHEME_NAME,
                              'previous_named_scheme': schemes.get(scheme.ADAPTIVE_SCHEME_NAME)},
-                'run': _run_value(), 'running': engine._running(),
+                'run': _run_value(), 'running': engine.running_directory(self.engine_root,self.data_root),
                 'previous_root': str(previous) if previous_running else None,
                 'startup_enabled': self.startup_enabled(),
                 'startup_backup': backup_path.read_text(encoding='utf-8') if backup_path.exists() else None}
@@ -51,7 +52,7 @@ class WindowsBackend:
         previous = self.previous_installation()
         if previous and previous != ROOT:
             engine.stop_directory(previous,previous.parent/'data')
-        return engine.stop_directory(ROOT, self.data_root)
+        return engine.stop_directory(self.engine_root, self.data_root)
 
     def previous_installation(self):
         if os.environ.get('POINTER_DATA_DIR'):

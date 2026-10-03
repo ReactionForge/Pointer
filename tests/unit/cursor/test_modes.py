@@ -97,39 +97,33 @@ class TiltResourceTests(unittest.TestCase):
 
 
 class ModeRecoveryTests(unittest.TestCase):
-    def test_downloaded_mode_button_upgrades_an_older_installed_helper(self):
-        with tempfile.TemporaryDirectory() as folder:
-            root = Path(folder)
-            installed = root / "installed"
-            installed.mkdir()
-            (installed / "Pointer.exe").touch()
-            capability = installed / "assets/cursors/adaptive/tilt/light/arrow-4.cur"
-            def install():
-                capability.parent.mkdir(parents=True)
-                capability.touch()
-            def launch(arguments, **kwargs):
-                report = Path(arguments[-1])
-                value = {"exit_code": 0, "click_mode": "tilt"} if capability.exists() else {
-                    "exit_code": 2, "error": "Older executable does not recognize --tilt"}
-                report.write_text(json.dumps(value))
-                return subprocess.CompletedProcess(arguments, value["exit_code"])
-            with patch.object(app, "FROZEN", True), patch.object(app, "ROOT", root / "download"), \
-                 patch.object(app, "INSTALL_ROOT", installed), patch.object(app, "DATA_ROOT", root), \
-                 patch.object(app, "install", side_effect=install), \
-                 patch.object(app.subprocess, "run", side_effect=launch):
-                self.assertEqual(app.dispatch("tilt")["click_mode"], "tilt")
+    def test_downloaded_mode_button_uses_persistent_application(self):
+        from pointer.cursor.settings import CursorSettings
+        from unittest.mock import Mock
+        application=Mock()
+        application.settings.return_value=CursorSettings(motion='shrink')
+        application.apply.return_value={'running':True,'settings':CursorSettings().to_dict()}
+        with patch.object(app,'_application',return_value=application):
+            self.assertTrue(app.dispatch('tilt')['running'])
+        self.assertEqual(application.apply.call_args.args[0].motion,'tilt')
 
     def test_failed_mode_switch_restores_previous_preference(self):
-        self.assertTrue(hasattr(app, "set_click_mode"), "Mode switching is missing")
+        from pointer.application import Application
+        from pointer.cursor.settings import CursorSettings
+        from unittest.mock import Mock
         with tempfile.TemporaryDirectory() as folder:
-            settings = Path(folder) / "settings.json"
-            click_motion.save_mode(settings, "shrink")
-            original = settings.read_bytes()
-            with patch.object(app.switcher, "CLICK_SETTINGS", settings), \
-                 patch.object(app, "apply_theme", side_effect=RuntimeError("helper failed")):
-                with self.assertRaisesRegex(RuntimeError, "helper failed"):
-                    app.set_click_mode("tilt")
-            self.assertEqual(settings.read_bytes(), original)
+            backend=Mock()
+            backend.startup_enabled.return_value=False
+            backend.snapshot.return_value={'running':False,'startup_enabled':False}
+            backend.start.side_effect=RuntimeError('helper failed')
+            application=Application(Path(folder)/'data',Path(folder)/'app',backend)
+            application.store.save(CursorSettings(motion='shrink'))
+            before=application.store.path.read_bytes()
+            with patch.object(app,'_application',return_value=application):
+                with self.assertRaisesRegex(RuntimeError,'helper failed'):
+                    app.set_click_mode('tilt')
+            self.assertEqual(application.store.path.read_bytes(),before)
+            backend.restore.assert_called_once()
 
 
 if __name__ == "__main__":

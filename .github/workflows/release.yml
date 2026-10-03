@@ -3,6 +3,7 @@ name: Windows release
 on:
   workflow_dispatch:
   push:
+    branches: [DEV]
     tags:
       - 'v*'
 
@@ -15,7 +16,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2025
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -35,7 +36,7 @@ jobs:
         shell: pwsh
         run: |
           $version = (Get-Content -LiteralPath VERSION -Raw).Trim()
-          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid VERSION' }
+          if ($version -notmatch '^\d+\.\d+\.\d+(-beta\.[1-9]\d*)?$') { throw 'Invalid VERSION' }
           if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -cne "v$version") {
             throw 'The release tag must match VERSION'
           }
@@ -46,6 +47,8 @@ jobs:
           python -m pip install --no-deps -e .
       - name: Test
         run: python -m unittest discover -s tests
+        env:
+          QT_QPA_PLATFORM: offscreen
       - name: Build package
         run: python -m scripts.build_release
       - name: Diagnose packaged executable
@@ -63,6 +66,18 @@ jobs:
             throw 'Incomplete packaged cursor resources'
           }
           if ($result.click_resources -ne 32) { throw 'Incomplete click animation resources' }
+          if (-not $result.qt_version) { throw 'Missing Qt runtime' }
+      - name: Isolated package installation and upgrade
+        shell: pwsh
+        run: |
+          $env:POINTER_PACKAGE_ROOT = (Resolve-Path -LiteralPath dist/Pointer).Path
+          python -m unittest tests.integration.test_packages
+          if ($LASTEXITCODE -ne 0) { throw 'Package lifecycle checks failed' }
+      - name: Installer smoke test
+        shell: pwsh
+        run: |
+          python -m scripts.smoke_installer
+          if ($LASTEXITCODE -ne 0) { throw 'Installer lifecycle checks failed' }
       - name: Upload release files
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -70,6 +85,8 @@ jobs:
           path: |
             dist/Pointer-v${{ steps.version.outputs.version }}-windows-x64.zip
             dist/Pointer-v${{ steps.version.outputs.version }}-windows-x64.zip.sha256
+            dist/Pointer-v${{ steps.version.outputs.version }}-setup-x64.exe
+            dist/Pointer-v${{ steps.version.outputs.version }}-setup-x64.exe.sha256
           if-no-files-found: error
           retention-days: 14
 
@@ -93,16 +110,22 @@ jobs:
           RELEASE_VERSION: ${{ needs.build.outputs.version }}
         run: |
           $package = "release/Pointer-v$env:RELEASE_VERSION-windows-x64.zip"
+          $installer = "release/Pointer-v$env:RELEASE_VERSION-setup-x64.exe"
           $checksum = "$package.sha256"
           $expected = ((Get-Content -LiteralPath $checksum -Raw).Trim() -split '\s+')[0]
           $actual = (Get-FileHash -LiteralPath $package -Algorithm SHA256).Hash
           if ($actual -ine $expected) { throw 'Release archive checksum mismatch' }
+          $installerChecksum = "$installer.sha256"
+          $expectedInstaller = ((Get-Content -LiteralPath $installerChecksum -Raw).Trim() -split '\s+')[0]
+          if ((Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash -ine $expectedInstaller) { throw 'Installer checksum mismatch' }
           $notes = @'
-          下载并完整解压 Windows x64 ZIP，双击其中的“一键安装.cmd”或“install.cmd”。
-          无需 Python、管理员权限或联网；安装后可在开始菜单的 Pointer 文件夹中启用、停止、恢复原光标或打开测试页。
+          桌面 APP 预览版：下载安装 EXE，或完整解压 ZIP 后双击 Pointer.exe。
+          APP 支持配色、大小、左键动效、自定义节奏、双色预览、内置系统光标测试、开机启动和配置导入导出。
+          首次打开后点击“应用配置”启用光标。开机启动由用户选择，关闭界面后后台仍可运行。
+          无需 Python 或管理员权限；升级保留配置与原光标备份，卸载前恢复原光标。
           发布包尚未签名；SHA-256 校验文件随包提供。
           '@
           $notesPath = Join-Path $env:RUNNER_TEMP 'pointer-release-notes.md'
           Set-Content -LiteralPath $notesPath -Value $notes -Encoding utf8
-          gh release create $env:RELEASE_TAG $package $checksum --verify-tag --title "Pointer $env:RELEASE_TAG" --notes-file $notesPath
+          gh release create $env:RELEASE_TAG $package $checksum $installer $installerChecksum --verify-tag --prerelease --latest=false --title "Pointer $env:RELEASE_TAG 桌面预览版" --notes-file $notesPath
           if ($LASTEXITCODE -ne 0) { throw 'GitHub Release creation failed' }

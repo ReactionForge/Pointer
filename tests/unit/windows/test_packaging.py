@@ -8,42 +8,45 @@ import unittest
 import runpy
 import subprocess
 import sys
+import os
+import winreg
 from contextlib import ExitStack
 from unittest.mock import patch
 
 from pointer.windows import scheme as config
 from pointer import cli as app
+from pointer.windows import installation
+from pointer.windows import startup as startup_module
 
 
 class PackageTests(unittest.TestCase):
     def test_reapplying_preserves_startup_registration(self):
-        with tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
-            stack.enter_context(patch.object(config, "BACKUP", Path(folder) / "absent.json"))
-            stack.enter_context(patch.object(app.switcher, "STARTUP_BACKUP", Path(folder) / "absent-startup.json"))
-            stack.enter_context(patch.object(app, "_snapshot", return_value={}))
-            stack.enter_context(patch.object(app, "_run_value", return_value=None))
-            stop = stack.enter_context(patch.object(app.switcher, "stop"))
-            stop_directory = stack.enter_context(patch.object(app.switcher, "stop_directory"))
-            stack.enter_context(patch.object(config, "apply"))
-            stack.enter_context(patch.object(app.switcher, "enable_startup"))
-            stack.enter_context(patch.object(app.switcher, "start", return_value={"running": True, "pid": 123}))
-            self.assertTrue(app.apply_theme()["startup_enabled"])
-            stop.assert_not_called()
-            stop_directory.assert_called_once_with(app.ROOT)
+        from pointer.application import Application
+        from pointer.cursor.settings import CursorSettings
+        from unittest.mock import Mock
+        with tempfile.TemporaryDirectory() as folder:
+            backend=Mock()
+            backend.startup_enabled.return_value=True
+            backend.start.return_value={'running':True}
+            application=Application(Path(folder)/'data',Path(folder)/'app',backend)
+            application.store.save(CursorSettings(startup=True))
+            with patch.object(app,'_application',return_value=application):
+                self.assertTrue(app.apply_theme()['startup_enabled'])
+            backend.set_startup.assert_not_called()
 
     def test_identical_startup_entry_is_never_rewritten(self):
         with tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
             startup = Path(folder) / "startup.json"
             startup.write_bytes(b'{"previous": null, "installed_command": "unchanged"}')
             original = startup.read_bytes()
-            stack.enter_context(patch.object(app.startup, "STARTUP_BACKUP", startup))
-            stack.enter_context(patch.object(app.startup, "_startup_command", return_value="unchanged"))
-            stack.enter_context(patch.object(app.winreg, "CreateKeyEx"))
-            stack.enter_context(patch.object(app.winreg, "QueryValueEx", return_value=("unchanged", app.winreg.REG_SZ)))
-            write = stack.enter_context(patch.object(app.winreg, "SetValueEx"))
-            backup = stack.enter_context(patch.object(app.startup, "_atomic_json"))
+            stack.enter_context(patch.object(startup_module, "STARTUP_BACKUP", startup))
+            stack.enter_context(patch.object(startup_module, "_startup_command", return_value="unchanged"))
+            stack.enter_context(patch.object(winreg, "CreateKeyEx"))
+            stack.enter_context(patch.object(winreg, "QueryValueEx", return_value=("unchanged", winreg.REG_SZ)))
+            write = stack.enter_context(patch.object(winreg, "SetValueEx"))
+            backup = stack.enter_context(patch.object(startup_module, "_atomic_json"))
             for _ in range(5):
-                self.assertFalse(app.startup.enable_startup()["changed"])
+                self.assertFalse(startup_module.enable_startup()["changed"])
             write.assert_not_called()
             backup.assert_not_called()
             self.assertEqual(startup.read_bytes(), original)
@@ -51,14 +54,14 @@ class PackageTests(unittest.TestCase):
     def test_startup_upgrade_keeps_original_backup(self):
         with tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
             startup = Path(folder) / "startup.json"
-            startup.write_text(json.dumps({"value_name": app.startup.RUN_VALUE,
+            startup.write_text(json.dumps({"value_name": startup_module.RUN_VALUE,
                                           "previous": None, "installed_command": "old path"}))
-            stack.enter_context(patch.object(app.startup, "STARTUP_BACKUP", startup))
-            stack.enter_context(patch.object(app.startup, "_startup_command", return_value="new path"))
-            stack.enter_context(patch.object(app.winreg, "CreateKeyEx"))
-            stack.enter_context(patch.object(app.winreg, "QueryValueEx", return_value=("old path", app.winreg.REG_SZ)))
-            write = stack.enter_context(patch.object(app.winreg, "SetValueEx"))
-            self.assertTrue(app.startup.enable_startup()["changed"])
+            stack.enter_context(patch.object(startup_module, "STARTUP_BACKUP", startup))
+            stack.enter_context(patch.object(startup_module, "_startup_command", return_value="new path"))
+            stack.enter_context(patch.object(winreg, "CreateKeyEx"))
+            stack.enter_context(patch.object(winreg, "QueryValueEx", return_value=("old path", winreg.REG_SZ)))
+            write = stack.enter_context(patch.object(winreg, "SetValueEx"))
+            self.assertTrue(startup_module.enable_startup()["changed"])
             write.assert_called_once()
             data = json.loads(startup.read_text())
             self.assertIsNone(data["previous"])
@@ -76,7 +79,7 @@ class PackageTests(unittest.TestCase):
             unowned.write_text("user notes")
             previous = {"legacy/old.cur": hashlib.sha256(old.read_bytes()).hexdigest(),
                         "custom.cur": hashlib.sha256(b"original cursor").hexdigest()}
-            app.remove_obsolete_files(previous, {}, root)
+            installation.remove_obsolete_files(previous, {}, root)
             self.assertFalse(old.parent.exists())
             self.assertEqual(changed.read_bytes(), b"user change")
             self.assertEqual(unowned.read_text(), "user notes")
@@ -103,7 +106,7 @@ class PackageTests(unittest.TestCase):
             executable.touch()
             with patch.object(app.sys, "frozen", True, create=True), \
                  patch.object(app.sys, "executable", str(executable)), \
-                 patch.dict(app.os.environ, {"LOCALAPPDATA": str(local)}):
+                 patch.dict(os.environ, {"LOCALAPPDATA": str(local)}):
                 paths = runpy.run_path(str(Path(__file__).resolve().parents[3] / "src" / "pointer" / "paths.py"))
             self.assertEqual(paths["INSTALL_ROOT"], installed.resolve())
             self.assertEqual(paths["DATA_ROOT"], installed.resolve().parent / "data")
@@ -120,10 +123,10 @@ class PackageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="Pointer 中文 ") as folder:
             root = Path(folder)
             self.make_package(root)
-            self.assertEqual(len(app.package_files(root)), 1)
+            self.assertEqual(len(installation.package_files(root)), 1)
             (root / "Pointer.exe").write_bytes(b"changed")
             with self.assertRaisesRegex(ValueError, "checksum"):
-                app.package_files(root)
+                installation.package_files(root)
 
     def test_rejects_path_escape(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -132,7 +135,7 @@ class PackageTests(unittest.TestCase):
             data["files"]["../outside"] = "0" * 64
             (root / "PACKAGE.json").write_text(json.dumps(data), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "Invalid package path"):
-                app.package_files(root)
+                installation.package_files(root)
 
     def test_keeps_existing_original_backup(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -144,7 +147,7 @@ class PackageTests(unittest.TestCase):
                     "previous_named_scheme": None}
             current.write_text(json.dumps(data), encoding="utf-8")
             with patch.object(config, "BACKUP", current):
-                app._migrate_backup(old)
+                installation._migrate_backup(old)
             self.assertEqual(json.loads(current.read_text()), data)
 
     def test_invalid_backup_is_not_overwritten(self):
@@ -153,30 +156,37 @@ class PackageTests(unittest.TestCase):
             backup.write_text('{"unexpected":1}', encoding="utf-8")
             with patch.object(config, "BACKUP", backup):
                 with self.assertRaises(ValueError):
-                    app._migrate_backup(Path(folder))
+                    installation._migrate_backup(Path(folder))
             self.assertEqual(backup.read_text(), '{"unexpected":1}')
 
     def test_start_failure_restores_startup_backup(self):
+        from pointer.application import Application
+        from pointer.cursor.settings import CursorSettings
+        from pointer.windows import backend as boundary
         with tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
-            startup = Path(folder) / "startup.json"
-            startup.write_bytes(b"original startup backup")
-            stack.enter_context(patch.object(app.switcher, "STARTUP_BACKUP", startup))
-            stack.enter_context(patch.object(config, "BACKUP", Path(folder) / "absent.json"))
-            before = {"cursor_values": {}, "previous_named_scheme": None}
-            stack.enter_context(patch.object(app, "_snapshot", return_value=before))
-            stack.enter_context(patch.object(app, "_run_value", return_value=None))
-            stack.enter_context(patch.object(app.switcher, "stop_directory"))
-            stack.enter_context(patch.object(config, "apply"))
-            stack.enter_context(patch.object(app.switcher, "enable_startup", side_effect=lambda: startup.write_bytes(b"changed")))
-            stack.enter_context(patch.object(app.switcher, "start", side_effect=RuntimeError("not ready")))
-            restored = stack.enter_context(patch.object(config, "restore_values"))
-            stack.enter_context(patch.object(config, "reload_cursors"))
-            stack.enter_context(patch.object(app.winreg, "CreateKeyEx"))
-            stack.enter_context(patch.object(config, "restore_value"))
-            with self.assertRaisesRegex(RuntimeError, "not ready"):
+            data=Path(folder)/'data';data.mkdir()
+            original=data/boundary.startup.STARTUP_BACKUP.name
+            original.write_bytes(b'original startup backup')
+            backend=boundary.WindowsBackend(data,Path(folder)/'app')
+            stack.enter_context(patch.object(backend,'startup_enabled',return_value=True))
+            stack.enter_context(patch.object(backend,'previous_installation',return_value=None))
+            stack.enter_context(patch.object(backend,'stop'))
+            stack.enter_context(patch.object(backend,'apply'))
+            stack.enter_context(patch.object(boundary.engine,'running_directory',return_value=False))
+            stack.enter_context(patch.object(boundary.scheme,'read_values',return_value={}))
+            stack.enter_context(patch.object(boundary.scheme,'restore_values'))
+            stack.enter_context(patch.object(boundary.scheme,'reload_cursors'))
+            stack.enter_context(patch.object(boundary,'_run_value',return_value=None))
+            def fail_start():
+                original.write_bytes(b'changed')
+                raise RuntimeError('not ready')
+            stack.enter_context(patch.object(backend,'start',side_effect=fail_start))
+            application=Application(data,Path(folder)/'app',backend)
+            application.store.save(CursorSettings(startup=True))
+            stack.enter_context(patch.object(app,'_application',return_value=application))
+            with self.assertRaisesRegex(RuntimeError,'not ready'):
                 app.apply_theme()
-            restored.assert_called_once_with(before)
-            self.assertEqual(startup.read_bytes(), b"original startup backup")
+            self.assertEqual(original.read_bytes(),b'original startup backup')
 
 
 if __name__ == "__main__":

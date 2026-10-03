@@ -11,3 +11,9 @@ def configure_paths(argv=None):
                 os.environ[name] = os.path.abspath(args[index + 1])
             elif arg.startswith(flag + '='):
                 os.environ[name] = os.path.abspath(arg.split('=', 1)[1])
+
+
+def main():
+    configure_paths()
+    from .cli import main as command_main
+    return command_main()

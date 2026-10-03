@@ -1,0 +1,23 @@
+Pointer desktop preview uses Python, Pillow, PyInstaller, PySide6-Essentials,
+Shiboken6 and Qt Core/Gui/Widgets. The corresponding notices accompany this file.
+
+Qt and Qt for Python are used under LGPLv3. They are unmodified shared libraries.
+The portable ZIP exposes the dynamically linked DLLs in _internal/PySide6.
+Users may replace these libraries with compatible modified versions and rebuild
+Pointer from its source for debugging those modifications. Pointer does not
+prevent reverse engineering for debugging changes to the LGPL libraries.
+
+Exact versions are pinned in requirements/runtime.txt and requirements/build.txt.
+Corresponding upstream source and notices:
+https://download.qt.io/official_releases/qt/6.11/6.11.2/submodules/
+https://download.qt.io/official_releases/QtForPython/pyside6/PySide6-6.11.2-src/
+https://code.qt.io/cgit/pyside/pyside-setup.git/tag/?h=v6.11.2
+https://doc.qt.io/qt-6/licenses-used-in-qt.html
+https://doc.qt.io/qtforpython-6/licenses.html
+https://github.com/python-pillow/Pillow/tree/12.3.0
+https://www.pyinstaller.org/license.html
+
+Pointer source and reproducible build instructions:
+https://github.com/ReactionForge/Pointer/tree/DEV
+PyInstaller's bootloader exception permits this distribution.
+Qt license texts and third-party attribution pages are included below.

@@ -28,6 +28,10 @@ class Application:
 
     def apply(self, settings):
         settings = CursorSettings.from_dict(settings.to_dict())
+        from .paths import FROZEN, ROOT
+        if FROZEN and ROOT.resolve() != self.install_root.resolve():
+            from .windows.installation import apply_portable
+            return apply_portable(settings)
         with self._lock:
             bundle = prepare_resources(settings, self.data_root / 'cursor-cache')
             before = self.backend.snapshot()
@@ -83,8 +87,13 @@ class Application:
     def restore(self):
         with self._lock:
             settings = self.settings()
+            before = self.backend.snapshot()
             self.backend.restore_original()
-            self.store.save(replace(settings, startup=False))
+            try:
+                self.store.save(replace(settings, startup=False))
+            except Exception:
+                self.backend.restore(before)
+                raise
             return {'running': False, 'startup_enabled': False, 'restored': True,
                     'settings': self.store.load().to_dict(), 'last_error': None}
 

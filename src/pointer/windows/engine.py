@@ -14,7 +14,7 @@ import time
 import uuid
 import winreg
 
-from pointer.paths import ASSET_ROOT, DATA_ROOT, FROZEN, ROOT
+from pointer.paths import ASSET_ROOT, DATA_ROOT, FROZEN, ROOT, INSTALL_ROOT
 
 
 STATUS_FILE = DATA_ROOT / "contrast-switcher-status.json"
@@ -264,7 +264,8 @@ def _run():
         return
     event, cache, click_cache, scheme_name = None, None, None, None
     state = {"pid": os.getpid(), "running": False, "theme": None, "switches": 0, "last_error": None,
-             'launch_token':os.environ.get('POINTER_LAUNCH_TOKEN')}
+             'launch_token':os.environ.get('POINTER_LAUNCH_TOKEN'),
+             'qt_loaded':any(name.startswith('PySide6') for name in sys.modules)}
     last_written = None
 
     def publish():
@@ -418,7 +419,9 @@ def _pythonw():
 
 def _helper_command():
     if FROZEN:
-        return [str(Path(sys.executable).resolve()), "--run"]
+        installed = INSTALL_ROOT/'Pointer.exe'
+        executable = installed if installed.exists() else Path(sys.executable).resolve()
+        return [str(executable), "--run"]
     return [str(_pythonw()), str(ROOT / "packaging" / "windows" / "entrypoint.py"), "--run"]
 
 

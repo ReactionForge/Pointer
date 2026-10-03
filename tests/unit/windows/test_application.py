@@ -84,6 +84,12 @@ class ApplicationTests(unittest.TestCase):
             self.app.restore()
         self.assertEqual(self.app.store.path.read_bytes(), before)
 
+    def test_failed_save_after_restore_rolls_back_system_choice(self):
+        with patch.object(self.app.store,'save',side_effect=OSError('disk full')):
+            with self.assertRaisesRegex(OSError,'disk full'):
+                self.app.restore()
+        self.backend.restore.assert_called_once_with(self.backend.snapshot.return_value)
+
     def test_corrupt_configuration_is_not_overwritten_by_pause(self):
         self.app.store.path.write_bytes(b'broken')
         with self.assertRaises(ValueError):

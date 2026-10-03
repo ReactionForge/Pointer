@@ -3,7 +3,7 @@ from dataclasses import replace
 import json
 import sys
 from PySide6.QtCore import Qt, QThread, QTimer, Slot
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QFrame, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QStackedWidget, QScrollArea, QFileDialog, QMessageBox
 from pointer.cursor.settings import CursorSettings, _write_json
 from pointer.paths import DATA_ROOT, INSTALL_ROOT, ROOT
@@ -32,6 +32,10 @@ class MainWindow(QMainWindow):
             self.load_error = str(error)
         self._draft = self.applied
         self.setWindowTitle('Pointer · 光标设置')
+        icon = ROOT/'pointer.ico'
+        if not icon.exists():
+            icon = ROOT/'packaging/windows/pointer.ico'
+        self.setWindowIcon(QIcon(str(icon)))
         self.resize(1100,760)
         self.setMinimumSize(900,700)
         self.setStyleSheet(STYLE)
@@ -266,7 +270,7 @@ class MainWindow(QMainWindow):
 
 def launch(test_page=False):
     from pointer.application import Application
-    from pointer.windows.gui_ipc import WindowInstance, REQUEST, REPLY
+    from pointer.windows.gui_ipc import WindowInstance, read_request, REPLY
     instance = WindowInstance()
     if not instance.primary:
         instance.close()
@@ -279,7 +283,8 @@ def launch(test_page=False):
     window = MainWindow(Application(DATA_ROOT,INSTALL_ROOT))
     if test_page:
         window.select_page(2)
-    handled = None
+    existing_request = read_request()
+    handled = existing_request['token'] if existing_request else None
 
     def poll():
         nonlocal handled
@@ -288,14 +293,17 @@ def launch(test_page=False):
             window.raise_()
             window.activateWindow()
         try:
-            request = json.loads(REQUEST.read_text(encoding='utf-8'))
+            request = read_request()
+            if not request:
+                return
             if request['token'] != handled:
                 handled = request['token']
-                ready = not window.busy and window.draft() == window.applied
-                _write_json(REPLY,{'token':handled,'ready':ready,'error':'请先应用或放弃未应用的修改，并关闭设置窗口。'})
-                if ready:
+                detached = str(ROOT.resolve()).casefold() != str(request.get('target_root',ROOT)).casefold()
+                ready = detached or (not window.busy and window.draft() == window.applied)
+                _write_json(REPLY,{'token':handled,'ready':ready,'detached':detached,'error':'请先应用或放弃未应用的修改，并关闭设置窗口。'})
+                if ready and not detached:
                     window.close()
-                else:
+                elif not ready:
                     window.feedback.setText('升级等待中：请先完成当前操作或处理未应用的修改。')
                     window.showNormal()
                     window.activateWindow()

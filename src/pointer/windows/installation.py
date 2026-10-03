@@ -1,5 +1,5 @@
 """Verified package installation, migration and owned-file cleanup."""
-import base64, hashlib, json, os, shutil, subprocess, time
+import base64, hashlib, json, os, shutil, subprocess, time, tempfile, uuid
 from pathlib import Path, PurePosixPath
 from pointer.paths import ROOT, DATA_ROOT, INSTALL_ROOT, FROZEN
 from . import scheme as config, engine as switcher
@@ -22,6 +22,59 @@ def package_files(root):
         if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
             raise ValueError(f"Package checksum mismatch: {name}")
     return files
+
+
+def _remove_temporary(path, parent, prefix):
+    path, parent = Path(path).resolve(), Path(parent).resolve()
+    if path.parent != parent or not path.name.startswith(prefix):
+        raise ValueError('拒绝清理管理范围外的目录')
+    if path.exists():
+        shutil.rmtree(path)
+
+
+def deploy_package(source, target):
+    """Validate and stage a complete deployment, then replace or recover it."""
+    source, target = Path(source).resolve(), Path(target).resolve()
+    files = package_files(source)
+    if source == target:
+        return files
+    if target == target.parent or source.is_relative_to(target) or target.is_relative_to(source):
+        raise ValueError('程序来源与安装目录不能相互包含')
+    target.parent.mkdir(parents=True, exist_ok=True)
+    stage = Path(tempfile.mkdtemp(prefix='.pointer-stage-',dir=target.parent))
+    rollback = target.parent / ('.pointer-rollback-'+uuid.uuid4().hex)
+    previous = {}
+    try:
+        if target.exists():
+            for path in target.rglob('*'):
+                if path.is_symlink() or not path.resolve().is_relative_to(target):
+                    raise ValueError('安装目录包含外部链接，请先移除链接')
+            shutil.copytree(target,stage,dirs_exist_ok=True)
+            if (target/'PACKAGE.json').exists():
+                previous = json.loads((target/'PACKAGE.json').read_text(encoding='utf-8')).get('files',{})
+        for name in (*files,'PACKAGE.json'):
+            if (target/name).exists() and name not in previous and name != 'PACKAGE.json':
+                raise ValueError(f'安装目录存在同名用户文件：{name}')
+            destination = stage/name
+            destination.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(source/name,destination)
+        remove_obsolete_files(previous,files,stage)
+        package_files(stage)
+        if target.exists():
+            os.replace(target,rollback)
+        try:
+            os.replace(stage,target)
+            package_files(target)
+        except Exception:
+            if target.exists():
+                os.replace(target,stage)
+            if rollback.exists():
+                os.replace(rollback,target)
+            raise
+        _remove_temporary(rollback,target.parent,'.pointer-rollback-')
+        return files
+    finally:
+        _remove_temporary(stage,target.parent,'.pointer-stage-')
 
 
 def _previous_directory():
@@ -63,7 +116,9 @@ def _migrate_backup(previous):
         previous_data = previous.parent / "data" if (previous / "Pointer.exe").is_file() else previous
     old_backup = previous_data / config.BACKUP.name
     if old_backup.is_file():
-        config.save_backup(config.validate_backup(json.loads(old_backup.read_text(encoding="utf-8"))))
+        config.validate_backup(json.loads(old_backup.read_text(encoding="utf-8")))
+        config.BACKUP.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copy2(old_backup,config.BACKUP)
     old_startup = previous_data / switcher.STARTUP_BACKUP.name
     if old_startup.is_file() and not switcher.STARTUP_BACKUP.exists():
         data = json.loads(old_startup.read_text(encoding="utf-8"))
@@ -76,9 +131,7 @@ def _shortcuts():
     menu = Path(os.environ["APPDATA"]) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Pointer"
     menu.mkdir(parents=True, exist_ok=True)
     executable = INSTALL_ROOT.resolve() / "Pointer.exe"
-    pairs = [("启用自适应光标", "--apply"), ("停止自动切换", "--stop"),
-             ("恢复原光标", "--restore"), ("打开测试页", "--test-page"),
-             ("使用倾斜动效", "--tilt"), ("使用缩小回弹", "--shrink")]
+    pairs = [("Pointer", "--gui"), ("光标测试", "--test-page")]
     def literal(value):
         return "'" + str(value).replace("'", "''") + "'"
     commands = ["$pointerShell = New-Object -ComObject WScript.Shell"]
@@ -114,53 +167,114 @@ def remove_obsolete_files(previous_files, current_files, directory):
             pass
 
 
+def _execute(executable, arguments, report):
+    environment = os.environ.copy()
+    environment['PYINSTALLER_RESET_ENVIRONMENT'] = '1'
+    completed = subprocess.run([str(executable), *arguments, '--quiet', '--report', str(report)],
+                               env=environment,creationflags=0x08000000,timeout=180)
+    result = json.loads(report.read_text(encoding='utf-8')) if report.exists() else {}
+    if completed.returncode or result.get('exit_code') != 0:
+        raise RuntimeError(result.get('error','安装程序未成功完成操作'))
+    return result
+
+
 def install():
     if not FROZEN:
-        raise ValueError("源码模式请使用 --apply；一键安装请运行发布包中的 Pointer.exe。")
+        raise ValueError('请使用发布包安装；源码模式可直接打开设置界面。')
     files = package_files(ROOT)
-    previous_files = {}
-    if ROOT.resolve() != INSTALL_ROOT.resolve() and (INSTALL_ROOT / "PACKAGE.json").is_file():
-        try:
-            previous_files = package_files(INSTALL_ROOT)
-        except (ValueError, FileNotFoundError):
-            # Modified files are not safe candidates for automatic cleanup.
-            pass
-    previous = _previous_directory()
+    standard = Path(os.environ['LOCALAPPDATA'])/'Pointer'/'app'
+    previous = _previous_directory() if INSTALL_ROOT.resolve() == standard.resolve() or not os.environ.get('POINTER_DATA_DIR') else None
+    if previous and previous != INSTALL_ROOT:
+        package_files(previous)
+        previous_data = previous.parent/'data'
+        DATA_ROOT.mkdir(parents=True,exist_ok=True)
+        for name in ('settings.json','click-motion-settings.json','contrast-switcher-startup-backup.json'):
+            source = previous_data/name
+            destination = DATA_ROOT/name
+            if source.exists() and not destination.exists():
+                shutil.copy2(source,destination)
     _migrate_backup(previous)
+    upgrade_state = None
+    was_running = switcher.running_directory(INSTALL_ROOT,DATA_ROOT)
     if previous:
-        switcher.stop_directory(previous)
-    switcher.stop_directory(INSTALL_ROOT)
-    if ROOT.resolve() != INSTALL_ROOT.resolve():
-        INSTALL_ROOT.mkdir(parents=True, exist_ok=True)
-        for name in [*files, "PACKAGE.json"]:
-            source = ROOT / name
-            target = INSTALL_ROOT / name
-            target.parent.mkdir(parents=True, exist_ok=True)
-            deadline = time.monotonic() + 4
-            while True:
-                try:
-                    shutil.copy2(source, target)
-                    break
-                except PermissionError as error:
-                    # The stopped helper can release its mutex just before Windows
-                    # unloads its DLLs. Allow that shutdown to finish before updating.
-                    if getattr(error, "winerror", None) not in (32, 33) or time.monotonic() >= deadline:
-                        raise RuntimeError(f"无法更新 {name}，请关闭该程序后重试：{error}") from error
-                    time.sleep(.1)
+        was_running = was_running or switcher.running_directory(previous,previous.parent/'data')
+    if (INSTALL_ROOT/'PACKAGE.json').is_file() and ROOT != INSTALL_ROOT:
+        package_files(INSTALL_ROOT)
+        version = (INSTALL_ROOT/'VERSION').read_text().strip()
+        if tuple(int(v) for v in version.split('-')[0].split('.')) >= (1,3,0):
+            report = DATA_ROOT/'prepare-install-report.json'
+            upgrade_state = _execute(INSTALL_ROOT/'Pointer.exe',['--prepare-upgrade'],report)
+        else:
+            switcher.stop_directory(INSTALL_ROOT,DATA_ROOT,_legacy=True)
+            upgrade_state={'previously_running':was_running}
+    if previous and previous != INSTALL_ROOT:
+        package_files(previous)
+        switcher.stop_directory(previous,previous.parent/'data',_legacy=True)
+    switcher.stop_directory(INSTALL_ROOT,DATA_ROOT)
+    try:
+        deploy_package(ROOT,INSTALL_ROOT)
+    except Exception:
+        if upgrade_state and upgrade_state.get('previously_running'):
+            _execute(INSTALL_ROOT/'Pointer.exe',['--apply'],DATA_ROOT/'rollback-resume-report.json')
+        raise
+    if not os.environ.get('POINTER_INSTALL_DIR'):
         _shortcuts()
-        report = DATA_ROOT / "install-apply-report.json"
-        environment = os.environ.copy()
-        environment["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
-        result = subprocess.run([str(INSTALL_ROOT / "Pointer.exe"), "--apply", "--quiet", "--report", str(report)],
-                                env=environment, creationflags=0x08000000, timeout=30)
-        detail = json.loads(report.read_text(encoding="utf-8")) if report.exists() else {}
-        if result.returncode or detail.get("exit_code") != 0:
-            raise RuntimeError(detail.get("error", "安装后的配置程序未成功完成。"))
-        remove_obsolete_files(previous_files, files, INSTALL_ROOT)
-    else:
-        _shortcuts()
-        from pointer.cli import apply_theme
-        apply_theme()
-    return {"installed": True, "install_directory": str(INSTALL_ROOT.resolve()),
-            "backup_directory": str(DATA_ROOT.resolve()), "startup_enabled": True}
+    if previous and previous != INSTALL_ROOT:
+        from .backend import WindowsBackend
+        if WindowsBackend(DATA_ROOT,INSTALL_ROOT).startup_enabled():
+            from .startup import enable_startup
+            enable_startup()
+    if was_running or (upgrade_state and upgrade_state.get('previously_running')):
+        _execute(INSTALL_ROOT/'Pointer.exe',['--apply'],DATA_ROOT/'upgrade-resume-report.json')
+    return {'installed':True,'install_directory':str(INSTALL_ROOT),'backup_directory':str(DATA_ROOT),
+            'startup_enabled':False if not (DATA_ROOT/'settings.json').exists() else
+                json.loads((DATA_ROOT/'settings.json').read_text(encoding='utf-8')).get('startup',False)}
 
+
+def apply_portable(settings):
+    from pointer.cursor.settings import _write_json
+    if not (INSTALL_ROOT/'PACKAGE.json').exists() or package_files(ROOT) != package_files(INSTALL_ROOT):
+        install()
+    token = uuid.uuid4().hex
+    desired, report = DATA_ROOT/f'portable-{token}.json', DATA_ROOT/f'portable-{token}-report.json'
+    _write_json(desired,settings.to_dict())
+    try:
+        return _execute(INSTALL_ROOT/'Pointer.exe',['--apply','--settings-file',str(desired)],report)
+    finally:
+        desired.unlink(missing_ok=True)
+        report.unlink(missing_ok=True)
+
+
+def uninstall(purge=False):
+    from pointer.application import Application
+    from .gui_ipc import prepare_gui_upgrade
+    prepare_gui_upgrade()
+    application = Application(DATA_ROOT,INSTALL_ROOT)
+    if application.backend.backup.exists():
+        application.restore()
+    else:
+        current = config.read_values(config.KEY_PATH).get('Arrow',{}).get('value','')
+        if current and Path(current).resolve().is_relative_to(ROOT):
+            raise ValueError('当前光标仍使用 Pointer，但原光标备份缺失；卸载已中止。')
+        application.backend.stop()
+        application.backend.set_startup(False)
+    manifest = json.loads((ROOT/'PACKAGE.json').read_text(encoding='utf-8'))
+    files = manifest.get('files',{})
+    if not isinstance(files,dict) or 'Pointer.exe' not in files:
+        raise ValueError('程序清单损坏，卸载已中止')
+    lines = []
+    for name,digest in files.items():
+        path = (ROOT/name).resolve()
+        if not path.is_relative_to(ROOT) or not isinstance(digest,str) or len(digest)!=64:
+            raise ValueError('程序清单含无效路径')
+        lines.append(name+'|'+digest)
+    lines.append('PACKAGE.json|'+hashlib.sha256((ROOT/'PACKAGE.json').read_bytes()).hexdigest())
+    DATA_ROOT.mkdir(parents=True,exist_ok=True)
+    (DATA_ROOT/'uninstall-owned-files.txt').write_text('\n'.join(lines),encoding='utf-8')
+    if purge:
+        allowed = INSTALL_ROOT.parent/'data'
+        if DATA_ROOT.resolve() != allowed.resolve():
+            raise ValueError('配置目录不在安装目录旁，拒绝自动清除')
+        for name in ('settings.json','click-motion-settings.json','active-profile.json','upgrade-state.json'):
+            (DATA_ROOT/name).unlink(missing_ok=True)
+    return {'uninstalled':True,'settings_preserved':not purge}
