@@ -11,16 +11,25 @@ import statistics
 import subprocess
 import sys
 import time
+import uuid
 import winreg
 
-from pointer.paths import DATA_ROOT, FROZEN, ROOT
+from pointer.paths import ASSET_ROOT, DATA_ROOT, FROZEN, ROOT
 
 
 STATUS_FILE = DATA_ROOT / "contrast-switcher-status.json"
 STARTUP_BACKUP = DATA_ROOT / "contrast-switcher-startup-backup.json"
 CLICK_SETTINGS = DATA_ROOT / "click-motion-settings.json"
+PROFILE_FILE = DATA_ROOT / "active-profile.json"
 SCRIPT = Path(__file__).resolve()
-INSTANCE = hashlib.sha256(str(ROOT).casefold().encode("utf-8")).hexdigest()[:16]
+def _identity(directory, data_root=None):
+    text = str(Path(directory).resolve()).casefold()
+    if data_root is not None:
+        text += '|' + str(Path(data_root).resolve()).casefold()
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()[:16]
+
+
+INSTANCE = _identity(ROOT, DATA_ROOT)
 MUTEX_NAME = rf"Local\PointerAdaptiveContrast_{INSTANCE}_Mutex"
 EVENT_NAME = rf"Local\PointerAdaptiveContrast_{INSTANCE}_Stop"
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
@@ -134,15 +143,16 @@ class _SchemeChanged(Exception):
 
 
 class _CursorCache:
-    def __init__(self, paths):
+    def __init__(self, paths, size=0):
         self.paths = paths
+        self.size = size
         self.handles = {}
         self.reload_animations = set()
         self.notes = []
         try:
             for theme, roles in paths.items():
                 for role, path in roles.items():
-                    self.handles[theme, role] = self._load(path)
+                    self.handles[theme, role] = self._load(path, size)
                     if Path(path).suffix.lower() != ".ani":
                         continue
                     original = self.handles[theme, role]
@@ -165,15 +175,15 @@ class _CursorCache:
             raise
 
     @staticmethod
-    def _load(path):
-        cursor = USER32.LoadImageW(None, str(path), IMAGE_CURSOR, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE)
+    def _load(path, size=0):
+        cursor = USER32.LoadImageW(None, str(path), IMAGE_CURSOR, size, size, LR_LOADFROMFILE | (LR_DEFAULTSIZE if not size else 0))
         if not cursor:
             raise ctypes.WinError(ctypes.get_last_error())
         return cursor
 
     @staticmethod
-    def _load_animated(path):
-        return _CursorCache._load(path)
+    def _load_animated(path, size=0):
+        return _CursorCache._load(path, size)
 
     def apply(self, theme, role_ids, scheme_name):
         prepared = []
@@ -181,7 +191,7 @@ class _CursorCache:
             for role, identity in role_ids.items():
                 key = theme, role
                 if key in self.reload_animations:
-                    cursor = self._load_animated(self.paths[theme][role])
+                    cursor = self._load_animated(self.paths[theme][role], self.size)
                 else:
                     cursor = USER32.CopyImage(self.handles[key], IMAGE_CURSOR, 0, 0, 0)
                     if not cursor:
@@ -206,6 +216,44 @@ class _CursorCache:
         self.handles.clear()
 
 
+def _read_profile(path=PROFILE_FILE):
+    """Validate persisted resources before passing any file to the native loader."""
+    from pointer.cursor.settings import CursorSettings, _read_json
+    from pointer.cursor.theme import ROLE_IDS
+    if not path.exists():
+        return None
+    value = _read_json(path)
+    CursorSettings.from_dict(value['settings'])
+    if type(value.get('size')) is not int or not 1 <= value['size'] <= 2048:
+        raise ValueError('无效的光标画布尺寸')
+    roots = (ASSET_ROOT.resolve(), (DATA_ROOT / 'cursor-cache').resolve())
+    for field, expected in (('themes', {t: set(ROLE_IDS) for t in ('light', 'dark')}),
+                            ('frames', {f'{t}:{f}': {'Arrow', 'Hand'} for t in ('light', 'dark') for f in range(5)})):
+        groups = value.get(field)
+        if not isinstance(groups, dict) or set(groups) != set(expected):
+            raise ValueError('光标配置缺少主题或动效帧')
+        for name, roles in expected.items():
+            entries = groups[name]
+            if not isinstance(entries, dict) or set(entries) != roles:
+                raise ValueError('光标配置缺少角色')
+            for role, filename in entries.items():
+                resource = Path(filename).resolve()
+                if not any(resource.is_relative_to(root) for root in roots) or not resource.is_file():
+                    raise ValueError('光标资源不在受管理的目录中')
+                entries[role] = resource
+    return value
+
+
+def _cursor_dpi():
+    point = POINT()
+    if USER32.GetCursorPos(ctypes.byref(point)) and hasattr(USER32, 'GetDpiForWindow'):
+        window = _signature(USER32, 'WindowFromPoint', [POINT], wintypes.HWND)(point)
+        dpi = _signature(USER32, 'GetDpiForWindow', [wintypes.HWND], wintypes.UINT)(window)
+        if dpi:
+            return dpi
+    return 96
+
+
 def _run():
     ctypes.set_last_error(0)
     mutex = KERNEL32.CreateMutexW(None, True, MUTEX_NAME)
@@ -215,7 +263,8 @@ def _run():
         KERNEL32.CloseHandle(mutex)
         return
     event, cache, click_cache, scheme_name = None, None, None, None
-    state = {"pid": os.getpid(), "running": False, "theme": None, "switches": 0, "last_error": None}
+    state = {"pid": os.getpid(), "running": False, "theme": None, "switches": 0, "last_error": None,
+             'launch_token':os.environ.get('POINTER_LAUNCH_TOKEN')}
     last_written = None
 
     def publish():
@@ -236,11 +285,18 @@ def _run():
         if _scheme_name() != scheme_name:
             raise _SchemeChanged()
         _set_dpi_awareness()
-        cache = _CursorCache({theme: theme_paths(theme) for theme in ("light", "dark")})
-        click_mode = read_mode(CLICK_SETTINGS)
-        click_cache = _CursorCache({f"{theme}:{frame}": click_paths(theme, frame, click_mode)
-                                    for theme in ("light", "dark") for frame in range(5)})
-        motion = ClickMotion()
+        profile = _read_profile()
+        settings = profile['settings'] if profile else {}
+        appearance = settings.get('appearance', 'adaptive')
+        click_mode = settings.get('motion', read_mode(CLICK_SETTINGS))
+        normal_paths = profile['themes'] if profile else {theme: theme_paths(theme) for theme in ('light', 'dark')}
+        pressed_paths = profile['frames'] if profile else {f'{theme}:{frame}': click_paths(theme, frame, click_mode)
+                                                          for theme in ('light', 'dark') for frame in range(5)}
+        logical_size = profile['size'] if profile else 32
+        physical_size = round(logical_size * _cursor_dpi() / 96)
+        cache = _CursorCache(normal_paths, size=physical_size)
+        click_cache = _CursorCache(pressed_paths, size=physical_size)
+        motion = ClickMotion(settings.get('press_ms', 60), settings.get('release_ms', 150))
         click_roles = {role: ROLE_IDS[role] for role in ("Arrow", "Hand")}
         applied_click = None
         state.update(running=True, theme=_initial_theme(), animation_copy=cache.notes,
@@ -258,7 +314,21 @@ def _run():
                 next_background = now + BACKGROUND_PERIOD
                 if _scheme_name() != scheme_name:
                     raise _SchemeChanged()
-                luminance = _sample_luminance()
+                requested_size = round(logical_size * _cursor_dpi() / 96)
+                if requested_size != physical_size:
+                    replacement = _CursorCache(normal_paths, size=requested_size)
+                    try:
+                        pressed_replacement = _CursorCache(pressed_paths, size=requested_size)
+                    except Exception:
+                        replacement.close()
+                        raise
+                    cache.close()
+                    click_cache.close()
+                    cache, click_cache, physical_size = replacement, pressed_replacement, requested_size
+                    if state['theme']:
+                        cache.apply(state['theme'], ROLE_IDS, scheme_name)
+                    applied_click = None
+                luminance = _sample_luminance() if appearance == 'adaptive' else (255 if appearance == 'light' else 0)
                 if luminance is None:
                     candidate = None
                 else:
@@ -275,7 +345,7 @@ def _run():
                         applied_click = None
                         publish()
             # Use the reliable current-down bit, never the shared "recently pressed" bit.
-            frame = motion.update(bool(USER32.GetAsyncKeyState(1) & 0x8000), now)
+            frame = motion.update(bool(USER32.GetAsyncKeyState(1) & 0x8000), now) if click_mode != 'off' else 0
             click_key = f'{state["theme"]}:{frame}'
             if state["theme"] and click_key != applied_click:
                 click_cache.apply(click_key, click_roles, scheme_name)
@@ -283,7 +353,7 @@ def _run():
             if motion.presses != state["click_presses"]:
                 state["click_presses"] = motion.presses
                 publish()
-            next_tick += PERIOD
+            next_tick += PERIOD if click_mode != 'off' else BACKGROUND_PERIOD
             if next_tick < time.monotonic():
                 next_tick = time.monotonic()
             wait_ms = max(1, int((next_tick - time.monotonic()) * 1000))
@@ -317,7 +387,18 @@ def _run():
 
 
 def _running():
-    mutex = KERNEL32.OpenMutexW(SYNCHRONIZE | MUTEX_MODIFY_STATE, False, MUTEX_NAME)
+    return running_directory(ROOT, DATA_ROOT)
+
+
+def running_directory(directory, data_root=None):
+    names = [_identity(directory,data_root)]
+    if not os.environ.get('POINTER_DATA_DIR'):
+        names.append(_identity(directory))
+    return any(_mutex_running(rf'Local\PointerAdaptiveContrast_{identity}_Mutex') for identity in names)
+
+
+def _mutex_running(name):
+    mutex = KERNEL32.OpenMutexW(SYNCHRONIZE | MUTEX_MODIFY_STATE, False, name)
     if not mutex:
         return False
     try:
@@ -349,6 +430,8 @@ def start():
             return status
         raise RuntimeError("The cursor helper is already starting or stopping")
     environment = os.environ.copy()
+    token = uuid.uuid4().hex
+    environment['POINTER_LAUNCH_TOKEN'] = token
     if FROZEN:
         # The helper must outlive the command that installed or started it.
         environment["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
@@ -362,7 +445,7 @@ def start():
     deadline = time.monotonic() + 5
     while time.monotonic() < deadline:
         status = _read_status()
-        if status.get("pid") == process.pid and status.get("running") and _running():
+        if status.get('launch_token') == token and status.get("running") and _running():
             return status
         if process.poll() is not None:
             raise RuntimeError(status.get("last_error") or status.get("shutdown_reason") or "Cursor helper exited before becoming ready")
@@ -376,19 +459,22 @@ def start():
 
 
 
-def stop_directory(directory):
+def stop_directory(directory, data_root=None, _legacy=False):
     """Stop a helper by its resource directory without changing settings or backups.
 
     Migration uses the previous directory's named event instead of executing a
     command read from the registry. Missing instances are safe to ignore.
     """
     directory = Path(directory).resolve()
-    identity = hashlib.sha256(str(directory).casefold().encode("utf-8")).hexdigest()[:16]
+    data_root = Path(data_root) if data_root is not None else (DATA_ROOT if directory == ROOT else directory.parent / 'data')
+    identity = _identity(directory, None if _legacy else data_root)
     mutex_name = rf"Local\PointerAdaptiveContrast_{identity}_Mutex"
     event_name = rf"Local\PointerAdaptiveContrast_{identity}_Stop"
-    status_file = STATUS_FILE if directory == ROOT else directory / STATUS_FILE.name
+    status_file = data_root / STATUS_FILE.name
     mutex = KERNEL32.OpenMutexW(SYNCHRONIZE | MUTEX_MODIFY_STATE, False, mutex_name)
     if not mutex:
+        if not _legacy and not os.environ.get('POINTER_DATA_DIR'):
+            return stop_directory(directory, data_root, _legacy=True)
         status = _read_status(status_file)
         if status.get("running"):
             status.update(running=False, shutdown_reason="not_running")

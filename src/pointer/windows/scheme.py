@@ -94,12 +94,11 @@ def validate_backup(value):
     return value
 
 
-def save_backup(value):
+def save_backup(value, path=None):
+    path = BACKUP if path is None else Path(path)
     validate_backup(value)
-    BACKUP.parent.mkdir(parents=True, exist_ok=True)
-    temporary = BACKUP.with_name(BACKUP.name + ".tmp")
-    temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
-    os.replace(temporary, BACKUP)
+    from pointer.cursor.settings import _write_json
+    _write_json(path, value)
 
 
 def restore_values(backup):
@@ -132,24 +131,29 @@ def apply(adaptive=False, dual=False):
     else:
         cursors = ADAPTIVE_CURSORS if adaptive else CURSORS
     scheme_name = ADAPTIVE_SCHEME_NAME if adaptive or dual else SCHEME_NAME
+    return apply_paths(cursors, scheme_name=scheme_name)
+
+
+def apply_paths(cursors, backup_path=None, scheme_name=ADAPTIVE_SCHEME_NAME, canvas_size=32):
+    backup_path = BACKUP if backup_path is None else Path(backup_path)
     for path in cursors.values():
         if not path.is_file():
             raise FileNotFoundError(path)
-        cursor = USER32.LoadImageW(None, str(path), 2, 32, 32, 0x0010)
+        cursor = USER32.LoadImageW(None, str(path), 2, canvas_size, canvas_size, 0x0010)
         if not cursor:
             raise ctypes.WinError(ctypes.get_last_error())
         USER32.DestroyCursor(cursor)
     current = read_values(KEY_PATH)
     previous_scheme = read_values(SCHEME_PATH).get(scheme_name)
     immediate_backup = {"cursor_values": current, "previous_named_scheme": previous_scheme, "scheme_name": scheme_name}
-    if not BACKUP.exists():
-        save_backup(immediate_backup)
+    if not backup_path.exists():
+        save_backup(immediate_backup, backup_path)
     else:
-        original_backup = validate_backup(json.loads(BACKUP.read_text(encoding="utf-8")))
+        original_backup = validate_backup(json.loads(backup_path.read_text(encoding="utf-8")))
         additional = original_backup.setdefault("additional_named_schemes", {})
         if scheme_name != original_backup.get("scheme_name", SCHEME_NAME) and scheme_name not in additional:
             additional[scheme_name] = previous_scheme
-            save_backup(original_backup)
+            save_backup(original_backup, backup_path)
     paths = [str(cursors[role]) if role in cursors else current.get(role, {}).get("value", "") for role in ROLES]
     try:
         with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, SCHEME_PATH, 0, winreg.KEY_SET_VALUE) as key:
@@ -169,10 +173,11 @@ def apply(adaptive=False, dual=False):
     print(f"Original settings saved: {BACKUP}")
 
 
-def restore():
-    if not BACKUP.is_file():
-        raise FileNotFoundError(BACKUP)
-    restore_values(validate_backup(json.loads(BACKUP.read_text(encoding="utf-8"))))
+def restore(path=None):
+    path = BACKUP if path is None else Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    restore_values(validate_backup(json.loads(path.read_text(encoding="utf-8"))))
     reload_cursors()
     print("Original cursor settings restored.")
 

@@ -73,11 +73,16 @@ def _read_json(path):
 
 
 def _write_json(path, value):
+    content = (json.dumps(value, ensure_ascii=False, indent=2) + '\n').encode('utf-8')
+    _write_bytes(path, content)
+
+
+def _write_bytes(path, content):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f'{path.name}.{uuid.uuid4().hex}.tmp')
     try:
-        temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+        temporary.write_bytes(content)
         os.replace(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)

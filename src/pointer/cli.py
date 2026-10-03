@@ -190,9 +190,13 @@ def dispatch(action):
             return dispatch(action)
         if action != "test_page":
             raise ValueError("尚未安装 Pointer，请先运行一键安装.cmd。")
-    if action == "test_page":
-        os.startfile(WEB_ROOT / "index.html")
-        return {"test_page_opened": True}
+    if action in ('gui', 'test_page'):
+        from pointer.ui.main_window import launch
+        return {'exit_code': launch(test_page=action == 'test_page')}
+    if action in ('prepare_upgrade', 'uninstall'):
+        from pointer.application import Application
+        application = Application(DATA_ROOT, INSTALL_ROOT)
+        return application.prepare_upgrade() if action == 'prepare_upgrade' else application.restore()
     if action in ("tilt", "shrink"):
         return set_click_mode(action)
     operation = {"install": install, "apply": apply_theme, "stop": stop_theme,
@@ -208,16 +212,21 @@ def main(argv=None):
         sys.stderr = io.StringIO()
     parser = argparse.ArgumentParser(description="Pointer cursor installer")
     group = parser.add_mutually_exclusive_group()
-    for action in ("install", "apply", "stop", "restore", "reference", "run", "diagnose", "test-page", "tilt", "shrink"):
+    for action in ("install", "apply", "stop", "restore", "reference", "run", "diagnose", "test-page", "tilt", "shrink", 'gui', 'prepare-upgrade', 'uninstall'):
         group.add_argument("--" + action, action="store_true")
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--report", type=Path)
+    parser.add_argument('--data-dir', type=Path)
+    parser.add_argument('--install-dir', type=Path)
     args = parser.parse_args(argv)
     if args.run:
         switcher._run()
         return 0
-    action = next((name for name in ("apply", "stop", "restore", "reference", "diagnose", "test_page", "tilt", "shrink")
-                   if getattr(args, name)), "install")
+    action = next((name for name in ("install", "apply", "stop", "restore", "reference", "diagnose", "test_page", "tilt", "shrink", 'gui', 'prepare_upgrade', 'uninstall')
+                   if getattr(args, name)), "gui")
+    if action in ('gui', 'test_page'):
+        from pointer.ui.main_window import launch
+        return launch(test_page=action == 'test_page')
     result = {"action": action, "exit_code": 0}
     messages = {"install": "安装完成。自适应光标已启用，并随 Windows 登录启动。\n可在开始菜单的 Pointer 文件夹中停止切换或恢复原光标。",
                 "apply": "自适应光标已启用。", "stop": "已停止自动切换并取消登录启动。当前保留黑色主体、白色边框。",
@@ -225,6 +234,7 @@ def main(argv=None):
                 "diagnose": "发布包和光标资源检查通过。"}
     messages.update(tilt="已启用倾斜动效：按下时箭头整体向左下倾斜、下方轻微跟随，小手向左倾斜，松开回正。",
                     shrink="已启用缩小回弹：按下缩小约 10%，松开恢复。")
+    messages.update(prepare_upgrade='已为升级做好准备。', uninstall='原光标已恢复，可以卸载。')
     try:
         result.update(dispatch(action))
     except Exception as error:

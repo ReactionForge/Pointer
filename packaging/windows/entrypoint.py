@@ -6,6 +6,8 @@ import sys
 if not getattr(sys, "frozen", False):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
+from pointer.bootstrap import configure_paths
+configure_paths()
 from pointer.cli import main
 
 if __name__ == "__main__":
