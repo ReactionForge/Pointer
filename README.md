@@ -62,7 +62,7 @@ python -m venv .build-env
 .\.build-env\Scripts\python.exe -m scripts.serve_test
 ```
 
-访问 `http://127.0.0.1:9167/`。绘图生成与原生验证工具需要额外安装 `requirements/art.txt`，操作入口见 [assets 说明](assets/README.md)。
+访问 `http://127.0.0.1:9167/`。绘图生成与原生验证工具需要额外安装 `requirements/dev.txt`，操作入口见 [assets 说明](assets/README.md)。
 
 点击动效测试区位于 `http://127.0.0.1:9167/#click-motion`，请分别检查箭头、小手、长按、松开和连续点击。网页计数表示事件已收到，光标外观由你手动判断。
 

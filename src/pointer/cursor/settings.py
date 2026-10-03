@@ -1,0 +1,109 @@
+"""Validated user preferences with atomic storage and explicit legacy migration."""
+from dataclasses import asdict, dataclass, fields
+import json
+import os
+from pathlib import Path
+import re
+import uuid
+
+MAX_JSON_BYTES = 65536
+SIZES = (24, 32, 40, 48, 64)
+
+
+@dataclass(frozen=True)
+class CursorSettings:
+    schema_version: int = 1
+    appearance: str = 'adaptive'
+    light_body: str = '#000000'
+    light_outline: str = '#ffffff'
+    dark_body: str = '#ffffff'
+    dark_outline: str = '#000000'
+    size: int = 32
+    motion: str = 'tilt'
+    strength: int = 50
+    press_ms: int = 60
+    release_ms: int = 150
+    startup: bool = False
+
+    def __post_init__(self):
+        bounds = {'schema_version': (1, 1), 'strength': (0, 100),
+                  'press_ms': (40, 200), 'release_ms': (80, 400)}
+        for name, (lower, upper) in bounds.items():
+            value = getattr(self, name)
+            if type(value) is not int or not lower <= value <= upper:
+                raise ValueError(f'{name} 必须在 {lower}–{upper} 范围内')
+        if type(self.size) is not int or self.size not in SIZES:
+            raise ValueError('光标大小必须是 24、32、40、48 或 64')
+        if self.appearance not in ('adaptive', 'light', 'dark'):
+            raise ValueError('无效的配色策略')
+        if self.motion not in ('tilt', 'shrink', 'off'):
+            raise ValueError('无效的左键动效')
+        if type(self.startup) is not bool:
+            raise ValueError('开机启动必须是布尔值')
+        for name in ('light_body', 'light_outline', 'dark_body', 'dark_outline'):
+            value = getattr(self, name)
+            if not isinstance(value, str) or not re.fullmatch(r'#[0-9a-fA-F]{6}', value):
+                raise ValueError(f'{name} 必须是六位十六进制颜色')
+            object.__setattr__(self, name, value.lower())
+
+    @classmethod
+    def from_dict(cls, value):
+        if not isinstance(value, dict):
+            raise ValueError('配置必须是 JSON 对象')
+        if 'schema_version' not in value:
+            raise ValueError('缺少配置格式版本')
+        unknown = set(value) - {field.name for field in fields(cls)}
+        if unknown:
+            raise ValueError('未知配置项：' + ', '.join(sorted(unknown)))
+        return cls(**value)
+
+    def to_dict(self):
+        return asdict(self)
+
+
+def _read_json(path):
+    with Path(path).open('rb') as source:
+        content = source.read(MAX_JSON_BYTES + 1)
+    if len(content) > MAX_JSON_BYTES:
+        raise ValueError('配置文件不能超过 64 KiB')
+    try:
+        return json.loads(content.decode('utf-8-sig'))
+    except (UnicodeError, ValueError) as error:
+        raise ValueError('无法读取配置文件，请检查 JSON 格式') from error
+
+
+def _write_json(path, value):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f'{path.name}.{uuid.uuid4().hex}.tmp')
+    try:
+        temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+class SettingsStore:
+    def __init__(self, root):
+        self.root = Path(root)
+        self.path = self.root / 'settings.json'
+
+    def load(self, legacy_mode_path=None, startup_enabled=False):
+        if self.path.exists():
+            return CursorSettings.from_dict(_read_json(self.path))
+        from .motion import read_mode
+        legacy = Path(legacy_mode_path) if legacy_mode_path else self.root / 'click-motion-settings.json'
+        settings = CursorSettings(motion=read_mode(legacy), startup=startup_enabled)
+        self.save(settings)
+        return settings
+
+    def save(self, settings):
+        value = CursorSettings.from_dict(settings.to_dict())
+        _write_json(self.path, value.to_dict())
+
+    def import_file(self, path):
+        return CursorSettings.from_dict(_read_json(path))
+
+    def export_file(self, path, settings):
+        value = CursorSettings.from_dict(settings.to_dict())
+        _write_json(path, value.to_dict())

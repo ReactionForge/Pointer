@@ -19,7 +19,7 @@
 | `src/pointer/__main__.py` | Python 模块命令入口 |
 | `packaging/windows/entrypoint.py` | PyInstaller 和源码快捷命令的启动入口 |
 
-运行模块仅依赖 Python 标准库；生成和视觉验证工具的 Pillow 依赖放在 `requirements/art.txt`，不进入应用运行包。
+运行模块仅依赖 Python 标准库；生成和视觉验证工具的 Pillow 依赖放在 `requirements/dev.txt`，不进入应用运行包。
 
 ## 资源与开发工具
 
