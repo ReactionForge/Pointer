@@ -1,28 +1,15 @@
 # 光标资源
 
-| 目录 | 用途 | 是否进入正式安装包 |
-| --- | --- | --- |
-| `cursors/adaptive/light` | 浅底黑主体、白边框 | 是 |
-| `cursors/adaptive/dark` | 深底白主体、黑边框 | 是 |
-| `cursors/adaptive/click/light`、`dark` | 箭头和小手的 4 档缩小帧，共 16 个文件 | 是 |
-| `cursors/adaptive/tilt/light`、`dark` | 箭头和小手的 3°、6°、9°、12° 倾斜帧，共 16 个文件 | 是 |
-| `cursors/reference` | 固定黑主体、灰白边框 | 是 |
-| `cursors/legacy-invert` | 历史原生反色实验 | 否 |
+`cursors/adaptive/light` 为浅底黑主体白边，`dark` 为深底白主体黑边；`click` 与 `tilt` 是默认大小的缩小和倾斜动效帧。`reference` 保留固定参考造型，`legacy-invert` 为历史实验资源，不进入安装包。
 
-每套均有 17 个 Windows 系统角色，加载和后台加载使用 24 帧 ANI。CUR 包含多个 DPI 尺寸。
-
-从仓库根目录安装绘图依赖后运行工具：
+每套有 17 个 Windows 角色；加载动画含 24 帧。默认造型与热点保持兼容。APP 自定义资源保存在用户数据的缓存目录，不写入源码资源。
 
 ```powershell
-.\.build-env\Scripts\python.exe -m pip install -r requirements/art.txt
-.\.build-env\Scripts\python.exe -m tools.generate.create_cursor
-.\.build-env\Scripts\python.exe -m tools.generate.create_hand_cursor
-.\.build-env\Scripts\python.exe -m tools.generate.create_extra_cursors
-.\.build-env\Scripts\python.exe -m tools.generate.create_dual_contrast
-.\.build-env\Scripts\python.exe -m tools.generate.create_click_cursors
-.\.build-env\Scripts\python.exe -m tools.verify.verify_dual_contrast
+python -m pip install -r requirements/dev.txt
+python -m scripts.generate_cursors
+python -m scripts.create_theme_preview
+python -m scripts.verify.verify_animation
+python -m scripts.verify.verify_dual_contrast
 ```
 
-生成工具写入本目录，预览写入 `docs/images/`。原生验证检查纯黑白配色、热点、复制后的静态形状和动画帧；不会修改系统光标设置。
-
-实验资源可用 `python -m tools.generate.create_adaptive_cursors` 重新生成，验证入口为 `tools.verify.verify_adaptive_cursors`。
+生成入口统一调用 `src/pointer/cursor/art`，原生检查只加载并绘制资源，不修改系统设置。默认箭头最大倾斜 6°，小手 12°；APP 强度可提升至其两倍。

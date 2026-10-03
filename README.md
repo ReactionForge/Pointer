@@ -1,77 +1,79 @@
 # Pointer
 
-Windows 黑白自适应圆角光标：浅色背景显示**黑色主体、白色边框**，深色背景显示**白色主体、黑色边框**。覆盖 17 种系统状态，保留加载动画，无蓝光。
+Windows 圆角光标桌面 APP。浅色背景黑色主体、白色边框；深色背景白色主体、黑色边框。覆盖 17 种系统光标，保留加载动画，无蓝光。
 
-`DEV` 是开发分支，当前目标版本为 1.2.0：普通箭头和链接小手支持两种独立动效：默认按下时整个箭头向左下倾斜约 6°、顶部移动明显且下方两尖轻微跟随，小手逆时针倾斜约 12°，也可选择原来的缩小约 10%。长按保持，松开约 150 毫秒恢复。开始菜单或开发包中的“使用倾斜动效”“使用缩小回弹”可切换，选择会保留到下次登录。点击热点固定，深浅两套配色均适配。应用自绘光标可能不采用系统动效。
+**DEV 桌面预览版：1.3.0-beta.1**。开发修改只推送 DEV，稳定版仍为 v1.1.1。
 
-![深浅背景下的光标](docs/images/dual-contrast-preview.png)
+[下载安装 EXE](https://github.com/ReactionForge/Pointer/releases/download/v1.3.0-beta.1/Pointer-v1.3.0-beta.1-setup-x64.exe) · [下载便携 ZIP](https://github.com/ReactionForge/Pointer/releases/download/v1.3.0-beta.1/Pointer-v1.3.0-beta.1-windows-x64.zip) · [预览版与校验文件](https://github.com/ReactionForge/Pointer/releases/tag/v1.3.0-beta.1)
 
-## 一键安装
+![Pointer 光标外观界面](docs/images/desktop-app.png)
 
-1. 从 [Releases](https://github.com/ReactionForge/Pointer/releases/latest) 下载 Windows x64 ZIP。
-2. 完整解压，双击 `Pointer/一键安装.cmd`（或 `install.cmd`）。
-3. 安装后，从开始菜单的 **Pointer** 文件夹启用、停止、恢复原光标或打开测试页。
+## 使用
 
-支持 Windows 10/11 x64，无需 Python、管理员权限或联网。程序安装到 `%LOCALAPPDATA%\Pointer\app`，备份保存到相邻的 `data` 目录。升级时再次运行新版本安装入口，已有原始备份会保留。安装成功后可删除下载包和解压目录。
+1. 安装 EXE，或完整解压 ZIP 后打开 `Pointer.exe`。支持 Windows 10/11 x64，无需 Python、管理员权限或联网。
+2. 在 APP 调整主体与边框配色、大小、倾斜或缩小动效、强度和按下/松开时间。右侧预览草稿，点击 **应用配置** 后才启用系统光标。
+3. 打开 **光标测试**，体验黑白交界、亮度变化、箭头、小手、输入、拖动、等待与各类缩放状态。
+4. 在 **应用设置** 中选择开机启动、暂停/恢复、导入导出配置或恢复 Windows 原光标。
 
-发布包未签名，ZIP 的 SHA-256 校验文件随 Release 提供。详细操作见[使用说明](docs/usage.txt)。Windows“照片”的图片抓手及应用自行绘制的光标可能不采用系统方案。
+关闭设置窗口后，已启用的后台光标效果继续工作。暂停与开机启动互相独立，未变化的启动项不会重复写入。新安装默认不启用开机启动；已有用户升级保留选择。
 
-安装或启用会注册当前用户的登录启动项。v1.1.1 起，已有启动路径不变时不会重复写入；重新启用和升级也不会先删除再添加。后台配色切换不修改启动项。“停止自动切换”和“恢复原光标”会取消登录启动，再次启用才重新注册。
+默认动效：箭头整体向左下倾斜约 6°，顶部移动明显、下方两尖轻微跟随；小手倾斜约 12°。长按保持，松开约 150 ms 回正。保留缩小回弹模式，各帧点击热点固定。
 
-## 项目结构
+![APP 内的系统光标测试页](docs/images/desktop-tests.png)
+
+配置与原光标备份位于 `%LOCALAPPDATA%\Pointer\data`，程序文件位于相邻 `app` 目录。商店应用宿主可能重定向路径。ZIP 首次应用时部署到持久目录，应用成功后可以移动或删除解压文件夹。升级保留用户数据，卸载前恢复原光标；恢复失败会中止卸载。
+
+测试页使用真实 Windows 系统光标。Windows“照片”的图片抓手及其他软件自绘的光标可能使用自身资源。文本编辑时闪烁的插入竖线由应用控制。点击次数表示收到了事件，外观与形变请实际观察。
+
+## 清晰的项目架构
 
 ```text
-Pointer/
-├── src/pointer/             # 应用、Windows 配置与后台切换
-├── assets/cursors/          # 自适应、固定和历史实验光标资源
-├── tools/
-│   ├── generate/            # 光标与预览生成工具
-│   ├── verify/              # Windows 原生绘制、热点与动画检查
-│   ├── build_release.py     # 发布包构建
-│   └── serve_test.py        # 本地测试网页服务
-├── tests/                   # 自动化测试，不修改系统设置
-├── web/cursor-test/         # 离线交互测试网页
-├── docs/                    # 架构、操作说明与公开预览
-├── packaging/windows/      # Windows 打包入口和随包说明
-├── scripts/windows/        # 源码模式快捷命令
-├── requirements/           # 构建与绘图依赖
-├── .github/workflows/       # 自动构建和发布
-├── pyproject.toml           # Python 包配置与命令入口
-└── VERSION                  # 唯一版本号来源
+src/pointer/
+  application.py, cli.py, bootstrap.py, paths.py
+  cursor/                 # 配置、资源缓存、动效与唯一绘图实现
+    art/
+  windows/                # 系统方案、后台引擎、启动、安装与窗口协调
+  ui/                     # 主窗口、预览、工作线程与原生光标
+    pages/                # 外观、动效、测试、应用设置
+assets/cursors/            # 正式默认资源与保留的历史实验资源
+packaging/windows/         # 安装脚本、入口、图标、许可证与随包说明
+scripts/                   # 生成、构建、安装包验证和开发辅助
+  verify/                  # Windows 原生资源检查
+  windows/                 # 源码模式快捷入口
+requirements/              # 固定版本运行、构建及开发依赖
+tests/unit/, integration/  # 单元检查与显式隔离包验证
+web/cursor-test/            # 原网页，保留为开发辅助
+docs/                      # 使用、架构、设计和计划
+.github/workflows/          # DEV 构建及预览版发布
 ```
 
-本机备份、调试截图和运行记录集中在 `.local/`，构建输出位于 `build/`、`dist/`；这些目录不上传。模块职责、运行流程及路径规则见[架构说明](docs/architecture.md)。
+界面只调用应用层，系统修改集中在 Windows 层；预览和 CUR/ANI 共用绘图实现。个人数据、截图日志和构建输出留在 `.local/`、`build/`、`dist/`，不上传。详见[架构说明](docs/architecture.md)与[使用说明](docs/usage.txt)。
 
 ## 开发与验证
 
-在 Windows x64 和 Python 3.13 环境中：
+Windows x64、Python 3.13：
 
 ```powershell
 python -m venv .build-env
-.\.build-env\Scripts\python.exe -m pip install -r requirements/build.txt
+.\.build-env\Scripts\python.exe -m pip install -r requirements/dev.txt
 .\.build-env\Scripts\python.exe -m pip install --no-deps -e .
 .\.build-env\Scripts\python.exe -m unittest discover -s tests
-.\.build-env\Scripts\python.exe -m pointer --diagnose --quiet --report .local/reports/diagnostics.json
+.\.build-env\Scripts\python.exe -m pointer --gui
+.\.build-env\Scripts\python.exe -m pointer --diagnose --quiet
 ```
 
-源码命令统一使用 `python -m pointer`（或安装后的 `pointer` 命令）。`--apply` 启用并修改当前用户设置；`--stop` 停止自动切换；`--restore` 恢复原方案；`--test-page` 打开离线测试页。源码模式使用仓库资源，启用期间应保留仓库位置。
+单元测试禁止真实系统设置写入。打包集成检查需显式设置 `POINTER_PACKAGE_ROOT`，只使用临时安装/数据目录。源码 `--apply` 会修改当前用户光标，使用期间应保留仓库位置。
 
-本地网页测试服务：
+`--stop` 暂停效果，`--restore` 恢复最初光标，`--tilt`/`--shrink` 切换动效，`--test-page` 打开 APP 原生测试页。`--run` 仅启动后台，不加载 Qt。`--data-dir`、`--install-dir` 提供隔离路径。
 
-```powershell
-.\.build-env\Scripts\python.exe -m scripts.serve_test
-```
+原网页开发服务：`python -m scripts.serve_test`，访问 `http://127.0.0.1:9167/`。资源生成与原生检查见 [assets 说明](assets/README.md)。
 
-访问 `http://127.0.0.1:9167/`。绘图生成与原生验证工具需要额外安装 `requirements/dev.txt`，操作入口见 [assets 说明](assets/README.md)。
-
-点击动效测试区位于 `http://127.0.0.1:9167/#click-motion`，请分别检查箭头、小手、长按、松开和连续点击。网页计数表示事件已收到，光标外观由你手动判断。
-
-## 构建和发布
+## 构建与预览版发布
 
 ```powershell
 .\.build-env\Scripts\python.exe -m scripts.build_release
 ```
 
-输出 `dist/Pointer-v<版本>-windows-x64.zip` 和校验文件。包内资源仍按 `assets/`、`web/` 分类，个人数据不会打包。
+需要 Inno Setup 6 编译器，可用 `--compiler` 指定路径。没有编译器时，`--skip-installer` 仅构建开发 ZIP。构建环境隔离其他工具 DLL，保留 Qt Widgets 所需的平台插件、动态库和许可说明。
 
-更新 `VERSION` 后推送对应的 `v<版本>` 标签，[GitHub Actions](https://github.com/ReactionForge/Pointer/actions/workflows/release.yml) 会运行测试、构建和 EXE 诊断，再创建 Release。手动触发只生成构建产物。
+DEV 推送会运行测试、构建 EXE/ZIP、打包诊断、隔离安装升级卸载检查；成功后保存构建产物。对应版本标签发布预览版，标记 prerelease，不替换稳定版。压缩包和安装 EXE 都有 SHA-256 校验文件。发布包尚未代码签名。

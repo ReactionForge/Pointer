@@ -165,6 +165,10 @@ class TestPage(QWidget):
             area.setProperty('cursorRole',role if enabled else 'arrow')
             area.label.setText('加载测试进行中，离开这里即结束' if enabled else '点击上方按钮，再移动鼠标到这里')
 
+    def finish_busy(self):
+        self.set_wait(False)
+        self.button_release()
+
     def set_brightness(self,value):
         self.gray.setStyleSheet(f'background: rgb({value},{value},{value}); border-radius: 8px;')
         self.gray.label.setText(f'亮度 {value} / 255')

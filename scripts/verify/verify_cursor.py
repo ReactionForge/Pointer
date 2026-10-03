@@ -8,7 +8,7 @@ import json
 import sys
 import winreg
 
-from pointer.runtime_paths import ASSET_ROOT, PREVIEW_ROOT
+from pointer.paths import ASSET_ROOT, PREVIEW_ROOT
 
 ROOT = ASSET_ROOT / "reference"
 USER32 = ctypes.WinDLL("user32", use_last_error=True)

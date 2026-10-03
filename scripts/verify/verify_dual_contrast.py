@@ -5,12 +5,12 @@ import json
 
 from PIL import Image, ImageDraw, ImageFont
 
-from pointer.contrast_theme import ROLE_IDS, theme_paths, choose_theme
-from pointer.runtime_paths import ASSET_ROOT, DATA_ROOT, PREVIEW_ROOT
-from tools.generate.create_adaptive_cursors import RENDERERS
-from tools.generate.create_cursor import render_loading
-from tools.generate.create_dual_contrast import recolor
-from .verify_adaptive_cursors import native_render
+from pointer.cursor.theme import ROLE_IDS, theme_paths, choose_theme
+from pointer.paths import ASSET_ROOT, DATA_ROOT, PREVIEW_ROOT
+from pointer.cursor.art.catalog import RENDERERS
+from pointer.cursor.art.animation import render_loading
+from pointer.cursor.art.palette import recolor
+from .native_render import native_render
 from .verify_animation import frames
 from .verify_cursor import USER32, signature
 
@@ -108,7 +108,7 @@ def check_system(theme):
 if __name__ == "__main__":
     import sys
     if "--system" in sys.argv:
-        from pointer.adaptive_switcher import _set_dpi_awareness
+        from pointer.windows.engine import _set_dpi_awareness
         _set_dpi_awareness()
         state = json.loads((DATA_ROOT / "contrast-switcher-status.json").read_text(encoding="utf-8"))
         print(json.dumps(check_system(state["theme"])))

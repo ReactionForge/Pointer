@@ -7,7 +7,7 @@ import hashlib
 import json
 import sys
 from .verify_cursor import USER32, GDI32
-from pointer.runtime_paths import ASSET_ROOT
+from pointer.paths import ASSET_ROOT
 
 
 class BitmapInfoHeader(ctypes.Structure):

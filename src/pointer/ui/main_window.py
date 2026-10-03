@@ -127,6 +127,13 @@ class MainWindow(QMainWindow):
     def draft(self):
         return self._draft
 
+    def set_draft(self, settings):
+        self._draft = CursorSettings.from_dict(settings.to_dict())
+        self.sync()
+
+    def request_apply(self):
+        self.apply_draft()
+
     def change(self, **fields):
         if not hasattr(self,'preview'):
             return
