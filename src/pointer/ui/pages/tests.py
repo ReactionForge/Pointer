@@ -1,6 +1,29 @@
-from PySide6.QtCore import Qt, QEvent
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QPushButton, QSlider, QPlainTextEdit, QFrame
+from PySide6.QtCore import Qt, QEvent, QPointF
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
+    QLabel, QPushButton, QSlider, QPlainTextEdit, QFrame
+)
 from ..theme import card
+
+QT_CURSOR_MAP = {
+    'arrow': Qt.CursorShape.ArrowCursor,
+    'hand': Qt.CursorShape.PointingHandCursor,
+    'ibeam': Qt.CursorShape.IBeamCursor,
+    'help': Qt.CursorShape.WhatsThisCursor,
+    'busy': Qt.CursorShape.WaitCursor,
+    'working': Qt.CursorShape.BusyCursor,
+    'move': Qt.CursorShape.SizeAllCursor,
+    'ew': Qt.CursorShape.SizeHorCursor,
+    'ns': Qt.CursorShape.SizeVerCursor,
+    'nwse': Qt.CursorShape.SizeFDiagCursor,
+    'nesw': Qt.CursorShape.SizeBDiagCursor,
+    'crosshair': Qt.CursorShape.CrossCursor,
+    'no': Qt.CursorShape.ForbiddenCursor,
+    'pen': Qt.CursorShape.CrossCursor,
+    'up': Qt.CursorShape.UpArrowCursor,
+    'pin': Qt.CursorShape.PointingHandCursor,
+    'person': Qt.CursorShape.ArrowCursor,
+}
 
 
 class TestSurface(QFrame):
@@ -11,11 +34,21 @@ class TestSurface(QFrame):
         self.setProperty('cursorRole', role)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setMinimumHeight(100)
-        self.setStyleSheet('QFrame#'+name+' { background: '+('#202830' if dark else '#ffffff')+'; border: 1px solid #d6dfe6; border-radius: 8px; }')
-        self.label = QLabel('深色区域' if dark else '浅色区域', self)
-        self.label.move(14,13)
-        self.label.setStyleSheet('color: '+('#cbd4dd' if dark else '#71808e')+'; background: transparent;')
+
+        bg = '#0f172a' if dark else '#ffffff'
+        border = '#334155' if dark else '#e2e8f0'
+        self.setStyleSheet(f'QFrame#{name} {{ background: {bg}; border: 1.5px solid {border}; border-radius: 10px; }}')
+
+        self.label = QLabel('深色测试区域' if dark else '浅色测试区域', self)
+        self.label.move(16, 14)
+        text_color = '#e2e8f0' if dark else '#475569'
+        self.label.setStyleSheet(f'color: {text_color}; background: transparent; font-weight: 500; font-size: 12px;')
         self.label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.label.adjustSize()
+
+    def set_label_text(self, text):
+        self.label.setText(text)
+        self.label.adjustSize()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -26,13 +59,17 @@ class TestSurface(QFrame):
             if self.name == 'drag':
                 self.dragging = True
                 self.origin = event.position()
-                self.label.setText('拖动中')
+                self.set_label_text('✦ 正在拖动卡片 (Move 游标)')
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         if self.dragging:
             delta = event.position() - self.origin
-            self.label.move(max(8,min(self.width()-110,14+int(delta.x()))),max(8,min(self.height()-30,13+int(delta.y()))))
+            max_x = max(10, self.width() - self.label.width() - 10)
+            max_y = max(10, self.height() - self.label.height() - 10)
+            new_x = max(10, min(max_x, 16 + int(delta.x())))
+            new_y = max(10, min(max_y, 14 + int(delta.y())))
+            self.label.move(new_x, new_y)
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
@@ -44,6 +81,8 @@ class TestSurface(QFrame):
         self.page.down = False
         self.dragging = False
         self.page.update_counter()
+        if self.name == 'drag':
+            self.set_label_text('✥ 拖动这张卡片 (测试 Move 移动光标)')
 
     def event(self, event):
         if event.type() in (QEvent.Type.FocusOut, QEvent.Type.Hide, QEvent.Type.WindowDeactivate, QEvent.Type.UngrabMouse):
@@ -58,92 +97,211 @@ class TestPage(QWidget):
         super().__init__()
         self.application, self.down, self.presses = application, False, 0
         self.surfaces = {}
+
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0,0,0,0)
-        frame, inner = card('深浅背景适配', '移动真实鼠标跨过黑白交界，观察主体与边框切换。')
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(16)
+
+        # 1. Real-world Contrast & Grayscale
+        frame, inner = card('深浅背景跨界与灰度阶梯', '移动真实鼠标跨过黑白与灰度交界，观察自适应光标主体与边框的高清切换。')
         row = QHBoxLayout()
-        for name,dark in [('light-arrow',False),('dark-arrow',True)]:
-            area = TestSurface(self,name,dark=dark)
+        row.setSpacing(12)
+        for name, dark in [('light-arrow', False), ('dark-arrow', True)]:
+            area = TestSurface(self, name, dark=dark)
             self.surfaces[name] = area
             row.addWidget(area)
         inner.addLayout(row)
+
+        inner.addSpacing(4)
+        slider_row = QHBoxLayout()
+        slider_row.addWidget(QLabel('动态灰度调节：'))
         self.brightness = QSlider(Qt.Orientation.Horizontal)
-        self.brightness.setRange(0,255)
+        self.brightness.setRange(0, 255)
         self.brightness.setValue(128)
-        inner.addWidget(self.brightness)
-        self.gray = TestSurface(self,'brightness')
-        self.gray.setMinimumHeight(62)
-        inner.addWidget(self.gray)
         self.brightness.valueChanged.connect(self.set_brightness)
+        slider_row.addWidget(self.brightness)
+        inner.addLayout(slider_row)
+
+        self.gray = TestSurface(self, 'brightness')
+        self.gray.setMinimumHeight(64)
+        self.surfaces['brightness'] = self.gray
+        inner.addWidget(self.gray)
         self.set_brightness(128)
+
         shades = QHBoxLayout()
-        for level in (0,48,96,144,192,255):
-            block = QLabel(str(level))
+        shades.setSpacing(6)
+        for level in (0, 48, 96, 144, 192, 255):
+            block = QLabel(f'{level}')
             block.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            block.setMinimumHeight(36)
-            block.setProperty('cursorRole','arrow')
-            block.setStyleSheet(f'background: rgb({level},{level},{level}); color: '+('white' if level<128 else 'black')+'; border-radius: 3px;')
+            block.setMinimumHeight(34)
+            block.setProperty('cursorRole', 'arrow')
+            block.setStyleSheet(
+                f'background: rgb({level},{level},{level}); '
+                f'color: {"white" if level < 128 else "black"}; '
+                f'border-radius: 6px; font-weight: 500; font-size: 11px;'
+            )
             shades.addWidget(block)
         inner.addLayout(shades)
         layout.addWidget(frame)
-        frame, inner = card('左键、小手与拖动', '空白区域测试箭头；按住按钮测试小手；拖动卡片观察移动光标。')
+
+        # 2. Click, Hand & Dragging Playground
+        frame, inner = card('左键动效、手型与拖动游标', '点击空白区域测试动效手感；悬浮或按住按钮测试手型；拖拽卡片体验移动光标。')
         self.counter = QLabel()
+        self.counter.setStyleSheet('color: #115e59; background: #f0fdfa; border: 1px solid #ccfbf1; border-radius: 8px; padding: 8px 12px; font-weight: 600;')
         inner.addWidget(self.counter)
-        row = QHBoxLayout()
-        for dark in (False,True):
-            button = QPushButton('按住测试小手')
-            button.setProperty('cursorRole','hand')
+
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(12)
+        for dark in (False, True):
+            button = QPushButton('👆  浅色按住测试小手' if not dark else '👆  深色按住测试小手')
+            button.setProperty('cursorRole', 'hand')
+            button.setCursor(Qt.CursorShape.PointingHandCursor)
             if dark:
-                button.setStyleSheet('background: #202830; color: white; padding: 14px;')
+                button.setStyleSheet('background: #0f172a; color: #f8fafc; border: 1px solid #334155; padding: 12px; border-radius: 8px;')
+            else:
+                button.setStyleSheet('background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px;')
             button.pressed.connect(self.button_press)
             button.released.connect(self.button_release)
             button.installEventFilter(self)
-            row.addWidget(button)
-        inner.addLayout(row)
-        drag = TestSurface(self,'drag','move')
-        drag.label.setText('拖动这张卡片')
+            btn_row.addWidget(button)
+        inner.addLayout(btn_row)
+
+        drag = TestSurface(self, 'drag', 'move')
+        drag.set_label_text('✥ 拖动这张卡片 (测试 Move 移动光标)')
+        drag.setStyleSheet('QFrame#drag { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #ffffff, stop:1 #f8fafc); border: 2px dashed #94a3b8; border-radius: 12px; }')
         self.surfaces['drag'] = drag
         inner.addWidget(drag)
         layout.addWidget(frame)
-        frame, inner = card('文字输入与加载', '加载效果只作用于下面的测试区域；离开区域即结束。')
-        edit = QPlainTextEdit('在这里输入文字，检查 I 形光标。')
-        edit.setProperty('cursorRole','ibeam')
-        edit.viewport().setProperty('cursorRole','ibeam')
-        edit.setMaximumHeight(95)
-        inner.addWidget(edit)
-        row = QHBoxLayout()
-        for text,role in [('等待','busy'),('后台忙碌','working'),('结束加载','arrow')]:
-            button = QPushButton(text)
-            button.clicked.connect(lambda checked=False,role=role:self.set_wait(role != 'arrow',role))
-            row.addWidget(button)
-        inner.addLayout(row)
-        area = TestSurface(self,'wait')
-        area.label.setText('点击上方按钮，再移动鼠标到这里')
+
+        # 3. Real-world Code Editor & Busy Loading
+        frame, inner = card('代码编辑与系统等待加载', '在富代码编辑区测试 I-Beam 文字输入光标；在加载区测试旋转动画。')
+
+        # Code editor container
+        code_box = QFrame()
+        code_box.setStyleSheet('QFrame { background: #1e293b; border: 1px solid #334155; border-radius: 10px; }')
+        code_layout = QVBoxLayout(code_box)
+        code_layout.setContentsMargins(12, 10, 12, 10)
+        code_layout.setSpacing(6)
+
+        code_title = QLabel("<span style='color: #38bdf8;'>●</span> <span style='color: #94a3b8; font-size: 11px;'>demo.ts — Pointer Cursor Playground</span>")
+        code_layout.addWidget(code_title)
+
+        edit = QPlainTextEdit(
+            "// 在此处点击并输入文本，检验细腻的 I-Beam 光标\n"
+            "const pointer = new Pointer({\n"
+            "    theme: 'aurora-glass',\n"
+            "    motion: 'tilt',\n"
+            "    springStrength: 0.5\n"
+            "});\n"
+            "pointer.listen();"
+        )
+        edit.setProperty('cursorRole', 'ibeam')
+        edit.viewport().setProperty('cursorRole', 'ibeam')
+        edit.setStyleSheet('''
+            QPlainTextEdit {
+                background: #0f172a;
+                color: #e2e8f0;
+                font-family: "Consolas", "Courier New", monospace;
+                font-size: 12px;
+                border: 1px solid #334155;
+                border-radius: 6px;
+                padding: 10px;
+            }
+        ''')
+        edit.setMaximumHeight(130)
+        code_layout.addWidget(edit)
+        inner.addWidget(code_box)
+
+        # Wait state controls
+        load_row = QHBoxLayout()
+        load_row.setSpacing(10)
+        for text, role in [('⏳  等待 (Wait)', 'busy'), ('⚙️  后台运行 (AppStarting)', 'working'), ('✅  结束加载', 'arrow')]:
+            btn = QPushButton(text)
+            btn.clicked.connect(lambda checked=False, role=role: self.set_wait(role != 'arrow', role))
+            load_row.addWidget(btn)
+        inner.addLayout(load_row)
+
+        area = TestSurface(self, 'wait')
+        area.set_label_text('点击上方按钮，再将鼠标移入此处观察加载动画')
+        area.setStyleSheet('QFrame#wait { background: #f0fdfa; border: 1.5px solid #99f6e4; border-radius: 10px; }')
         self.surfaces['wait'] = area
         inner.addWidget(area)
         layout.addWidget(frame)
-        frame, inner = card('其他光标角色', '移动到每个区域，检查对应的系统光标。')
+
+        # 4. All 17 System Cursor Roles Matrix
+        frame, inner = card('全部 17 种 Windows 系统光标矩阵', '移动鼠标至各个卡片，即刻调用对应原生系统光标进行实时检验。')
         grid = QGridLayout()
-        for index,(text,role) in enumerate([('禁止','no'),('移动','move'),('水平缩放','ew'),('垂直缩放','ns'),('对角缩放 ↘','nwse'),('对角缩放 ↗','nesw'),('精确选择','crosshair'),('帮助','help'),('手写','pen'),('向上','up'),('位置','pin'),('人物','person')]):
-            label = QLabel(text)
-            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            label.setProperty('cursorRole',role)
-            label.setMinimumHeight(54)
-            label.setStyleSheet('background: #f3f5f7; border-radius: 5px;')
-            grid.addWidget(label,index//3,index%3)
+        grid.setSpacing(10)
+
+        all_roles = [
+            ('🎯  普通箭头', 'arrow', 'Arrow 默认指针'),
+            ('👆  链接手型', 'hand', 'Hand 悬浮指针'),
+            ('📝  文本选择', 'ibeam', 'IBeam 文字插入'),
+            ('❓  帮助选择', 'help', 'Help 问号指针'),
+            ('⏳  等待沙漏', 'busy', 'Wait 忙碌等待'),
+            ('⚙️  后台运行', 'working', 'AppStarting 运行'),
+            ('✥  四向移动', 'move', 'SizeAll 拖拽移动'),
+            ('↔  水平缩放', 'ew', 'SizeWE 左右调整'),
+            ('↕  垂直缩放', 'ns', 'SizeNS 上下调整'),
+            ('↘  对角缩放', 'nwse', 'SizeNWSE 倾斜 1'),
+            ('↗  对角缩放', 'nesw', 'SizeNESW 倾斜 2'),
+            ('➕  精确十字', 'crosshair', 'Crosshair 定位'),
+            ('🚫  禁止操作', 'no', 'No 无效操作'),
+            ('✍️  手写输入', 'pen', 'NWPen 批注触控'),
+            ('⬆  向上候选', 'up', 'UpArrow 坚立箭头'),
+            ('📍  位置定位', 'pin', 'Pin 空间图钉'),
+            ('👤  人物选择', 'person', 'Person 人员'),
+        ]
+
+        for index, (text, role, desc) in enumerate(all_roles):
+            tile = QFrame()
+            tile.setProperty('cursorRole', role)
+            tile.setCursor(QT_CURSOR_MAP.get(role, Qt.CursorShape.ArrowCursor))
+            tile.setMinimumHeight(56)
+            tile.setStyleSheet('''
+                QFrame {
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    padding: 6px 10px;
+                }
+                QFrame:hover {
+                    background: #f0fdfa;
+                    border-color: #2cb6ad;
+                }
+            ''')
+            tile_layout = QVBoxLayout(tile)
+            tile_layout.setContentsMargins(6, 6, 6, 6)
+            tile_layout.setSpacing(2)
+
+            t_lbl = QLabel(f"<b>{text}</b>")
+            t_lbl.setProperty('cursorRole', role)
+            t_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+
+            d_lbl = QLabel(desc)
+            d_lbl.setProperty('cursorRole', role)
+            d_lbl.setStyleSheet('color: #64748b; font-size: 11px;')
+            d_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+
+            tile_layout.addWidget(t_lbl)
+            tile_layout.addWidget(d_lbl)
+            grid.addWidget(tile, index // 3, index % 3)
+
         inner.addLayout(grid)
         layout.addWidget(frame)
+
         self.update_counter()
 
-    def scenario(self,name):
+    def scenario(self, name):
         return self.surfaces[name]
 
     def click_state(self):
-        return {'down':self.down,'presses':self.presses}
+        return {'down': self.down, 'presses': self.presses}
 
     def update_counter(self):
-        if hasattr(self,'counter'):
-            self.counter.setText(f'左键：{"按下" if self.down else "松开"}    按下次数：{self.presses}')
+        if hasattr(self, 'counter'):
+            state_text = '● 按下' if self.down else '○ 松开'
+            self.counter.setText(f'鼠标手感监测：当前状态 {state_text}    |    累计点击次数：{self.presses} 次')
 
     def button_press(self):
         self.down = True
@@ -154,22 +312,22 @@ class TestPage(QWidget):
         self.down = False
         self.update_counter()
 
-    def eventFilter(self,watched,event):
-        if event.type() in (QEvent.Type.FocusOut,QEvent.Type.Hide,QEvent.Type.WindowDeactivate,QEvent.Type.UngrabMouse):
+    def eventFilter(self, watched, event):
+        if event.type() in (QEvent.Type.FocusOut, QEvent.Type.Hide, QEvent.Type.WindowDeactivate, QEvent.Type.UngrabMouse):
             self.button_release()
         return False
 
-    def set_wait(self,enabled,role='busy'):
+    def set_wait(self, enabled, role='busy'):
         if 'wait' in self.surfaces:
             area = self.surfaces['wait']
-            area.setProperty('cursorRole',role if enabled else 'arrow')
-            area.label.setText('加载测试进行中，离开这里即结束' if enabled else '点击上方按钮，再移动鼠标到这里')
+            area.setProperty('cursorRole', role if enabled else 'arrow')
+            area.set_label_text('⏳ 加载动效测试进行中，移出该区域即自动结束' if enabled else '点击上方按钮，再将鼠标移入此处观察加载动画')
 
     def finish_busy(self):
         self.set_wait(False)
         self.button_release()
 
-    def set_brightness(self,value):
+    def set_brightness(self, value):
         self.gray.setStyleSheet(f'background: rgb({value},{value},{value}); border-radius: 8px;')
-        self.gray.label.setText(f'亮度 {value} / 255')
-        self.gray.label.setStyleSheet('color: '+('white' if value<128 else 'black')+'; background: transparent;')
+        self.gray.set_label_text(f'材质亮度 {value} / 255')
+        self.gray.label.setStyleSheet('color: ' + ('white' if value < 128 else 'black') + '; background: transparent; font-weight: 500;')
