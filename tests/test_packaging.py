@@ -16,6 +16,54 @@ from pointer import app
 
 
 class PackageTests(unittest.TestCase):
+    def test_reapplying_preserves_startup_registration(self):
+        with tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
+            stack.enter_context(patch.object(config, "BACKUP", Path(folder) / "absent.json"))
+            stack.enter_context(patch.object(app.switcher, "STARTUP_BACKUP", Path(folder) / "absent-startup.json"))
+            stack.enter_context(patch.object(app, "_snapshot", return_value={}))
+            stack.enter_context(patch.object(app, "_run_value", return_value=None))
+            stop = stack.enter_context(patch.object(app.switcher, "stop"))
+            stop_directory = stack.enter_context(patch.object(app.switcher, "stop_directory"))
+            stack.enter_context(patch.object(config, "apply"))
+            stack.enter_context(patch.object(app.switcher, "enable_startup"))
+            stack.enter_context(patch.object(app.switcher, "start", return_value={"running": True, "pid": 123}))
+            self.assertTrue(app.apply_theme()["startup_enabled"])
+            stop.assert_not_called()
+            stop_directory.assert_called_once_with(app.ROOT)
+
+    def test_identical_startup_entry_is_never_rewritten(self):
+        with tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
+            startup = Path(folder) / "startup.json"
+            startup.write_bytes(b'{"previous": null, "installed_command": "unchanged"}')
+            original = startup.read_bytes()
+            stack.enter_context(patch.object(app.switcher, "STARTUP_BACKUP", startup))
+            stack.enter_context(patch.object(app.switcher, "_startup_command", return_value="unchanged"))
+            stack.enter_context(patch.object(app.winreg, "CreateKeyEx"))
+            stack.enter_context(patch.object(app.winreg, "QueryValueEx", return_value=("unchanged", app.winreg.REG_SZ)))
+            write = stack.enter_context(patch.object(app.winreg, "SetValueEx"))
+            backup = stack.enter_context(patch.object(app.switcher, "_atomic_json"))
+            for _ in range(5):
+                self.assertFalse(app.switcher.enable_startup()["changed"])
+            write.assert_not_called()
+            backup.assert_not_called()
+            self.assertEqual(startup.read_bytes(), original)
+
+    def test_startup_upgrade_keeps_original_backup(self):
+        with tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
+            startup = Path(folder) / "startup.json"
+            startup.write_text(json.dumps({"value_name": app.switcher.RUN_VALUE,
+                                          "previous": None, "installed_command": "old path"}))
+            stack.enter_context(patch.object(app.switcher, "STARTUP_BACKUP", startup))
+            stack.enter_context(patch.object(app.switcher, "_startup_command", return_value="new path"))
+            stack.enter_context(patch.object(app.winreg, "CreateKeyEx"))
+            stack.enter_context(patch.object(app.winreg, "QueryValueEx", return_value=("old path", app.winreg.REG_SZ)))
+            write = stack.enter_context(patch.object(app.winreg, "SetValueEx"))
+            self.assertTrue(app.switcher.enable_startup()["changed"])
+            write.assert_called_once()
+            data = json.loads(startup.read_text())
+            self.assertIsNone(data["previous"])
+            self.assertEqual(data["installed_command"], "new path")
+
     def test_upgrade_cleanup_preserves_changed_and_unowned_files(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
@@ -116,7 +164,6 @@ class PackageTests(unittest.TestCase):
             before = {"cursor_values": {}, "previous_named_scheme": None}
             stack.enter_context(patch.object(app, "_snapshot", return_value=before))
             stack.enter_context(patch.object(app, "_run_value", return_value=None))
-            stack.enter_context(patch.object(app.switcher, "stop"))
             stack.enter_context(patch.object(app.switcher, "stop_directory"))
             stack.enter_context(patch.object(config, "apply"))
             stack.enter_context(patch.object(app.switcher, "enable_startup", side_effect=lambda: startup.write_bytes(b"changed")))

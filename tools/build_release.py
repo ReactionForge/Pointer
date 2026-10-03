@@ -22,7 +22,24 @@ def main():
         raise ValueError("Use a semantic version, for example 1.0.0")
     if args.version != (ROOT / "VERSION").read_text().strip():
         raise ValueError("Update VERSION before building a different version")
+    version_file = ROOT / "build" / "version-info.txt"
+    version_file.parent.mkdir(exist_ok=True)
+    version_tuple = tuple(int(part) for part in args.version.split(".")) + (0,)
+    version_file.write_text(f"""VSVersionInfo(
+  ffi=FixedFileInfo(filevers={version_tuple!r}, prodvers={version_tuple!r},
+    mask=0x3f, flags=0, OS=0x40004, fileType=0x1, subtype=0, date=(0, 0)),
+  kids=[StringFileInfo([StringTable('040904B0', [
+    StringStruct('CompanyName', 'ReactionForge'),
+    StringStruct('FileDescription', 'Pointer Adaptive Cursor'),
+    StringStruct('FileVersion', '{args.version}'),
+    StringStruct('InternalName', 'Pointer'),
+    StringStruct('OriginalFilename', 'Pointer.exe'),
+    StringStruct('ProductName', 'Pointer'),
+    StringStruct('ProductVersion', '{args.version}')])]),
+    VarFileInfo([VarStruct('Translation', [1033, 1200])])])
+""", encoding="utf-8")
     subprocess.run([sys.executable, "-m", "PyInstaller", "--noconfirm", "--windowed", "--onedir",
+                    "--version-file", str(version_file),
                     "--name", "Pointer", "--distpath", str(ROOT / "dist"),
                     "--workpath", str(ROOT / "build"), "--specpath", str(ROOT / "build"),
                     "--paths", str(ROOT / "src"),

@@ -7,7 +7,7 @@ import json
 import os
 import sys
 import winreg
-from .runtime_paths import ASSET_ROOT, DATA_ROOT
+from .runtime_paths import ASSET_ROOT, DATA_ROOT, ROOT
 
 REFERENCE_ROOT = ASSET_ROOT / "reference"
 CURSOR = REFERENCE_ROOT / "reference-black-arrow.cur"
@@ -178,8 +178,8 @@ def restore():
 
 
 if __name__ == "__main__":
-    from .adaptive_switcher import stop, enable_startup, disable_startup, start
-    stop()
+    from .adaptive_switcher import stop_directory, enable_startup, disable_startup, start
+    stop_directory(ROOT)
     if "--restore" in sys.argv:
         disable_startup()
         restore()

@@ -403,7 +403,7 @@ def _startup_command():
 
 
 def enable_startup():
-    """Install only this helper's Run value, preserving any previous value."""
+    """Write the Run value only when it changes, preserving any previous value."""
     command = _startup_command()
     with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_QUERY_VALUE | winreg.KEY_SET_VALUE) as key:
         backup = json.loads(STARTUP_BACKUP.read_text(encoding="utf-8")) if STARTUP_BACKUP.exists() else None
@@ -412,13 +412,16 @@ def enable_startup():
             previous = {"value": base64.b64encode(value).decode("ascii") if isinstance(value, bytes) else value,
                         "type": kind, "binary": isinstance(value, bytes)}
         except FileNotFoundError:
-            value, previous = None, None
+            value, kind, previous = None, None, None
+        # Rewriting an identical value can prompt startup protection again.
+        if value == command and kind == winreg.REG_SZ:
+            return {"startup_enabled": True, "value_name": RUN_VALUE, "changed": False}
         if not backup or value != backup.get("installed_command"):
             backup = {"value_name": RUN_VALUE, "previous": previous}
         backup["installed_command"] = command
         _atomic_json(STARTUP_BACKUP, backup)
         winreg.SetValueEx(key, RUN_VALUE, 0, winreg.REG_SZ, command)
-    return {"startup_enabled": True, "value_name": RUN_VALUE}
+    return {"startup_enabled": True, "value_name": RUN_VALUE, "changed": True}
 
 
 def disable_startup():

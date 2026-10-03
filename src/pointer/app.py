@@ -87,7 +87,8 @@ def apply_theme():
     if config.BACKUP.exists():
         config.validate_backup(json.loads(config.BACKUP.read_text(encoding="utf-8")))
     try:
-        switcher.stop()
+        # Restart the helper without deleting and recreating its approved Run entry.
+        switcher.stop_directory(ROOT)
         config.apply(dual=True)
         switcher.enable_startup()
         state = switcher.start()
@@ -100,6 +101,8 @@ def apply_theme():
             except Exception as recovery_error:
                 recovery_errors.append(str(recovery_error))
         def restore_run():
+            if _run_value() == run_before:
+                return
             with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, switcher.RUN_KEY,
                                    0, winreg.KEY_SET_VALUE) as key:
                 config.restore_value(key, switcher.RUN_VALUE, run_before)
