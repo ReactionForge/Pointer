@@ -4,6 +4,7 @@
 | --- | --- | --- |
 | `cursors/adaptive/light` | 浅底黑主体、白边框 | 是 |
 | `cursors/adaptive/dark` | 深底白主体、黑边框 | 是 |
+| `cursors/adaptive/click/light`、`dark` | 箭头和小手的 4 档缩小帧，共 16 个文件 | 是 |
 | `cursors/reference` | 固定黑主体、灰白边框 | 是 |
 | `cursors/legacy-invert` | 历史原生反色实验 | 否 |
 
@@ -17,6 +18,7 @@
 .\.build-env\Scripts\python.exe -m tools.generate.create_hand_cursor
 .\.build-env\Scripts\python.exe -m tools.generate.create_extra_cursors
 .\.build-env\Scripts\python.exe -m tools.generate.create_dual_contrast
+.\.build-env\Scripts\python.exe -m tools.generate.create_click_cursors
 .\.build-env\Scripts\python.exe -m tools.verify.verify_dual_contrast
 ```
 

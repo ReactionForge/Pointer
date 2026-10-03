@@ -92,6 +92,7 @@ class PackageTests(unittest.TestCase):
             result = json.loads(report.read_text(encoding="utf-8"))
             self.assertEqual(result["cursor_resources"], 34)
             self.assertEqual(result["animated_resources"], 4)
+            self.assertEqual(result["click_resources"], 16)
 
     def test_installed_data_survives_host_appdata_redirection(self):
         with tempfile.TemporaryDirectory() as folder:

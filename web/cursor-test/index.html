@@ -21,6 +21,7 @@
     @media(max-width:430px){.brand small{display:none}.nav a:last-child{display:none}.card-top{padding:12px 10px;flex-wrap:wrap}.card-footer{align-items:flex-start;flex-direction:column;gap:8px}.verdict-buttons{width:100%}.verdict-buttons button{flex:1}.test-surface{margin:0 8px}.toolbar-inner{flex-direction:column;align-items:stretch}.controls{justify-content:space-between}.segmented{order:0}.hero h1{font-size:33px}}
     @media(max-width:430px){.nav a:nth-child(3){display:none}}
     @media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}*{transition:none!important}}
+    .click-pad{height:210px;border-radius:7px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;user-select:none;touch-action:none;cursor:default;background:#fff;color:#080808;border:1px solid #747474}.click-pad.dark{background:#080808;color:#fff}.click-pad .click-caption{pointer-events:none;font-size:14px;line-height:1.8}.click-pad button{align-self:flex-start;background:transparent;color:inherit;border:1px solid currentColor;border-radius:6px;padding:12px 18px;cursor:pointer}.click-pad button:focus-visible{outline-color:currentColor}.click-pad output{font-size:12px;pointer-events:none}.click-pad[data-down="true"] output{font-weight:650}
   </style>
 </head>
 <body data-background="split">
@@ -30,7 +31,7 @@
         <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 3Q1.5 1.8 3.1 6.1L11.1 26Q12.4 29.6 14 26L17.2 18.4Q17.8 16.8 19.3 16.2L26.2 13.7Q29.8 11.8 26.4 10.5Z" fill="#080808" stroke="#d0d2d5" stroke-width="3" stroke-linejoin="round"/></svg>
         <span class="brand-name">光标试验台<small>POINTER / LOCAL</small></span>
       </a>
-      <nav class="nav" aria-label="页面导航"><a href="#adaptive">深浅自适应</a><a href="#system">系统状态</a><a href="#practice">交互演练</a><a href="#image-test">图片拖动</a></nav>
+      <nav class="nav" aria-label="页面导航"><a href="#adaptive">深浅自适应</a><a href="#click-motion">点击动效</a><a href="#system">系统状态</a><a href="#practice">交互演练</a><a href="#image-test">图片拖动</a></nav>
     </div>
   </header>
   <main id="top" class="wrap">
@@ -55,6 +56,22 @@
       </div>
       <div class="adaptive-note"><span>↔</span><p><strong>请用眼睛判断：</strong>本地后台程序根据光标所在区域的背景亮度切换配色；亮度在 112–144 的中灰区间内保留当前配色，避免来回切换。这里调用系统普通箭头，颜色按整只光标切换。上方“测试背景”开关不改变这些对照色块，测试结果由你手动判断。</p></div>
     </section>
+    <section id="click-motion" class="section" aria-labelledby="click-motion-title">
+      <div class="section-head"><div><h2 id="click-motion-title">左键 · 按压回弹</h2><p>在空白处测试箭头，在按钮上测试小手。按住看缩小，松开看回弹，再试快速连点。</p></div></div>
+      <div class="adaptive-grid">
+        <div class="click-pad" data-click-pad="light" data-adaptive-test="按压回弹 · 浅色背景" tabindex="0" aria-label="浅色背景点击动效测试区">
+          <span class="click-caption">浅色背景<br>黑色主体 · 白色边框</span>
+          <button type="button" aria-label="浅色背景小手点击测试">在这里测试小手</button>
+          <output aria-live="polite">等待左键按下 · 0 次</output>
+        </div>
+        <div class="click-pad dark" data-click-pad="dark" data-adaptive-test="按压回弹 · 深色背景" tabindex="0" aria-label="深色背景点击动效测试区">
+          <span class="click-caption">深色背景<br>白色主体 · 黑色边框</span>
+          <button type="button" aria-label="深色背景小手点击测试">在这里测试小手</button>
+          <output aria-live="polite">等待左键按下 · 0 次</output>
+        </div>
+      </div>
+      <div class="help-note">请观察系统光标本身：按下约缩小 10%，长按保持缩小，松开约 150 毫秒回弹。尖端应留在同一点击位置。计数只表示网页收到了左键事件，动效外观需要你手动判断。</div>
+    </section>
     <section id="system" class="section" aria-labelledby="system-title"><div class="section-head"><div><h2 id="system-title">系统光标 · 逐项检查</h2><p>把鼠标停在卡片的色块上，观察形状、描边和动画，再点击“正常”或“需检查”。</p></div><span class="section-tag">SYSTEM / 13 STATES</span></div><div id="cursor-grid" class="grid"></div><div class="help-note"><strong>观察重点：</strong>浅色背景上应为纯黑主体、纯白描边，深色背景上应为纯白主体、纯黑描边；加载圆环应持续旋转，17 种系统光标都没有蓝色光晕。</div></section>
     <section id="practice" class="section" aria-labelledby="practice-title"><div class="section-head"><div><h2 id="practice-title">交互演练 · 真的动手试</h2><p>检查输入、点击落点、拖动和调整大小时，光标是否切换自然。</p></div><span class="section-tag">INPUT / CLICK / DRAG</span></div><div class="practice-grid">
       <article class="practice"><h3>输入与文字选择</h3><p>点击输入框写几个字，再按住鼠标拖选文字。输入区应显示 I 形光标。</p><label for="text-test" class="visually-hidden">文字输入测试</label><textarea id="text-test" class="text-input" data-test="text" spellcheck="false">浅底黑主体白边，深底白主体黑边。
@@ -69,6 +86,28 @@
   <script>
     (() => {
       'use strict';
+      document.querySelectorAll('[data-click-pad]').forEach(pad => {
+        let count = 0, activePointer = null;
+        const output = pad.querySelector('output');
+        function release(event) {
+          if (activePointer === null || (event && event.pointerId !== activePointer)) return;
+          activePointer = null;
+          pad.dataset.down = 'false';
+          output.textContent = `已松开 · ${count} 次`;
+        }
+        pad.addEventListener('pointerdown', event => {
+          if (event.button !== 0 || event.pointerType !== 'mouse' || activePointer !== null) return;
+          activePointer = event.pointerId;
+          const captureTarget = event.target.closest('button') || pad;
+          captureTarget.setPointerCapture(event.pointerId);
+          pad.dataset.down = 'true';
+          output.textContent = `左键按住 · ${++count} 次`;
+        });
+        pad.addEventListener('pointerup', release);
+        pad.addEventListener('pointercancel', release);
+        pad.addEventListener('lostpointercapture', release);
+        window.addEventListener('blur', () => release());
+      });
       const tests = [
         {id:'default',title:'普通选择',hint:'观察圆角箭头切换黑白配色',icon:'M8 5L27 12L18 17L13 28Z'},
         {id:'text',title:'文字选择',hint:'观察 I 形光标',icon:'M11 6H23M17 6V28M11 28H23'},

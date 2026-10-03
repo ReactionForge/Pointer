@@ -28,7 +28,8 @@ CURSOR_KEY = r"Control Panel\Cursors"
 WAIT_OBJECT_0, WAIT_ABANDONED, WAIT_TIMEOUT = 0, 0x80, 0x102
 SYNCHRONIZE, MUTEX_MODIFY_STATE, EVENT_MODIFY_STATE = 0x100000, 1, 2
 IMAGE_CURSOR, LR_LOADFROMFILE, LR_DEFAULTSIZE = 2, 0x10, 0x40
-PERIOD, STABLE_SECONDS, MIN_SWITCH_SECONDS = 0.05, 0.1, 0.2
+PERIOD, BACKGROUND_PERIOD = 1 / 120, .05
+STABLE_SECONDS, MIN_SWITCH_SECONDS = .1, .2
 
 USER32 = ctypes.WinDLL("user32", use_last_error=True)
 GDI32 = ctypes.WinDLL("gdi32", use_last_error=True)
@@ -70,6 +71,7 @@ _signature(KERNEL32, "WaitForSingleObject", [wintypes.HANDLE, wintypes.DWORD], w
 _signature(KERNEL32, "CloseHandle", [wintypes.HANDLE], wintypes.BOOL)
 _signature(USER32, "GetCursorPos", [ctypes.POINTER(POINT)], wintypes.BOOL)
 _signature(USER32, "GetCursorInfo", [ctypes.POINTER(CURSORINFO)], wintypes.BOOL)
+_signature(USER32, "GetAsyncKeyState", [ctypes.c_int], ctypes.c_short)
 _signature(USER32, "GetSystemMetrics", [ctypes.c_int], ctypes.c_int)
 _signature(USER32, "GetDC", [wintypes.HWND], wintypes.HDC)
 _signature(USER32, "ReleaseDC", [wintypes.HWND, wintypes.HDC], ctypes.c_int)
@@ -265,7 +267,7 @@ def _run():
     if ctypes.get_last_error() == 183:
         KERNEL32.CloseHandle(mutex)
         return
-    event, cache, scheme_name = None, None, None
+    event, cache, click_cache, scheme_name = None, None, None, None
     state = {"pid": os.getpid(), "running": False, "theme": None, "switches": 0, "last_error": None}
     last_written = None
 
@@ -276,7 +278,8 @@ def _run():
             last_written = dict(state)
 
     try:
-        from .contrast_theme import THEME_NAME, ROLE_IDS, choose_theme, theme_paths
+        from .contrast_theme import THEME_NAME, ROLE_IDS, choose_theme, theme_paths, click_paths
+        from .click_motion import ClickMotion
         scheme_name = THEME_NAME
         event = KERNEL32.CreateEventW(None, True, False, EVENT_NAME)
         if not event:
@@ -287,32 +290,51 @@ def _run():
             raise _SchemeChanged()
         _set_dpi_awareness()
         cache = _CursorCache({theme: theme_paths(theme) for theme in ("light", "dark")})
-        state.update(running=True, theme=_initial_theme(), animation_copy=cache.notes)
+        click_cache = _CursorCache({f"{theme}:{frame}": click_paths(theme, frame)
+                                    for theme in ("light", "dark") for frame in range(5)})
+        motion = ClickMotion()
+        click_roles = {role: ROLE_IDS[role] for role in ("Arrow", "Hand")}
+        applied_click = None
+        state.update(running=True, theme=_initial_theme(), animation_copy=cache.notes,
+                     click_motion=True, click_presses=0)
         publish()
         candidate, candidate_since, last_switch = None, 0, -float("inf")
-        next_tick = time.monotonic()
+        next_tick = next_background = time.monotonic()
         while True:
             if KERNEL32.WaitForSingleObject(event, 0) == WAIT_OBJECT_0:
                 state["shutdown_reason"] = "stop_requested"
                 break
-            if _scheme_name() != scheme_name:
-                raise _SchemeChanged()
-            luminance = _sample_luminance()
             now = time.monotonic()
-            if luminance is None:
-                candidate = None
-            else:
-                requested = choose_theme(luminance, state["theme"])
-                if requested == state["theme"]:
+            # Button polling stays responsive; expensive pixel sampling stays at 20 Hz.
+            if now >= next_background:
+                next_background = now + BACKGROUND_PERIOD
+                if _scheme_name() != scheme_name:
+                    raise _SchemeChanged()
+                luminance = _sample_luminance()
+                if luminance is None:
                     candidate = None
-                elif requested != candidate:
-                    candidate, candidate_since = requested, now
-                elif now - candidate_since >= STABLE_SECONDS and now - last_switch >= MIN_SWITCH_SECONDS:
-                    cache.apply(requested, ROLE_IDS, scheme_name)
-                    state["theme"] = requested
-                    state["switches"] += 1
-                    last_switch, candidate = time.monotonic(), None
-                    publish()
+                else:
+                    requested = choose_theme(luminance, state["theme"])
+                    if requested == state["theme"]:
+                        candidate = None
+                    elif requested != candidate:
+                        candidate, candidate_since = requested, now
+                    elif now - candidate_since >= STABLE_SECONDS and now - last_switch >= MIN_SWITCH_SECONDS:
+                        cache.apply(requested, ROLE_IDS, scheme_name)
+                        state["theme"] = requested
+                        state["switches"] += 1
+                        last_switch, candidate = time.monotonic(), None
+                        applied_click = None
+                        publish()
+            # Use the reliable current-down bit, never the shared "recently pressed" bit.
+            frame = motion.update(bool(USER32.GetAsyncKeyState(1) & 0x8000), now)
+            click_key = f'{state["theme"]}:{frame}'
+            if state["theme"] and click_key != applied_click:
+                click_cache.apply(click_key, click_roles, scheme_name)
+                applied_click = click_key
+            if motion.presses != state["click_presses"]:
+                state["click_presses"] = motion.presses
+                publish()
             next_tick += PERIOD
             if next_tick < time.monotonic():
                 next_tick = time.monotonic()
@@ -334,6 +356,8 @@ def _run():
             state["last_error"] = "; ".join(filter(None, (state["last_error"], recovery)))
         if cache:
             cache.close()
+        if click_cache:
+            click_cache.close()
         state["running"] = False
         try:
             publish()

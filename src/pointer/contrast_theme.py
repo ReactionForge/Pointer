@@ -29,3 +29,13 @@ def choose_theme(luminance, current=None):
     if current == "dark":
         return "light" if luminance > 144 else "dark"
     return "light" if luminance >= 128 else "dark"
+
+
+def click_paths(theme, frame):
+    normal = theme_paths(theme)
+    if frame not in range(5):
+        raise ValueError(frame)
+    if frame == 0:
+        return {role: normal[role] for role in ("Arrow", "Hand")}
+    return {role: ASSET_ROOT / "adaptive" / "click" / theme / f"{role.lower()}-{frame}.cur"
+            for role in ("Arrow", "Hand")}

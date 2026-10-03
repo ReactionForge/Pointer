@@ -13,6 +13,7 @@
 | `src/pointer/app.py` | 安装、停止、恢复、诊断与控制入口；下载目录中的按钮转交安装版 |
 | `src/pointer/configure_cursor.py` | 光标注册表配置、原始备份校验、Windows 重新加载与恢复 |
 | `src/pointer/adaptive_switcher.py` | 亮度采样、配色切换、动画载入、单实例和登录启动 |
+| `src/pointer/click_motion.py` | 左键边沿、长按和 150 毫秒回弹的纯时间状态机 |
 | `src/pointer/contrast_theme.py` | 17 个系统角色、资源名称和切换阈值 |
 | `src/pointer/runtime_paths.py` | 源码、安装资源和持久数据路径的统一定义 |
 | `src/pointer/__main__.py` | Python 模块命令入口 |
@@ -39,6 +40,8 @@
 | 本地开发 | 工具生成公开资源或预览 | `.local/reports/`、`.local/archive/` |
 
 安装版保持资源目录与备份目录分离，升级不会覆盖原始备份。Windows 商店宿主可能重定向 AppData；程序使用解析后的安装路径及相邻数据目录，保证登录启动时仍读取同一份备份。
+
+DEV 点击动效只替换 Arrow 和 Hand。后台约每 8 毫秒读取左键当前按下状态，背景采样仍约每 50 毫秒一次。4 档缩小帧预加载到缓存，点击期间不读文件、不改启动项；配色切换后立即重新应用当前按压帧。所有帧围绕原热点缩放，加载 ANI 不参与按压动画。
 
 源代码、正式资源、测试和说明进入 Git；`.local`、虚拟环境、`build`、`dist`、缓存和个人备份由 `.gitignore` 排除。重组目录和发布使用普通提交，保留 Git 历史。
 

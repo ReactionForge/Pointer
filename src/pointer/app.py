@@ -20,7 +20,7 @@ import winreg
 
 from . import adaptive_switcher as switcher
 from . import configure_cursor as config
-from .contrast_theme import THEME_NAME, theme_paths
+from .contrast_theme import THEME_NAME, theme_paths, click_paths
 from .runtime_paths import DATA_ROOT, FROZEN, INSTALL_ROOT, ROOT, WEB_ROOT
 
 
@@ -59,7 +59,15 @@ def diagnose():
                 count += 1
             finally:
                 switcher.USER32.DestroyCursor(cursor)
+    click_count = 0
+    for theme in ("light", "dark"):
+        for frame in range(1, 5):
+            for path in click_paths(theme, frame).values():
+                cursor = switcher._CursorCache._load(path)
+                switcher.USER32.DestroyCursor(cursor)
+                click_count += 1
     return {"cursor_resources": count, "animated_resources": animated,
+            "click_resources": click_count,
             "package_files": len(files), "frozen": FROZEN}
 
 
