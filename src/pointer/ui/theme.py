@@ -73,9 +73,9 @@ QMainWindow {
 #navCapsule QPushButton {
     color: #94a3b8;
     background-color: transparent;
-    border: none;
+    border: 1.5px solid transparent;
     border-radius: 16px;
-    padding: 7px 16px;
+    padding: 6px 15px;
     font-size: 12.5px;
     font-weight: 600;
     text-align: center;
@@ -88,7 +88,7 @@ QMainWindow {
 
 #navCapsule QPushButton:checked {
     color: #ffffff;
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgba(20, 184, 166, 0.32), stop:1 rgba(44, 182, 173, 0.22));
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgba(20, 184, 166, 0.35), stop:1 rgba(44, 182, 173, 0.22));
     border: 1.5px solid #2cb6ad;
     font-weight: 700;
 }

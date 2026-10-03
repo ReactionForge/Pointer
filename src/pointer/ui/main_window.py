@@ -96,7 +96,7 @@ class ToastWidget(QFrame):
             self.adjustSize()
             pw = self.parent().width()
             ph = self.parent().height()
-            w = max(300, min(self.sizeHint().width() + 32, pw - 40))
+            w = min(max(260, self.sizeHint().width() + 32), max(60, pw - 40))
             h = max(42, self.sizeHint().height())
             cx = max(10, (pw - w) // 2)
             cy = max(10, ph - h - 80)
@@ -150,7 +150,7 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QIcon(str(self.icon_path)))
 
         self.resize(1180, 800)
-        self.setMinimumSize(920, 680)
+        self.setMinimumSize(880, 620)
         self.setStyleSheet(STYLE)
 
         root = QWidget()
@@ -347,7 +347,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'toast') and hasattr(self, 'content_widget'):
             pw = self.content_widget.width()
             ph = self.content_widget.height()
-            w = max(300, min(self.toast.width(), pw - 40))
+            w = min(max(260, self.toast.width()), max(60, pw - 40))
             h = max(42, self.toast.height())
             cx = max(10, (pw - w) // 2)
             cy = max(10, ph - h - 80)

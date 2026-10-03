@@ -187,6 +187,61 @@ class RedesignTests(unittest.TestCase):
         self.assertTrue(check_path.exists(), 'assets/check.png must exist')
         self.assertIn(CHECK_ICON_PATH, STYLE)
 
+    def test_preview_surface_reflects_locked_appearance_strategy(self):
+        panel = self.window.preview
+        light_surf = panel.surfaces[0]
+        dark_surf = panel.surfaces[1]
+
+        # In adaptive mode: light surf uses light scheme, dark surf uses dark scheme
+        self.window.change(appearance='adaptive')
+        light_surf.repaint()
+        dark_surf.repaint()
+        # In locked light mode: both surfaces resolve to light cursor
+        self.window.change(appearance='light')
+        light_surf.repaint()
+        dark_surf.repaint()
+        # In locked dark mode: both surfaces resolve to dark cursor
+        self.window.change(appearance='dark')
+        light_surf.repaint()
+        dark_surf.repaint()
+
+    def test_preview_timer_skips_when_hidden(self):
+        panel = self.window.preview
+        panel.setVisible(False)
+        old_frame = panel.frame
+        old_loading = panel.loading_frame
+        panel.tick()
+        self.assertEqual(panel.frame, old_frame)
+        self.assertEqual(panel.loading_frame, old_loading)
+
+    def test_preview_loading_animation_throttled_to_native_speed(self):
+        import time
+        panel = self.window.preview
+        panel.setVisible(True)
+        # Select busy role
+        idx = panel.role.findData('busy')
+        panel.role.setCurrentIndex(idx)
+        panel._last_loading_time = time.monotonic()
+        initial_frame = panel.loading_frame
+
+        # Calling tick() immediately (<50ms elapsed) should NOT advance loading frame
+        panel.tick()
+        self.assertEqual(panel.loading_frame, initial_frame)
+
+        # Simulating >50ms elapsed advances loading frame by exactly 1
+        panel._last_loading_time = time.monotonic() - 0.06
+        panel.tick()
+        self.assertEqual(panel.loading_frame, (initial_frame + 1) % 24)
+
+    def test_preview_set_settings_preserves_motion_state_when_down(self):
+        panel = self.window.preview
+        panel.set_down(True)
+        self.assertTrue(panel.down)
+        panel.set_settings(CursorSettings(press_ms=80, release_ms=180))
+        self.assertTrue(panel.motion.down)
+        self.assertEqual(panel.motion._target, 0.9)
+        panel.set_down(False)
+
 
 if __name__ == '__main__':
     unittest.main()

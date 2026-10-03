@@ -214,12 +214,19 @@ class AppearancePage(QWidget):
                     QPushButton {
                         text-align: left;
                         padding: 8px 14px;
-                        background: rgba(44, 182, 173, 0.18);
+                        background: rgba(44, 182, 173, 0.22);
                         border: 2px solid #2cb6ad;
                         border-radius: 10px;
                         font-size: 12px;
                         font-weight: 700;
                         color: #ffffff;
+                    }
+                    QPushButton:hover {
+                        background: rgba(44, 182, 173, 0.32);
+                        border: 2px solid #5eead4;
+                    }
+                    QPushButton:pressed {
+                        background: rgba(44, 182, 173, 0.4);
                     }
                 ''')
             else:
@@ -237,5 +244,8 @@ class AppearancePage(QWidget):
                         background: rgba(44, 182, 173, 0.12);
                         border-color: #2cb6ad;
                         color: #5eead4;
+                    }
+                    QPushButton:pressed {
+                        background: rgba(44, 182, 173, 0.2);
                     }
                 ''')

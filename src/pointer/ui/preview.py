@@ -1,6 +1,6 @@
 import time
 from PySide6.QtCore import Qt, QTimer, QRectF
-from PySide6.QtGui import QImage, QPainter, QColor, QFont, QPen, QLinearGradient
+from PySide6.QtGui import QImage, QPixmap, QPainter, QColor, QFont, QPen, QLinearGradient
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QFrame
 from pointer.cursor.resources import RenderRequest, render_cursor
 from pointer.cursor.motion import ClickMotion
@@ -78,55 +78,74 @@ class PreviewSurface(QWidget):
         painter.drawRoundedRect(card_rect, 13, 13)
 
         # Badge pill at top-left
-        badge_rect = QRectF(card_rect.x() + 12, card_rect.y() + 12, 142, 22)
+        settings = self.owner.settings
         if is_down:
             badge_bg = QColor(44, 182, 173, 40)
             badge_border = QColor('#2cb6ad')
             badge_text_color = QColor('#2cb6ad')
             badge_text = '● 动效激发中'
         else:
+            if settings.appearance == 'adaptive':
+                badge_text = '浅色 · 自适应光标' if is_light else '深色 · 自适应光标'
+            elif settings.appearance == 'light':
+                badge_text = '浅色 · 锁定方案' if is_light else '深色 · 锁定浅色标'
+            else:
+                badge_text = '浅色 · 锁定深色标' if is_light else '深色 · 锁定方案'
+
             if is_light:
                 badge_bg = QColor(241, 245, 249, 230)
                 badge_border = QColor('#94a3b8')
                 badge_text_color = QColor('#475569')
-                badge_text = '浅色 · 点击测手感'
             else:
                 badge_bg = QColor(30, 41, 59, 230)
                 badge_border = QColor('#475569')
                 badge_text_color = QColor('#94a3b8')
-                badge_text = '深色 · 点击测手感'
-
-        painter.setBrush(badge_bg)
-        painter.setPen(QPen(badge_border, 0.9))
-        painter.drawRoundedRect(badge_rect, 11, 11)
 
         badge_font = QFont('Segoe UI Variable Text', 9)
         badge_font.setWeight(QFont.Weight.DemiBold)
         painter.setFont(badge_font)
+        fm = painter.fontMetrics()
+        badge_w = max(130.0, float(fm.horizontalAdvance(badge_text) + 20))
+        badge_rect = QRectF(card_rect.x() + 12, card_rect.y() + 12, badge_w, 22)
+
+        painter.setBrush(badge_bg)
+        painter.setPen(QPen(badge_border, 0.9))
+        painter.drawRoundedRect(badge_rect, 11, 11)
         painter.setPen(badge_text_color)
         painter.drawText(badge_rect, Qt.AlignmentFlag.AlignCenter, badge_text)
 
+        # Resolve effective theme under current settings appearance strategy
+        if settings.appearance in ('light', 'dark'):
+            effective_theme = settings.appearance
+        else:
+            effective_theme = self.theme
+
         # Render active cursor frame
-        settings = self.owner.settings
         role = self.owner.role.currentData() or 'arrow'
         frame = self.owner.frame if role in ('arrow', 'hand') else self.owner.loading_frame if role in ('busy', 'working') else 0
-        image, _ = render_cursor(RenderRequest(settings, role, self.theme, frame))
-        data = image.tobytes('raw', 'RGBA')
-        qt = QImage(data, image.width, image.height, QImage.Format.Format_RGBA8888).copy()
+
+        cache_key = (
+            settings.size, settings.motion, settings.strength, role, effective_theme, frame,
+            getattr(settings, effective_theme + '_body'), getattr(settings, effective_theme + '_outline')
+        )
+        pixmap = self.owner.get_cached_pixmap(cache_key)
+        if pixmap is None:
+            image, _ = render_cursor(RenderRequest(settings, role, effective_theme, frame))
+            data = image.tobytes('raw', 'RGBA')
+            qt = QImage(data, image.width, image.height, QImage.Format.Format_RGBA8888)
+            pixmap = QPixmap.fromImage(qt)
+            self.owner.put_cached_pixmap(cache_key, pixmap)
 
         # Display comfortably within card bounds below the badge without clipping
         avail_w = max(40, self.width() - 32)
         avail_h = max(40, self.height() - 48)
-        scale = min(2.0, max(0.5, min(avail_w / image.width, avail_h / image.height)))
-        disp_w = int(image.width * scale)
-        disp_h = int(image.height * scale)
+        scale = min(2.0, max(0.5, min(avail_w / pixmap.width(), avail_h / pixmap.height())))
+        disp_w = int(pixmap.width() * scale)
+        disp_h = int(pixmap.height() * scale)
 
         dest_x = int((self.width() - disp_w) / 2)
         dest_y = int(28 + (self.height() - 28 - disp_h) / 2)
-        painter.drawImage(
-            dest_x, dest_y,
-            qt.scaled(disp_w, disp_h, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-        )
+        painter.drawPixmap(dest_x, dest_y, disp_w, disp_h, pixmap)
 
 
 class PreviewPanel(QWidget):
@@ -136,6 +155,8 @@ class PreviewPanel(QWidget):
         self.settings, self.frame, self.loading_frame = settings, 0, 0
         self.motion = ClickMotion(settings.press_ms, settings.release_ms)
         self.down = False
+        self._pixmap_cache = {}
+        self._last_loading_time = 0.0
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -183,24 +204,47 @@ class PreviewPanel(QWidget):
         self.timer.timeout.connect(self.tick)
         self.timer.start()
 
+    def get_cached_pixmap(self, key):
+        return self._pixmap_cache.get(key)
+
+    def put_cached_pixmap(self, key, pixmap):
+        if len(self._pixmap_cache) > 120:
+            self._pixmap_cache.clear()
+        self._pixmap_cache[key] = pixmap
+
     def set_down(self, down):
         self.down = down
         for surface in self.surfaces:
             surface.update()
 
     def tick(self):
+        if self.isHidden():
+            return
+        now = time.monotonic()
         old = self.frame
-        self.frame = self.motion.update(self.down, time.monotonic())
-        self.loading_frame = (self.loading_frame + 1) % 24
-        if old != self.frame or self.role.currentData() in ('busy', 'working'):
+        self.frame = self.motion.update(self.down, now)
+
+        role = self.role.currentData() or 'arrow'
+        loading_changed = False
+        if role in ('busy', 'working'):
+            if now - self._last_loading_time >= 0.05:
+                self.loading_frame = (self.loading_frame + 1) % 24
+                self._last_loading_time = now
+                loading_changed = True
+
+        if old != self.frame or loading_changed:
             self.refresh()
 
     def set_settings(self, settings):
         self.settings = settings
+        self._pixmap_cache.clear()
         was_down = self.down
         self.motion = ClickMotion(settings.press_ms, settings.release_ms)
         if was_down:
             self.motion.down = True
+            self.motion._target = 0.9  # SCALES[-1]
+            self.motion._source = 0.9
+            self.motion._since = time.monotonic()
         self.refresh()
 
     def refresh(self):
