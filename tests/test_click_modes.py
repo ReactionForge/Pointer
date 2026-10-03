@@ -45,17 +45,24 @@ class ClickModeTests(unittest.TestCase):
 
 
 class TiltResourceTests(unittest.TestCase):
-    def test_arrow_bends_only_its_top_corner(self):
+    def test_arrow_rotates_as_one_shape_with_top_moving_further(self):
         from tools.generate.create_cursor import arrow_contour
+        import math
         normal = arrow_contour()
         previous = normal[0]
         for amount in (.25, .5, .75, 1):
-            bent = arrow_contour(amount)
-            self.assertEqual(bent[25:-1], normal[25:-1], "Both lower corners must stay fixed")
-            self.assertLess(bent[0][0], previous[0])
-            self.assertGreater(bent[0][1], previous[1])
-            self.assertEqual(bent[-1], bent[0])
-            previous = bent[0]
+            tilted = arrow_contour(amount)
+            self.assertLess(tilted[0][0], previous[0])
+            self.assertGreater(tilted[0][1], previous[1])
+            top_distance = math.dist(tilted[0], normal[0])
+            for index in (25, -13):
+                self.assertGreater(math.dist(tilted[index], normal[index]), 0)
+                self.assertLess(math.dist(tilted[index], normal[index]), top_distance)
+            for index in range(1, len(normal), 10):
+                self.assertAlmostEqual(math.dist(tilted[0], tilted[index]),
+                                       math.dist(normal[0], normal[index]), places=9)
+            self.assertEqual(tilted[-1], tilted[0])
+            previous = tilted[0]
 
     def test_motion_preserves_hotspots_and_unclipped_shapes(self):
         root = Path(__file__).resolve().parents[1] / "assets" / "cursors" / "adaptive"

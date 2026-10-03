@@ -22,26 +22,29 @@ def quadratic(start, control, end, steps=24):
     ]
 
 
-def arrow_contour(tip_pull=0):
-    # Only the rounded top corner moves; the two lower corners remain anchored.
-    dx, dy = -1.2 * tip_pull, 2.4 * tip_pull
-    def tip(point):
-        return point[0] + dx, point[1] + dy
-    contour = quadratic(tip((6, 3)), tip((1.5, 1.8)), tip((3.1, 6.1)))
+def arrow_contour(press=0):
+    contour = quadratic((6, 3), (1.5, 1.8), (3.1, 6.1))
     contour += [(11.1, 26)]
     contour += quadratic((11.1, 26), (12.4, 29.6), (14, 26))
     contour += [(17.2, 18.4)]
     contour += quadratic((17.2, 18.4), (17.8, 16.8), (19.3, 16.2))
     contour += [(26.2, 13.7)]
     contour += quadratic((26.2, 13.7), (29.8, 11.8), (26.4, 10.5))
-    contour += [tip((6, 3))]
-    return contour
+    contour += [(6, 3)]
+    if not press:
+        return contour
+    # A lower pivot makes the top travel further while both lower tips follow.
+    pivot_x, pivot_y = 20, 16
+    angle = math.radians(-6 * press)
+    c, s = math.cos(angle), math.sin(angle)
+    return [(pivot_x + c * (x - pivot_x) - s * (y - pivot_y),
+             pivot_y + s * (x - pivot_x) + c * (y - pivot_y)) for x, y in contour]
 
 
-def render(size, supersample=8, tip_pull=0):
+def render(size, supersample=8, press=0):
     scale = size / 32
     factor = scale * supersample
-    contour = arrow_contour(tip_pull)
+    contour = arrow_contour(press)
     points = [(round(x * factor), round(y * factor)) for x, y in contour]
     extent = size * supersample
     arrow = Image.new("RGBA", (extent, extent))
