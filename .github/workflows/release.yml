@@ -60,7 +60,7 @@ jobs:
           if ($result.cursor_resources -ne 34 -or $result.animated_resources -ne 4 -or -not $result.frozen) {
             throw 'Incomplete packaged cursor resources'
           }
-          if ($result.click_resources -ne 16) { throw 'Incomplete click animation resources' }
+          if ($result.click_resources -ne 32) { throw 'Incomplete click animation resources' }
       - name: Upload release files
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

@@ -1,8 +1,31 @@
 """Map button edges to cached cursor frames, keeping the hotspot stationary."""
 
+import json
+import os
+
 PRESS_SECONDS = .06
 RELEASE_SECONDS = .15
 SCALES = (1.0, .975, .95, .925, .9)
+ANGLES = (0, 3, 6, 9, 12)
+MODES = ("tilt", "shrink")
+
+
+def read_mode(path):
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        mode = data.get("mode") if isinstance(data, dict) else None
+        return mode if mode in MODES else "tilt"
+    except (OSError, ValueError):
+        return "tilt"
+
+
+def save_mode(path, mode):
+    if mode not in MODES:
+        raise ValueError(mode)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(json.dumps({"mode": mode}), encoding="utf-8")
+    os.replace(temporary, path)
 
 
 class ClickMotion:

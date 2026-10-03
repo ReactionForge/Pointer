@@ -60,9 +60,9 @@ def diagnose():
             finally:
                 switcher.USER32.DestroyCursor(cursor)
     click_count = 0
-    for theme in ("light", "dark"):
+    for mode, theme in ((mode, theme) for mode in ("tilt", "shrink") for theme in ("light", "dark")):
         for frame in range(1, 5):
-            for path in click_paths(theme, frame).values():
+            for path in click_paths(theme, frame, mode).values():
                 cursor = switcher._CursorCache._load(path)
                 switcher.USER32.DestroyCursor(cursor)
                 click_count += 1
@@ -138,6 +138,22 @@ def stop_theme():
             "shutdown_reason": result.get("shutdown_reason")}
 
 
+def set_click_mode(mode):
+    """Save the choice beside backups, restoring it if reconfiguration fails."""
+    from .click_motion import save_mode
+    path = switcher.CLICK_SETTINGS
+    before = path.read_bytes() if path.exists() else None
+    save_mode(path, mode)
+    try:
+        return {**apply_theme(), "click_mode": mode}
+    except Exception:
+        if before is None:
+            path.unlink(missing_ok=True)
+        else:
+            path.write_bytes(before)
+        raise
+
+
 def reference_theme():
     switcher.stop()
     config.apply()
@@ -206,7 +222,8 @@ def _shortcuts():
     menu.mkdir(parents=True, exist_ok=True)
     executable = INSTALL_ROOT.resolve() / "Pointer.exe"
     pairs = [("启用自适应光标", "--apply"), ("停止自动切换", "--stop"),
-             ("恢复原光标", "--restore"), ("打开测试页", "--test-page")]
+             ("恢复原光标", "--restore"), ("打开测试页", "--test-page"),
+             ("使用倾斜动效", "--tilt"), ("使用缩小回弹", "--shrink")]
     def literal(value):
         return "'" + str(value).replace("'", "''") + "'"
     commands = ["$pointerShell = New-Object -ComObject WScript.Shell"]
@@ -296,8 +313,12 @@ def dispatch(action):
     """Downloaded control buttons always operate on the installed helper."""
     installed = INSTALL_ROOT / "Pointer.exe"
     if FROZEN and ROOT.resolve() != INSTALL_ROOT.resolve() and action in (
-            "apply", "stop", "restore", "reference", "test_page"):
+            "apply", "stop", "restore", "reference", "test_page", "tilt", "shrink"):
         if installed.is_file():
+            # Older packages cannot parse the new mode flags. Upgrade before delegation.
+            if action in ("tilt", "shrink") and not (
+                    INSTALL_ROOT / "assets/cursors/adaptive/tilt/light/arrow-4.cur").is_file():
+                install()
             report = DATA_ROOT / "delegated-operation.json"
             environment = os.environ.copy()
             environment["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
@@ -310,11 +331,16 @@ def dispatch(action):
             return value
         if action == "apply":
             return install()
+        if action in ("tilt", "shrink"):
+            install()
+            return dispatch(action)
         if action != "test_page":
             raise ValueError("尚未安装 Pointer，请先运行一键安装.cmd。")
     if action == "test_page":
         os.startfile(WEB_ROOT / "index.html")
         return {"test_page_opened": True}
+    if action in ("tilt", "shrink"):
+        return set_click_mode(action)
     operation = {"install": install, "apply": apply_theme, "stop": stop_theme,
                  "reference": reference_theme, "restore": restore_theme, "diagnose": diagnose}[action]
     return operation()
@@ -328,7 +354,7 @@ def main(argv=None):
         sys.stderr = io.StringIO()
     parser = argparse.ArgumentParser(description="Pointer cursor installer")
     group = parser.add_mutually_exclusive_group()
-    for action in ("install", "apply", "stop", "restore", "reference", "run", "diagnose", "test-page"):
+    for action in ("install", "apply", "stop", "restore", "reference", "run", "diagnose", "test-page", "tilt", "shrink"):
         group.add_argument("--" + action, action="store_true")
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--report", type=Path)
@@ -336,13 +362,15 @@ def main(argv=None):
     if args.run:
         switcher._run()
         return 0
-    action = next((name for name in ("apply", "stop", "restore", "reference", "diagnose", "test_page")
+    action = next((name for name in ("apply", "stop", "restore", "reference", "diagnose", "test_page", "tilt", "shrink")
                    if getattr(args, name)), "install")
     result = {"action": action, "exit_code": 0}
     messages = {"install": "安装完成。自适应光标已启用，并随 Windows 登录启动。\n可在开始菜单的 Pointer 文件夹中停止切换或恢复原光标。",
                 "apply": "自适应光标已启用。", "stop": "已停止自动切换并取消登录启动。当前保留黑色主体、白色边框。",
                 "restore": "已恢复原来的 Windows 光标。", "reference": "已启用固定黑色主体、灰白边框的原始造型。",
                 "diagnose": "发布包和光标资源检查通过。"}
+    messages.update(tilt="已启用倾斜动效：按下向右倾斜约 12°，松开回正。",
+                    shrink="已启用缩小回弹：按下缩小约 10%，松开恢复。")
     try:
         result.update(dispatch(action))
     except Exception as error:

@@ -64,7 +64,8 @@ def main():
     actions = {"一键安装.cmd": "install", "install.cmd": "install",
                "恢复原光标.cmd": "restore", "restore.cmd": "restore",
                "停止自动切换.cmd": "stop", "stop.cmd": "stop",
-               "启用自适应.cmd": "apply", "打开测试页.cmd": "test-page"}
+               "启用自适应.cmd": "apply", "打开测试页.cmd": "test-page",
+               "使用倾斜动效.cmd": "tilt", "使用缩小回弹.cmd": "shrink"}
     for filename, action in actions.items():
         (output / filename).write_text(f'@echo off\nstart "" /wait "%~dp0Pointer.exe" --{action}\n',
                                       encoding="utf-8", newline="\r\n")

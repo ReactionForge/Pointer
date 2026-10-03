@@ -18,6 +18,7 @@ from .runtime_paths import DATA_ROOT, FROZEN, ROOT
 
 STATUS_FILE = DATA_ROOT / "contrast-switcher-status.json"
 STARTUP_BACKUP = DATA_ROOT / "contrast-switcher-startup-backup.json"
+CLICK_SETTINGS = DATA_ROOT / "click-motion-settings.json"
 SCRIPT = Path(__file__).resolve()
 INSTANCE = hashlib.sha256(str(ROOT).casefold().encode("utf-8")).hexdigest()[:16]
 MUTEX_NAME = rf"Local\PointerAdaptiveContrast_{INSTANCE}_Mutex"
@@ -279,7 +280,7 @@ def _run():
 
     try:
         from .contrast_theme import THEME_NAME, ROLE_IDS, choose_theme, theme_paths, click_paths
-        from .click_motion import ClickMotion
+        from .click_motion import ClickMotion, read_mode
         scheme_name = THEME_NAME
         event = KERNEL32.CreateEventW(None, True, False, EVENT_NAME)
         if not event:
@@ -290,13 +291,14 @@ def _run():
             raise _SchemeChanged()
         _set_dpi_awareness()
         cache = _CursorCache({theme: theme_paths(theme) for theme in ("light", "dark")})
-        click_cache = _CursorCache({f"{theme}:{frame}": click_paths(theme, frame)
+        click_mode = read_mode(CLICK_SETTINGS)
+        click_cache = _CursorCache({f"{theme}:{frame}": click_paths(theme, frame, click_mode)
                                     for theme in ("light", "dark") for frame in range(5)})
         motion = ClickMotion()
         click_roles = {role: ROLE_IDS[role] for role in ("Arrow", "Hand")}
         applied_click = None
         state.update(running=True, theme=_initial_theme(), animation_copy=cache.notes,
-                     click_motion=True, click_presses=0)
+                     click_motion=True, click_mode=click_mode, click_presses=0)
         publish()
         candidate, candidate_since, last_switch = None, 0, -float("inf")
         next_tick = next_background = time.monotonic()

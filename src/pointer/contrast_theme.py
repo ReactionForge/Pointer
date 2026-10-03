@@ -31,11 +31,14 @@ def choose_theme(luminance, current=None):
     return "light" if luminance >= 128 else "dark"
 
 
-def click_paths(theme, frame):
+def click_paths(theme, frame, mode="shrink"):
     normal = theme_paths(theme)
     if frame not in range(5):
         raise ValueError(frame)
+    if mode not in ("tilt", "shrink"):
+        raise ValueError(mode)
     if frame == 0:
         return {role: normal[role] for role in ("Arrow", "Hand")}
-    return {role: ASSET_ROOT / "adaptive" / "click" / theme / f"{role.lower()}-{frame}.cur"
+    folder = "tilt" if mode == "tilt" else "click"
+    return {role: ASSET_ROOT / "adaptive" / folder / theme / f"{role.lower()}-{frame}.cur"
             for role in ("Arrow", "Hand")}
