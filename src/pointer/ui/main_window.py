@@ -25,6 +25,7 @@ class MainWindow(QMainWindow):
         self.busy = False
         self._threads = []
         self.load_error = None
+        self._replace_draft = False
         try:
             self.applied = application.settings()
         except Exception as error:
@@ -168,9 +169,9 @@ class MainWindow(QMainWindow):
 
     def apply_draft(self):
         desired = self._draft
-        self.run_operation(lambda:self.application.apply(desired),'配置已应用')
+        self.run_operation(lambda:self.application.apply(desired),'配置已应用',replace_draft=True)
 
-    def run_operation(self, operation, success):
+    def run_operation(self, operation, success, replace_draft=False):
         if self.busy:
             return
         self.busy = True
@@ -178,6 +179,7 @@ class MainWindow(QMainWindow):
         self.sync()
         self.feedback.setText('正在处理，请稍候…')
         self._operation_message = success
+        self._replace_draft = replace_draft
         thread = QThread(self)
         worker = Worker(operation)
         worker.moveToThread(thread)
@@ -203,7 +205,8 @@ class MainWindow(QMainWindow):
         self.stack.setEnabled(True)
         if 'settings' in result:
             self.applied = CursorSettings.from_dict(result['settings'])
-            self._draft = self.applied
+            if self._replace_draft:
+                self._draft = self.applied
         elif 'startup_enabled' in result:
             self.applied = replace(self.applied,startup=result['startup_enabled'])
             self._draft = replace(self._draft,startup=result['startup_enabled'])
@@ -262,7 +265,7 @@ class MainWindow(QMainWindow):
 
     def confirm_restore(self):
         if QMessageBox.question(self,'恢复原光标','恢复 Windows 原光标并关闭 Pointer 开机启动？') == QMessageBox.StandardButton.Yes:
-            self.run_operation(self.application.restore,'原光标已恢复')
+            self.run_operation(self.application.restore,'原光标已恢复',replace_draft=True)
 
     def closeEvent(self,event):
         if self.busy:

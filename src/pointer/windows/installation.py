@@ -1,7 +1,7 @@
 """Verified package installation, migration and owned-file cleanup."""
 import base64, hashlib, json, os, shutil, subprocess, time, tempfile, uuid
 from pathlib import Path, PurePosixPath
-from pointer.paths import ROOT, DATA_ROOT, INSTALL_ROOT, FROZEN
+from pointer.paths import ROOT, DATA_ROOT, INSTALL_ROOT, FROZEN, INSTALLATION_MARKER, is_installed
 from . import scheme as config, engine as switcher
 
 def package_files(root):
@@ -32,11 +32,13 @@ def _remove_temporary(path, parent, prefix):
         shutil.rmtree(path)
 
 
-def deploy_package(source, target):
+def deploy_package(source, target, finalize=None):
     """Validate and stage a complete deployment, then replace or recover it."""
     source, target = Path(source).resolve(), Path(target).resolve()
     files = package_files(source)
     if source == target:
+        if finalize:
+            finalize()
         return files
     if target == target.parent or source.is_relative_to(target) or target.is_relative_to(source):
         raise ValueError('程序来源与安装目录不能相互包含')
@@ -60,11 +62,15 @@ def deploy_package(source, target):
             shutil.copy2(source/name,destination)
         remove_obsolete_files(previous,files,stage)
         package_files(stage)
+        from pointer.cursor.settings import _write_json
+        _write_json(stage/INSTALLATION_MARKER,{'schema_version':1,'data_directory':'../data'})
         if target.exists():
             os.replace(target,rollback)
         try:
             os.replace(stage,target)
             package_files(target)
+            if finalize:
+                finalize()
         except Exception:
             if target.exists():
                 os.replace(target,stage)
@@ -81,6 +87,19 @@ def _previous_directory():
     arrow = config.read_values(config.KEY_PATH).get("Arrow", {}).get("value", "")
     path = Path(os.path.expandvars(arrow)) if isinstance(arrow, str) and arrow else None
     if not path:
+        return None
+    if (path.name == 'adaptive-arrow.cur' and path.parent.name in ('light','dark')
+            and path.parents[2].name == 'cursor-cache' and path.parents[3].name == 'data'):
+        data = path.parents[3].resolve()
+        if data.parent.name == '.local':
+            candidate = data.parent.parent
+            if (candidate/'src/pointer/windows/engine.py').is_file():
+                return candidate
+        for candidate in data.parent.iterdir():
+            if candidate.is_dir() and candidate != data and (candidate/'Pointer.exe').is_file():
+                if is_installed(candidate) or (candidate.name == 'app' and candidate.parent.name == 'Pointer'):
+                    package_files(candidate)
+                    return candidate.resolve()
         return None
     if path.name == "adaptive-arrow.cur" and path.parent.name in ("light", "dark"):
         if path.parent.parent.name == "dual-contrast":
@@ -182,6 +201,12 @@ def install():
     if not FROZEN:
         raise ValueError('请使用发布包安装；源码模式可直接打开设置界面。')
     files = package_files(ROOT)
+    from .backend import WindowsBackend
+    backend = WindowsBackend(DATA_ROOT,INSTALL_ROOT)
+    before = backend.snapshot()
+    saved_files = {DATA_ROOT/name: (DATA_ROOT/name).read_bytes() if (DATA_ROOT/name).exists() else None
+                   for name in ('settings.json','click-motion-settings.json','active-profile.json',
+                                'original-cursor-settings.json','contrast-switcher-startup-backup.json')}
     standard = Path(os.environ['LOCALAPPDATA'])/'Pointer'/'app'
     previous = _previous_directory() if INSTALL_ROOT.resolve() == standard.resolve() or not os.environ.get('POINTER_DATA_DIR') else None
     if previous and previous != INSTALL_ROOT:
@@ -211,21 +236,32 @@ def install():
         package_files(previous)
         switcher.stop_directory(previous,previous.parent/'data',_legacy=True)
     switcher.stop_directory(INSTALL_ROOT,DATA_ROOT)
-    try:
-        deploy_package(ROOT,INSTALL_ROOT)
-    except Exception:
-        if upgrade_state and upgrade_state.get('previously_running'):
-            _execute(INSTALL_ROOT/'Pointer.exe',['--apply'],DATA_ROOT/'rollback-resume-report.json')
-        raise
-    if not os.environ.get('POINTER_INSTALL_DIR'):
-        _shortcuts()
-    if previous and previous != INSTALL_ROOT:
-        from .backend import WindowsBackend
-        if WindowsBackend(DATA_ROOT,INSTALL_ROOT).startup_enabled():
+    def finalize():
+        if not os.environ.get('POINTER_INSTALL_DIR'):
+            _shortcuts()
+        if previous and previous != INSTALL_ROOT and backend.startup_enabled():
             from .startup import enable_startup
             enable_startup()
-    if was_running or (upgrade_state and upgrade_state.get('previously_running')):
-        _execute(INSTALL_ROOT/'Pointer.exe',['--apply'],DATA_ROOT/'upgrade-resume-report.json')
+        if was_running or (upgrade_state and upgrade_state.get('previously_running')):
+            _execute(INSTALL_ROOT/'Pointer.exe',['--apply'],DATA_ROOT/'upgrade-resume-report.json')
+    try:
+        deploy_package(ROOT,INSTALL_ROOT,finalize=finalize)
+    except Exception as error:
+        from pointer.cursor.settings import _write_bytes
+        try:
+            for path,content in saved_files.items():
+                if content is None:
+                    path.unlink(missing_ok=True)
+                else:
+                    _write_bytes(path,content)
+            backend.restore({**before,'running':False,'previous_root':None})
+            if was_running:
+                recovery_root = previous if previous and previous != INSTALL_ROOT else INSTALL_ROOT
+                recovery_data = recovery_root.parent/'data'
+                _execute(recovery_root/'Pointer.exe',['--apply','--install-dir',str(recovery_root),'--data-dir',str(recovery_data)],recovery_data/'rollback-resume-report.json')
+        except Exception as failure:
+            raise RuntimeError(f'{error}；恢复失败：{failure}') from error
+        raise
     return {'installed':True,'install_directory':str(INSTALL_ROOT),'backup_directory':str(DATA_ROOT),
             'startup_enabled':False if not (DATA_ROOT/'settings.json').exists() else
                 json.loads((DATA_ROOT/'settings.json').read_text(encoding='utf-8')).get('startup',False)}
@@ -254,7 +290,8 @@ def uninstall(purge=False):
         application.restore()
     else:
         current = config.read_values(config.KEY_PATH).get('Arrow',{}).get('value','')
-        if current and Path(current).resolve().is_relative_to(ROOT):
+        if current and (Path(current).resolve().is_relative_to(ROOT) or
+                        Path(current).resolve().is_relative_to(DATA_ROOT/'cursor-cache')):
             raise ValueError('当前光标仍使用 Pointer，但原光标备份缺失；卸载已中止。')
         application.backend.stop()
         application.backend.set_startup(False)
@@ -269,6 +306,9 @@ def uninstall(purge=False):
             raise ValueError('程序清单含无效路径')
         lines.append(name+'|'+digest)
     lines.append('PACKAGE.json|'+hashlib.sha256((ROOT/'PACKAGE.json').read_bytes()).hexdigest())
+    if (ROOT/INSTALLATION_MARKER).exists():
+        is_installed(ROOT)
+        lines.append(INSTALLATION_MARKER+'|'+hashlib.sha256((ROOT/INSTALLATION_MARKER).read_bytes()).hexdigest())
     DATA_ROOT.mkdir(parents=True,exist_ok=True)
     (DATA_ROOT/'uninstall-owned-files.txt').write_text('\n'.join(lines),encoding='utf-8')
     if purge:

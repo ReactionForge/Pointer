@@ -46,6 +46,15 @@ class WindowTests(unittest.TestCase):
         application.pause.assert_not_called()
         application.restore.assert_not_called()
 
+    def test_pause_result_preserves_unapplied_draft(self):
+        window, application = self.make_window()
+        window.change(strength=75)
+        window._operation_message = 'paused'
+        window.operation_done({'running':False,'settings':CursorSettings().to_dict()})
+        self.assertEqual(window.draft().strength,75)
+        self.assertEqual(window.applied.strength,50)
+        window.discard_changes();window.close()
+
     def test_draft_edit_does_not_apply_system_configuration(self):
         self.assertIsNotNone(importlib.util.find_spec('pointer.ui'), 'GUI missing')
         from pointer.ui.main_window import MainWindow

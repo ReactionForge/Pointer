@@ -300,8 +300,10 @@ def _run():
         motion = ClickMotion(settings.get('press_ms', 60), settings.get('release_ms', 150))
         click_roles = {role: ROLE_IDS[role] for role in ("Arrow", "Hand")}
         applied_click = None
-        state.update(running=True, theme=_initial_theme(), animation_copy=cache.notes,
+        initial_theme = appearance if appearance in ('light','dark') else (_initial_theme() or 'light')
+        state.update(running=True, theme=initial_theme, animation_copy=cache.notes,
                      click_motion=True, click_mode=click_mode, click_presses=0)
+        cache.apply(state['theme'], ROLE_IDS, scheme_name)
         publish()
         candidate, candidate_since, last_switch = None, 0, -float("inf")
         next_tick = next_background = time.monotonic()
@@ -367,7 +369,9 @@ def _run():
     finally:
         # Never reload over a scheme the user selected while the helper was running.
         try:
-            if state.get("shutdown_reason") == "error" and scheme_name and _scheme_name() == scheme_name:
+            if state.get('shutdown_reason') == 'stop_requested' and click_cache and state.get('theme') and _scheme_name() == scheme_name:
+                click_cache.apply(f'{state["theme"]}:0', click_roles, scheme_name)
+            elif state.get("shutdown_reason") == "error" and scheme_name and _scheme_name() == scheme_name:
                 from pointer.windows.scheme import reload_cursors
                 reload_cursors()
         except Exception as error:

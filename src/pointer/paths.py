@@ -3,6 +3,24 @@ from dataclasses import dataclass
 from pathlib import Path
 import os
 import sys
+import json
+
+INSTALLATION_MARKER = 'INSTALLATION.json'
+
+def is_installed(root):
+    """The local deployment marker contains no machine-specific paths."""
+    path = Path(root) / INSTALLATION_MARKER
+    if not path.exists():
+        return False
+    if path.stat().st_size > 1024:
+        raise ValueError('安装标识损坏')
+    try:
+        value = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError,ValueError) as error:
+        raise ValueError('安装标识损坏') from error
+    if value != {'schema_version':1,'data_directory':'../data'}:
+        raise ValueError('安装标识损坏')
+    return True
 
 @dataclass(frozen=True)
 class RuntimePaths:
@@ -12,7 +30,7 @@ class RuntimePaths:
 
 def resolve_paths(root, local_app_data, frozen):
     root, local_app_data = Path(root).resolve(), Path(local_app_data).resolve()
-    installed = root if frozen and root.name.casefold() == "app" and root.parent.name.casefold() == "pointer" else local_app_data / "Pointer" / "app"
+    installed = root if frozen and (is_installed(root) or (root.name.casefold() == "app" and root.parent.name.casefold() == "pointer")) else local_app_data / "Pointer" / "app"
     data = installed.parent / "data" if frozen else root / ".local" / "data"
     return RuntimePaths(root, installed, data)
 

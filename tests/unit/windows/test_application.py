@@ -96,3 +96,12 @@ class ApplicationTests(unittest.TestCase):
             self.app.pause()
         self.assertEqual(self.app.store.path.read_bytes(), b'broken')
         self.backend.stop.assert_not_called()
+
+    def test_apply_preserves_existing_damaged_configuration_before_side_effects(self):
+        for damaged in (b'broken', b'{"schema_version":99}', b' '*65537):
+            with self.subTest(damaged=damaged[:30]):
+                self.app.store.path.write_bytes(damaged)
+                with self.assertRaises(ValueError):
+                    self.app.apply(CursorSettings())
+                self.assertEqual(self.app.store.path.read_bytes(),damaged)
+                self.backend.stop.assert_not_called()

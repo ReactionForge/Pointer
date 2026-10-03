@@ -28,6 +28,8 @@ class Application:
 
     def apply(self, settings):
         settings = CursorSettings.from_dict(settings.to_dict())
+        # A supplied draft cannot silently replace a damaged persisted file.
+        self.settings()
         from .paths import FROZEN, ROOT
         if FROZEN and ROOT.resolve() != self.install_root.resolve():
             from .windows.installation import apply_portable
