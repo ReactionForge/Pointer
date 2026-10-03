@@ -34,7 +34,7 @@ def main():
                     images.append(image.transform(image.size, Image.Transform.AFFINE, transform,
                                                   resample=Image.Resampling.BICUBIC))
                 (folder / f"{role}-{frame}.cur").write_bytes(cursor_bytes(images, hotspot))
-    print("Created 16 shrink and 16 clockwise tilt frames; six DPI sizes, unchanged hotspots.")
+    print("Created 16 shrink and 16 counterclockwise tilt frames; six DPI sizes, unchanged hotspots.")
 
 
 if __name__ == "__main__":

@@ -45,7 +45,7 @@ class ClickModeTests(unittest.TestCase):
 
 
 class TiltResourceTests(unittest.TestCase):
-    def test_tilt_preserves_hotspots_area_and_rotates_clockwise(self):
+    def test_tilt_preserves_hotspots_area_and_rotates_counterclockwise(self):
         root = Path(__file__).resolve().parents[1] / "assets" / "cursors" / "adaptive"
         for theme in ("light", "dark"):
             for role in ("arrow", "hand"):
@@ -70,7 +70,7 @@ class TiltResourceTests(unittest.TestCase):
                         tilted_area, tilted_x = shape(tilted)
                         self.assertGreater(tilted_area, area * .94, (theme, role, size, "clipped"))
                         self.assertLess(tilted_area, area * 1.06)
-                        self.assertLess(tilted_x, center_x, "Clockwise tilt around the tip moves the body left")
+                        self.assertGreater(tilted_x, center_x, "Counterclockwise tilt points the tip down-left and moves the body right")
 
 
 class ModeRecoveryTests(unittest.TestCase):

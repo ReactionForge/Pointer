@@ -369,7 +369,7 @@ def main(argv=None):
                 "apply": "自适应光标已启用。", "stop": "已停止自动切换并取消登录启动。当前保留黑色主体、白色边框。",
                 "restore": "已恢复原来的 Windows 光标。", "reference": "已启用固定黑色主体、灰白边框的原始造型。",
                 "diagnose": "发布包和光标资源检查通过。"}
-    messages.update(tilt="已启用倾斜动效：按下向右倾斜约 12°，松开回正。",
+    messages.update(tilt="已启用倾斜动效：按下尖端向左下倾斜约 12°，松开回正。",
                     shrink="已启用缩小回弹：按下缩小约 10%，松开恢复。")
     try:
         result.update(dispatch(action))

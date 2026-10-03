@@ -6,7 +6,7 @@ import os
 PRESS_SECONDS = .06
 RELEASE_SECONDS = .15
 SCALES = (1.0, .975, .95, .925, .9)
-ANGLES = (0, 3, 6, 9, 12)
+ANGLES = (0, -3, -6, -9, -12)
 MODES = ("tilt", "shrink")
 
 
