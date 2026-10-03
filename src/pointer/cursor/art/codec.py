@@ -9,12 +9,12 @@ def dib(image):
     stride = size * 4
     bottom_up = b"".join(pixels[y * stride:(y + 1) * stride] for y in range(size - 1, -1, -1))
     mask_stride = ((size + 31) // 32) * 4
-    alpha = image.getchannel("A")
+    alpha = image.getchannel("A").tobytes()
     rows = []
     for y in range(size - 1, -1, -1):
         row = bytearray(mask_stride)
-        for x in range(size):
-            if alpha.getpixel((x, y)) == 0:
+        for x, value in enumerate(alpha[y * size:(y + 1) * size]):
+            if value == 0:
                 row[x // 8] |= 1 << (7 - x % 8)
         rows.append(bytes(row))
     header = struct.pack("<IiiHHIIiiII", 40, size, size * 2, 1, 32, 0, len(bottom_up), 0, 0, 0, 0)

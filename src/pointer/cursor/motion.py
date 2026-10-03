@@ -29,12 +29,17 @@ def save_mode(path, mode):
 
 
 class ClickMotion:
-    def __init__(self):
+    def __init__(self, press_ms=60, release_ms=150):
+        if type(press_ms) is not int or not 40 <= press_ms <= 200:
+            raise ValueError("Invalid press duration")
+        if type(release_ms) is not int or not 80 <= release_ms <= 400:
+            raise ValueError("Invalid release duration")
+        self._press, self._release = press_ms / 1000, release_ms / 1000
         self.down = False
         self.presses = 0
         self._source = self._target = 1.0
         self._since = 0.0
-        self._duration = PRESS_SECONDS
+        self._duration = self._press
 
     def _scale(self, now):
         progress = min(1.0, max(0.0, (now - self._since) / self._duration))
@@ -48,7 +53,7 @@ class ClickMotion:
             self.down = down
             self._source, self._since = scale, now
             self._target = SCALES[-1] if down else SCALES[0]
-            self._duration = PRESS_SECONDS if down else RELEASE_SECONDS
+            self._duration = self._press if down else self._release
             if down:
                 self.presses += 1
         return min(4, max(0, round((1 - scale) / .025)))

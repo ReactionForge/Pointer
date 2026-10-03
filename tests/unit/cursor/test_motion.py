@@ -13,6 +13,17 @@ class ClickMotionTests(unittest.TestCase):
         from pointer.cursor.motion import ClickMotion
         return ClickMotion()
 
+    def test_configurable_press_and_release_durations(self):
+        from pointer.cursor.motion import ClickMotion
+        self.assertIn("press_ms", __import__("inspect").signature(ClickMotion).parameters)
+        motion = ClickMotion(press_ms=200, release_ms=400)
+        motion.update(True, 0)
+        self.assertLess(motion.update(True, .05), 4)
+        self.assertEqual(motion.update(True, .201), 4)
+        motion.update(False, 1)
+        self.assertGreater(motion.update(False, 1.3), 0)
+        self.assertEqual(motion.update(False, 1.401), 0)
+
     def test_press_holds_until_release_and_returns_to_rest(self):
         motion = self.motion()
         self.assertEqual(motion.update(False, 0), 0)
