@@ -5,7 +5,9 @@ import math
 import struct
 from PIL import Image, ImageDraw
 
-ROOT = Path(__file__).resolve().parent
+from pointer.runtime_paths import ASSET_ROOT, PREVIEW_ROOT
+
+ROOT = ASSET_ROOT / "reference"
 SIZES = (32, 48, 64, 96, 128, 256)
 ANIMATION_FRAMES = 24
 
@@ -153,8 +155,8 @@ def loading_preview():
             preview.alpha_composite(render_loading(32, frame), (offset + 20, 32))
             preview.alpha_composite(render_loading(64, frame, True), (offset + 80, 16))
         frames.append(preview.convert("RGB"))
-    frames[0].save(ROOT / "cursor-preview-loading.png")
-    frames[0].save(ROOT / "cursor-preview-loading.gif", save_all=True, append_images=frames[1:], duration=50, loop=0, disposal=2)
+    frames[0].save(PREVIEW_ROOT / "cursor-preview-loading.png")
+    frames[0].save(PREVIEW_ROOT / "cursor-preview-loading.gif", save_all=True, append_images=frames[1:], duration=50, loop=0, disposal=2)
 
 
 def main():
@@ -165,14 +167,14 @@ def main():
     write_animation("reference-black-busy.ani", False)
     write_animation("reference-black-working.ani", True)
     loading_preview()
-    images[0].save(ROOT / "cursor-preview.png")
+    images[0].save(PREVIEW_ROOT / "cursor-preview.png")
     preview = Image.new("RGBA", (320, 128), "#f4f7fc")
     ImageDraw.Draw(preview).rectangle((160, 0, 319, 127), fill="#0d1117")
     preview.alpha_composite(images[0], (25, 48))
     preview.alpha_composite(images[2], (80, 32))
     preview.alpha_composite(images[0], (185, 48))
     preview.alpha_composite(images[2], (240, 32))
-    preview.convert("RGB").save(ROOT / "cursor-preview-sizes.png")
+    preview.convert("RGB").save(PREVIEW_ROOT / "cursor-preview-sizes.png")
     text_preview = Image.new("RGBA", (320, 128), "#f4f7fc")
     ImageDraw.Draw(text_preview).rectangle((160, 0, 319, 127), fill="#0d1117")
     text_preview.alpha_composite(images[0], (20, 48))
@@ -181,7 +183,7 @@ def main():
     text_preview.alpha_composite(images[0], (180, 48))
     text_preview.alpha_composite(text_images[0], (218, 48))
     text_preview.alpha_composite(text_images[2], (252, 32))
-    text_preview.convert("RGB").save(ROOT / "cursor-preview-text.png")
+    text_preview.convert("RGB").save(PREVIEW_ROOT / "cursor-preview-text.png")
 
 
 if __name__ == "__main__":

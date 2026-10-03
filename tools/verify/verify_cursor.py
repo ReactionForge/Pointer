@@ -8,7 +8,9 @@ import json
 import sys
 import winreg
 
-ROOT = Path(__file__).resolve().parent
+from pointer.runtime_paths import ASSET_ROOT, PREVIEW_ROOT
+
+ROOT = ASSET_ROOT / "reference"
 USER32 = ctypes.WinDLL("user32", use_last_error=True)
 GDI32 = ctypes.WinDLL("gdi32", use_last_error=True)
 
@@ -79,7 +81,7 @@ if __name__ == "__main__":
             ("Person", "reference-black-person.cur", 32672),
         ):
             path = winreg.QueryValueEx(key, role)[0]
-            expected_path = ROOT / "adaptive" / filename.replace("reference-black-", "adaptive-") if "--adaptive" in sys.argv else ROOT / filename
+            expected_path = ASSET_ROOT / "legacy-invert" / filename.replace("reference-black-", "adaptive-") if "--adaptive" in sys.argv else ROOT / filename
             disk = USER32.LoadCursorFromFileW(str(expected_path))
             try:
                 expected = signature(disk)

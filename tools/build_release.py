@@ -11,7 +11,7 @@ import subprocess
 import sys
 import zipfile
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
@@ -25,15 +25,15 @@ def main():
     subprocess.run([sys.executable, "-m", "PyInstaller", "--noconfirm", "--windowed", "--onedir",
                     "--name", "Pointer", "--distpath", str(ROOT / "dist"),
                     "--workpath", str(ROOT / "build"), "--specpath", str(ROOT / "build"),
-                    str(ROOT / "pointer_app.py")], cwd=ROOT, check=True)
+                    "--paths", str(ROOT / "src"),
+                    str(ROOT / "packaging" / "windows" / "entrypoint.py")], cwd=ROOT, check=True)
     output = ROOT / "dist" / "Pointer"
-    shutil.copytree(ROOT / "dual-contrast", output / "dual-contrast", dirs_exist_ok=True)
-    shutil.copytree(ROOT / "cursor-test", output / "cursor-test", dirs_exist_ok=True)
-    for path in ROOT.glob("reference-black-*.*"):
-        if path.suffix in (".cur", ".ani"):
-            shutil.copy2(path, output / path.name)
+    for theme in ("adaptive", "reference"):
+        shutil.copytree(ROOT / "assets" / "cursors" / theme,
+                        output / "assets" / "cursors" / theme, dirs_exist_ok=True)
+    shutil.copytree(ROOT / "web" / "cursor-test", output / "web" / "cursor-test", dirs_exist_ok=True)
     shutil.copy2(ROOT / "VERSION", output / "VERSION")
-    shutil.copy2(ROOT / "packaging" / "README.txt", output / "使用说明.txt")
+    shutil.copy2(ROOT / "packaging" / "windows" / "README.txt", output / "使用说明.txt")
     notices = output / "licenses"
     notices.mkdir(exist_ok=True)
     python_license = Path(sys.base_prefix) / "LICENSE.txt"

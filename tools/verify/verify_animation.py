@@ -6,7 +6,8 @@ from ctypes import wintypes
 import hashlib
 import json
 import sys
-from verify_cursor import USER32, GDI32
+from .verify_cursor import USER32, GDI32
+from pointer.runtime_paths import ASSET_ROOT
 
 
 class BitmapInfoHeader(ctypes.Structure):
@@ -51,9 +52,9 @@ def frames(handle):
 if __name__ == "__main__":
     results = []
     for filename, identifier in (("reference-black-busy.ani", 32514), ("reference-black-working.ani", 32650)):
-        path = Path(__file__).resolve().parent / filename
+        path = ASSET_ROOT / "reference" / filename
         if "--adaptive" in sys.argv:
-            path = path.parent / "adaptive" / filename.replace("reference-black-", "adaptive-")
+            path = ASSET_ROOT / "legacy-invert" / filename.replace("reference-black-", "adaptive-")
         handle = USER32.LoadCursorFromFileW(str(path))
         if not handle:
             raise ctypes.WinError(ctypes.get_last_error())

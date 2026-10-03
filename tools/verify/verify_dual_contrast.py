@@ -5,13 +5,14 @@ import json
 
 from PIL import Image, ImageDraw, ImageFont
 
-from contrast_theme import ROOT, ROLE_IDS, theme_paths, choose_theme
-from create_adaptive_cursors import RENDERERS
-from create_cursor import render_loading
-from create_dual_contrast import recolor
-from verify_adaptive_cursors import native_render
-from verify_animation import frames
-from verify_cursor import USER32, signature
+from pointer.contrast_theme import ROLE_IDS, theme_paths, choose_theme
+from pointer.runtime_paths import ASSET_ROOT, DATA_ROOT, PREVIEW_ROOT
+from tools.generate.create_adaptive_cursors import RENDERERS
+from tools.generate.create_cursor import render_loading
+from tools.generate.create_dual_contrast import recolor
+from .verify_adaptive_cursors import native_render
+from .verify_animation import frames
+from .verify_cursor import USER32, signature
 
 USER32.CopyImage.argtypes = (ctypes.c_void_p, ctypes.c_uint, ctypes.c_int, ctypes.c_int, ctypes.c_uint)
 USER32.CopyImage.restype = ctypes.c_void_p
@@ -25,7 +26,7 @@ def check_assets():
         outline = tuple(255 - value for value in body)
         for kind, (renderer, _) in RENDERERS.items():
             source = renderer(64)
-            path = ROOT / "dual-contrast" / theme / f"adaptive-{kind}.cur"
+            path = ASSET_ROOT / "adaptive" / theme / f"adaptive-{kind}.cur"
             actual = native_render(path, Image.new("RGB", (64, 64), background))
             found_body = found_border = False
             for y in range(64):
@@ -86,7 +87,7 @@ def preview():
             tile = native_render(theme_paths(theme)[role], Image.new("RGB", (64, 64), background))
             image.paste(tile, (x + 34, y + 2))
             draw.text((x + 123, y + 23), label, font=font, fill="#15171c" if theme == "light" else "#eeeef1")
-    image.save(ROOT / "dual-contrast-preview.png")
+    image.save(PREVIEW_ROOT / "dual-contrast-preview.png")
 
 
 def check_system(theme):
@@ -107,9 +108,9 @@ def check_system(theme):
 if __name__ == "__main__":
     import sys
     if "--system" in sys.argv:
-        from adaptive_switcher import _set_dpi_awareness
+        from pointer.adaptive_switcher import _set_dpi_awareness
         _set_dpi_awareness()
-        state = json.loads((ROOT / "contrast-switcher-status.json").read_text(encoding="utf-8"))
+        state = json.loads((DATA_ROOT / "contrast-switcher-status.json").read_text(encoding="utf-8"))
         print(json.dumps(check_system(state["theme"])))
     else:
         result = check_assets()

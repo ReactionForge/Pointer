@@ -6,11 +6,13 @@ import struct
 
 from PIL import Image, ImageDraw, ImageFont
 
-from create_cursor import SIZES, cursor_bytes, render as render_arrow
-from create_hand_cursor import render_hand
+from .create_cursor import SIZES, cursor_bytes, render as render_arrow
+from .create_hand_cursor import render_hand
 
 
-ROOT = Path(__file__).resolve().parent
+from pointer.runtime_paths import ASSET_ROOT, PREVIEW_ROOT
+
+ROOT = ASSET_ROOT / "reference"
 INK = (8, 8, 8, 255)
 OUTLINE = (208, 210, 213, 255)
 SUPERSAMPLE = 8
@@ -160,7 +162,7 @@ def main():
             preview.alpha_composite(images[0], (x + offset + 20, y + 86))
             preview.alpha_composite(images[2], (x + offset + 76, y + 70))
         print(f"{kind}: {asset.name}, hotspot={hotspot}, sizes={SIZES}")
-    preview.convert("RGB").save(ROOT / "extra-cursors-preview.png")
+    preview.convert("RGB").save(PREVIEW_ROOT / "extra-cursors-preview.png")
 
 
 if __name__ == "__main__":

@@ -4,9 +4,10 @@ import struct
 
 from PIL import Image
 
-from contrast_theme import ROOT, theme_paths
-from create_adaptive_cursors import RENDERERS
-from create_cursor import SIZES, ANIMATION_FRAMES, render_loading, cursor_bytes, riff_chunk
+from pointer.contrast_theme import theme_paths
+from pointer.runtime_paths import ASSET_ROOT
+from .create_adaptive_cursors import RENDERERS
+from .create_cursor import SIZES, ANIMATION_FRAMES, render_loading, cursor_bytes, riff_chunk
 
 
 def recolor(image, theme):
@@ -28,7 +29,7 @@ def animation(theme, with_arrow):
 
 def main():
     for theme in ("light", "dark"):
-        folder = ROOT / "dual-contrast" / theme
+        folder = ASSET_ROOT / "adaptive" / theme
         folder.mkdir(parents=True, exist_ok=True)
         for kind, (renderer, hotspot) in RENDERERS.items():
             images = [recolor(renderer(size), theme) for size in SIZES]

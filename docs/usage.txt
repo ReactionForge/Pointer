@@ -1,0 +1,37 @@
+Pointer 使用说明
+
+下载：https://github.com/ReactionForge/Pointer/releases/latest
+
+完整解压 Windows x64 ZIP，双击 Pointer 文件夹中的“一键安装.cmd”。
+不需要 Python、管理员权限或联网。安装后可删除下载包和解压目录。
+
+浅色背景：黑色主体、白色边框。
+深色背景：白色主体、黑色边框。
+保留圆角造型和加载动画，无蓝光；覆盖 17 种 Windows 系统光标。
+中灰亮度 112–144 之间保留上一种配色，减少反复切换。
+
+开始菜单 → Pointer：
+- 启用自适应光标：启用后台切换和当前用户登录启动。
+- 停止自动切换：停止后台并取消登录启动，保留黑主体白边固定配色。
+- 恢复原光标：恢复首次保存的 Windows 原始设置，并停止后台和登录启动。
+- 打开测试页：离线观察箭头、文字选择、链接小手、加载与调整大小等状态。
+
+程序位于 %LOCALAPPDATA%\Pointer\app，备份在相邻的 data 目录。
+Windows 商店应用宿主可能重定向这个路径，安装提示会显示实际保存位置。
+请保留安装目录及备份；升级时运行新版本的一键安装，原始备份不会覆盖。
+
+本地源码工程：
+- 程序：src/pointer
+- 正式光标：assets/cursors/adaptive/light、dark
+- 固定光标：assets/cursors/reference
+- 实验资源：assets/cursors/legacy-invert
+- 测试网页：web/cursor-test/index.html
+- 源码快捷命令：scripts/windows
+- 本机备份：.local/data
+- 架构说明：docs/architecture.md
+
+网页可触发 13 类系统状态，请观察外观和动画后手动标记。
+Windows“照片”的拖动手掌、浏览器的 grab/grabbing/缩放光标可能来自软件自身资源。
+它们可能不使用系统方案。文本插入闪烁的细竖线也由应用控制。
+
+本主题依据参考截图重绘，并非原主题文件。发布包未签名，SHA-256 校验随 Release 提供。

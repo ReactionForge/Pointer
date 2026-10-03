@@ -6,11 +6,13 @@ import json
 
 from PIL import Image, ImageDraw, ImageFont
 
-from verify_animation import BitmapInfoHeader, USER32, GDI32
-from create_adaptive_cursors import adaptive_planes, RENDERERS
-from configure_cursor import USER32 as CURSOR_USER32
+from .verify_animation import BitmapInfoHeader, USER32, GDI32
+from tools.generate.create_adaptive_cursors import adaptive_planes, RENDERERS
+from pointer.configure_cursor import USER32 as CURSOR_USER32
 
-ROOT = Path(__file__).resolve().parent
+from pointer.runtime_paths import ASSET_ROOT, PREVIEW_ROOT
+
+ROOT = ASSET_ROOT / "reference"
 
 
 def native_render(path, background, size=64, frame=0, handle=None):
@@ -80,11 +82,11 @@ def preview(destination):
             rendered = native_render(destination / f"adaptive-{kind}.cur", background)
             image.paste(rendered, (x + 21, 92 + row * 79))
             draw.text((x + 99, 113 + row * 79), name, font=font, fill="#c6c9cf")
-    image.save(ROOT / "adaptive-preview.png")
+    image.save(PREVIEW_ROOT / "adaptive-preview.png")
 
 
 def main():
-    destination = ROOT / "adaptive"
+    destination = ASSET_ROOT / "legacy-invert"
     results = check_static(destination)
     animations = []
     for kind in ("busy", "working"):
@@ -93,7 +95,7 @@ def main():
         assert len(set(hashes)) == 24, f"{kind} lost animation frames"
         animations.append(kind)
     preview(destination)
-    print(json.dumps({"static_roles": len(results), "backgrounds_checked_per_role": 4, "animated_roles": animations, "distinct_frames_per_animation": 24, "preview": str(ROOT / "adaptive-preview.png")}, ensure_ascii=True))
+    print(json.dumps({"static_roles": len(results), "backgrounds_checked_per_role": 4, "animated_roles": animations, "distinct_frames_per_animation": 24, "preview": str(PREVIEW_ROOT / "adaptive-preview.png")}, ensure_ascii=True))
 
 
 if __name__ == "__main__":

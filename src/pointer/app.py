@@ -18,10 +18,10 @@ import sys
 import time
 import winreg
 
-import adaptive_switcher as switcher
-import configure_cursor as config
-from contrast_theme import THEME_NAME, theme_paths
-from runtime_paths import DATA_ROOT, FROZEN, INSTALL_ROOT, ROOT
+from . import adaptive_switcher as switcher
+from . import configure_cursor as config
+from .contrast_theme import THEME_NAME, theme_paths
+from .runtime_paths import DATA_ROOT, FROZEN, INSTALL_ROOT, ROOT, WEB_ROOT
 
 
 def package_files(root):
@@ -148,15 +148,23 @@ def _previous_directory():
     if not path:
         return None
     if path.name == "adaptive-arrow.cur" and path.parent.name in ("light", "dark"):
-        root = path.parent.parent.parent
-        if path.parent.parent.name != "dual-contrast":
+        if path.parent.parent.name == "dual-contrast":
+            root = path.parent.parent.parent
+        elif (path.parent.parent.name == "adaptive" and path.parents[2].name == "cursors"
+              and path.parents[3].name == "assets"):
+            root = path.parents[4]
+        else:
             return None
     elif path.name in ("reference-black-arrow.cur", "adaptive-arrow.cur"):
-        root = path.parent.parent if path.parent.name == "adaptive" else path.parent
+        if path.parent.name == "reference" and path.parents[1].name == "cursors":
+            root = path.parents[3]
+        else:
+            root = path.parent.parent if path.parent.name == "adaptive" else path.parent
     else:
         return None
     root = root.resolve()
-    if (root / "configure_cursor.py").is_file() or (root / "Pointer.exe").is_file():
+    if ((root / "configure_cursor.py").is_file() or (root / "Pointer.exe").is_file()
+            or (root / "src" / "pointer" / "configure_cursor.py").is_file()):
         return root
     return None
 
@@ -168,10 +176,13 @@ def _migrate_backup(previous):
         return
     if not previous:
         return
-    old_backup = previous / config.BACKUP.name
+    previous_data = previous / ".local" / "data"
+    if not previous_data.is_dir():
+        previous_data = previous.parent / "data" if (previous / "Pointer.exe").is_file() else previous
+    old_backup = previous_data / config.BACKUP.name
     if old_backup.is_file():
         config.save_backup(config.validate_backup(json.loads(old_backup.read_text(encoding="utf-8"))))
-    old_startup = previous / switcher.STARTUP_BACKUP.name
+    old_startup = previous_data / switcher.STARTUP_BACKUP.name
     if old_startup.is_file() and not switcher.STARTUP_BACKUP.exists():
         data = json.loads(old_startup.read_text(encoding="utf-8"))
         if data.get("value_name") != switcher.RUN_VALUE or not isinstance(data.get("installed_command"), str):
@@ -199,10 +210,38 @@ def _shortcuts():
                    check=True, creationflags=0x08000000, capture_output=True)
 
 
+def remove_obsolete_files(previous_files, current_files, directory):
+    """Remove verified files owned by the old release, preserving user additions."""
+    directory = directory.resolve()
+    parents = set()
+    for name, digest in previous_files.items():
+        if name in current_files:
+            continue
+        path = (directory / name).resolve()
+        if not path.is_relative_to(directory) or not path.is_file():
+            continue
+        if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+            continue
+        path.unlink()
+        parents.update(parent for parent in path.parents if parent != directory and parent.is_relative_to(directory))
+    for parent in sorted(parents, key=lambda value: len(value.parts), reverse=True):
+        try:
+            parent.rmdir()
+        except OSError:
+            pass
+
+
 def install():
     if not FROZEN:
         raise ValueError("源码模式请使用 --apply；一键安装请运行发布包中的 Pointer.exe。")
     files = package_files(ROOT)
+    previous_files = {}
+    if ROOT.resolve() != INSTALL_ROOT.resolve() and (INSTALL_ROOT / "PACKAGE.json").is_file():
+        try:
+            previous_files = package_files(INSTALL_ROOT)
+        except (ValueError, FileNotFoundError):
+            # Modified files are not safe candidates for automatic cleanup.
+            pass
     previous = _previous_directory()
     _migrate_backup(previous)
     if previous:
@@ -234,6 +273,7 @@ def install():
         detail = json.loads(report.read_text(encoding="utf-8")) if report.exists() else {}
         if result.returncode or detail.get("exit_code") != 0:
             raise RuntimeError(detail.get("error", "安装后的配置程序未成功完成。"))
+        remove_obsolete_files(previous_files, files, INSTALL_ROOT)
     else:
         _shortcuts()
         apply_theme()
@@ -262,7 +302,7 @@ def dispatch(action):
         if action != "test_page":
             raise ValueError("尚未安装 Pointer，请先运行一键安装.cmd。")
     if action == "test_page":
-        os.startfile(ROOT / "cursor-test" / "index.html")
+        os.startfile(WEB_ROOT / "index.html")
         return {"test_page_opened": True}
     operation = {"install": install, "apply": apply_theme, "stop": stop_theme,
                  "reference": reference_theme, "restore": restore_theme, "diagnose": diagnose}[action]

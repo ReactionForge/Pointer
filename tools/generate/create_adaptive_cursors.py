@@ -5,12 +5,13 @@ import struct
 
 from PIL import Image, ImageFilter
 
-from create_cursor import SIZES, ANIMATION_FRAMES, render, render_ibeam, render_loading, riff_chunk
-from create_hand_cursor import render_hand
-from create_extra_cursors import ASSETS, render_extra
+from .create_cursor import SIZES, ANIMATION_FRAMES, render, render_ibeam, render_loading, riff_chunk
+from .create_hand_cursor import render_hand
+from .create_extra_cursors import ASSETS, render_extra
 
-ROOT = Path(__file__).resolve().parent
-DESTINATION = ROOT / "adaptive"
+from pointer.runtime_paths import ASSET_ROOT
+
+DESTINATION = ASSET_ROOT / "legacy-invert"
 
 
 def adaptive_planes(image, mode="body"):
@@ -99,8 +100,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=("body", "outline"), default="body")
     arguments = parser.parse_args()
-    destination = DESTINATION if arguments.mode == "body" else ROOT / "adaptive-outline"
-    destination.mkdir(exist_ok=True)
+    destination = DESTINATION if arguments.mode == "body" else ASSET_ROOT / "legacy-outline"
+    destination.mkdir(parents=True, exist_ok=True)
     for kind, (renderer, hotspot) in RENDERERS.items():
         (destination / f"adaptive-{kind}.cur").write_bytes(cursor_bytes([renderer(size) for size in SIZES], hotspot, arguments.mode))
     for kind, with_arrow in (("busy", False), ("working", True)):

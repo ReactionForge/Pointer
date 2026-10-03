@@ -13,7 +13,7 @@ import sys
 import time
 import winreg
 
-from runtime_paths import DATA_ROOT, FROZEN, ROOT
+from .runtime_paths import DATA_ROOT, FROZEN, ROOT
 
 
 STATUS_FILE = DATA_ROOT / "contrast-switcher-status.json"
@@ -276,7 +276,7 @@ def _run():
             last_written = dict(state)
 
     try:
-        from contrast_theme import THEME_NAME, ROLE_IDS, choose_theme, theme_paths
+        from .contrast_theme import THEME_NAME, ROLE_IDS, choose_theme, theme_paths
         scheme_name = THEME_NAME
         event = KERNEL32.CreateEventW(None, True, False, EVENT_NAME)
         if not event:
@@ -327,7 +327,7 @@ def _run():
         # Never reload over a scheme the user selected while the helper was running.
         try:
             if state.get("shutdown_reason") == "error" and scheme_name and _scheme_name() == scheme_name:
-                from configure_cursor import reload_cursors
+                from .configure_cursor import reload_cursors
                 reload_cursors()
         except Exception as error:
             recovery = f"Cursor reload failed: {type(error).__name__}: {error}"
@@ -366,7 +366,7 @@ def _pythonw():
 def _helper_command():
     if FROZEN:
         return [str(Path(sys.executable).resolve()), "--run"]
-    return [str(_pythonw()), str(SCRIPT), "--run"]
+    return [str(_pythonw()), str(ROOT / "packaging" / "windows" / "entrypoint.py"), "--run"]
 
 
 def start():
@@ -499,9 +499,9 @@ if __name__ == "__main__":
         _run()
     elif "--stop" in sys.argv:
         result = stop()
-        from contrast_theme import THEME_NAME
+        from .contrast_theme import THEME_NAME
         if _scheme_name() == THEME_NAME:
-            from configure_cursor import reload_cursors
+            from .configure_cursor import reload_cursors
             reload_cursors()
         print(json.dumps(result, ensure_ascii=False))
     else:

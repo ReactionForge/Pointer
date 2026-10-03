@@ -4,9 +4,11 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-from create_cursor import SIZES, cursor_bytes
+from .create_cursor import SIZES, cursor_bytes
 
-ROOT = Path(__file__).resolve().parent
+from pointer.runtime_paths import ASSET_ROOT, PREVIEW_ROOT
+
+ROOT = ASSET_ROOT / "reference"
 INK = (8, 8, 8, 255)
 OUTLINE = (208, 210, 213, 255)
 HOTSPOT = (14, 3)
@@ -78,7 +80,7 @@ def main():
         preview.alpha_composite(images[0], (offset + 25, 105))
         preview.alpha_composite(images[2], (offset + 83, 86))
         preview.alpha_composite(images[4], (offset + 171, 50))
-    preview.convert("RGB").save(ROOT / "hand-preview.png")
+    preview.convert("RGB").save(PREVIEW_ROOT / "hand-preview.png")
     print(f"Created {asset}; hotspot={HOTSPOT}; sizes={SIZES}")
 
 

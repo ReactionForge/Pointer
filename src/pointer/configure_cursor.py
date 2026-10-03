@@ -7,30 +7,31 @@ import json
 import os
 import sys
 import winreg
-from runtime_paths import ROOT, DATA_ROOT
+from .runtime_paths import ASSET_ROOT, DATA_ROOT
 
-CURSOR = ROOT / "reference-black-arrow.cur"
+REFERENCE_ROOT = ASSET_ROOT / "reference"
+CURSOR = REFERENCE_ROOT / "reference-black-arrow.cur"
 CURSORS = {
     "Arrow": CURSOR,
-    "IBeam": ROOT / "reference-black-ibeam.cur",
-    "Wait": ROOT / "reference-black-busy.ani",
-    "AppStarting": ROOT / "reference-black-working.ani",
-    "Hand": ROOT / "reference-black-hand.cur",
-    "Help": ROOT / "reference-black-help.cur",
-    "Crosshair": ROOT / "reference-black-crosshair.cur",
-    "NWPen": ROOT / "reference-black-pen.cur",
-    "No": ROOT / "reference-black-no.cur",
-    "SizeNS": ROOT / "reference-black-ns.cur",
-    "SizeWE": ROOT / "reference-black-ew.cur",
-    "SizeNWSE": ROOT / "reference-black-nwse.cur",
-    "SizeNESW": ROOT / "reference-black-nesw.cur",
-    "SizeAll": ROOT / "reference-black-move.cur",
-    "UpArrow": ROOT / "reference-black-up.cur",
-    "Pin": ROOT / "reference-black-pin.cur",
-    "Person": ROOT / "reference-black-person.cur",
+    "IBeam": REFERENCE_ROOT / "reference-black-ibeam.cur",
+    "Wait": REFERENCE_ROOT / "reference-black-busy.ani",
+    "AppStarting": REFERENCE_ROOT / "reference-black-working.ani",
+    "Hand": REFERENCE_ROOT / "reference-black-hand.cur",
+    "Help": REFERENCE_ROOT / "reference-black-help.cur",
+    "Crosshair": REFERENCE_ROOT / "reference-black-crosshair.cur",
+    "NWPen": REFERENCE_ROOT / "reference-black-pen.cur",
+    "No": REFERENCE_ROOT / "reference-black-no.cur",
+    "SizeNS": REFERENCE_ROOT / "reference-black-ns.cur",
+    "SizeWE": REFERENCE_ROOT / "reference-black-ew.cur",
+    "SizeNWSE": REFERENCE_ROOT / "reference-black-nwse.cur",
+    "SizeNESW": REFERENCE_ROOT / "reference-black-nesw.cur",
+    "SizeAll": REFERENCE_ROOT / "reference-black-move.cur",
+    "UpArrow": REFERENCE_ROOT / "reference-black-up.cur",
+    "Pin": REFERENCE_ROOT / "reference-black-pin.cur",
+    "Person": REFERENCE_ROOT / "reference-black-person.cur",
 }
 ADAPTIVE_CURSORS = {
-    role: ROOT / "adaptive" / path.name.replace("reference-black-", "adaptive-")
+    role: ASSET_ROOT / "legacy-invert" / path.name.replace("reference-black-", "adaptive-")
     for role, path in CURSORS.items()
 }
 BACKUP = DATA_ROOT / "original-cursor-settings.json"
@@ -126,7 +127,7 @@ def reload_cursors():
 
 def apply(adaptive=False, dual=False):
     if dual:
-        from contrast_theme import theme_paths
+        from .contrast_theme import theme_paths
         cursors = theme_paths("light")
     else:
         cursors = ADAPTIVE_CURSORS if adaptive else CURSORS
@@ -177,7 +178,7 @@ def restore():
 
 
 if __name__ == "__main__":
-    from adaptive_switcher import stop, enable_startup, disable_startup, start
+    from .adaptive_switcher import stop, enable_startup, disable_startup, start
     stop()
     if "--restore" in sys.argv:
         disable_startup()

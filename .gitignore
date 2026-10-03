@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 venv/
 .build-env/
+.local/
 build/
 dist/
 *.spec
@@ -23,12 +24,11 @@ data/
 *.zip
 *.sha256
 
-# Prototype screenshots; keep the two public theme previews.
-/*.jpg
-/*preview*.png
-/*preview*.gif
-!/dual-contrast-preview.png
-!/theme-preview.png
+# Development artwork previews stay local except for the documented examples.
+docs/images/*preview*.png
+docs/images/*preview*.gif
+!docs/images/dual-contrast-preview.png
+!docs/images/theme-preview.png
 
 .DS_Store
 Thumbs.db

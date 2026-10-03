@@ -1,10 +1,12 @@
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
-from create_cursor import render, render_ibeam, render_loading
-from create_hand_cursor import render_hand
-from create_extra_cursors import render_extra
+from .create_cursor import render, render_ibeam, render_loading
+from .create_hand_cursor import render_hand
+from .create_extra_cursors import render_extra
 
-ROOT = Path(__file__).resolve().parent
+from pointer.runtime_paths import PREVIEW_ROOT
+
+ROOT = PREVIEW_ROOT
 LABELS = [
     ("普通选择", render),
     ("文字选择", render_ibeam),

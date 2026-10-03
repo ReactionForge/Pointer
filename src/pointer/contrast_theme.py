@@ -1,6 +1,6 @@
 """Shared paths and switching thresholds for the paired black-and-white theme."""
 
-from runtime_paths import ROOT
+from .runtime_paths import ASSET_ROOT
 THEME_NAME = "Screenshot Adaptive Contrast"
 ROLE_IDS = {
     "Arrow": 32512, "IBeam": 32513, "Wait": 32514,
@@ -20,7 +20,7 @@ FILENAMES = dict(zip(ROLE_IDS, (
 def theme_paths(theme):
     if theme not in ("light", "dark"):
         raise ValueError(theme)
-    return {role: ROOT / "dual-contrast" / theme / f"adaptive-{filename}" for role, filename in FILENAMES.items()}
+    return {role: ASSET_ROOT / "adaptive" / theme / f"adaptive-{filename}" for role, filename in FILENAMES.items()}
 
 
 def choose_theme(luminance, current=None):

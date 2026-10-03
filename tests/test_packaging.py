@@ -6,14 +6,45 @@ from pathlib import Path
 import tempfile
 import unittest
 import runpy
+import subprocess
+import sys
 from contextlib import ExitStack
 from unittest.mock import patch
 
-import configure_cursor as config
-import pointer_app as app
+from pointer import configure_cursor as config
+from pointer import app
 
 
 class PackageTests(unittest.TestCase):
+    def test_upgrade_cleanup_preserves_changed_and_unowned_files(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            old = root / "legacy" / "old.cur"
+            old.parent.mkdir()
+            old.write_bytes(b"old cursor")
+            changed = root / "custom.cur"
+            changed.write_bytes(b"user change")
+            unowned = root / "notes.txt"
+            unowned.write_text("user notes")
+            previous = {"legacy/old.cur": hashlib.sha256(old.read_bytes()).hexdigest(),
+                        "custom.cur": hashlib.sha256(b"original cursor").hexdigest()}
+            app.remove_obsolete_files(previous, {}, root)
+            self.assertFalse(old.parent.exists())
+            self.assertEqual(changed.read_bytes(), b"user change")
+            self.assertEqual(unowned.read_text(), "user notes")
+
+    def test_source_entrypoint_works_without_site_packages_from_another_directory(self):
+        repository = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory(prefix="Pointer 中文 ") as folder:
+            report = Path(folder) / "diagnostics.json"
+            process = subprocess.run([sys.executable, "-S", str(repository / "packaging" / "windows" / "entrypoint.py"),
+                                      "--diagnose", "--quiet", "--report", str(report)],
+                                     cwd=folder, capture_output=True, timeout=15)
+            self.assertEqual(process.returncode, 0, process.stderr.decode(errors="replace"))
+            result = json.loads(report.read_text(encoding="utf-8"))
+            self.assertEqual(result["cursor_resources"], 34)
+            self.assertEqual(result["animated_resources"], 4)
+
     def test_installed_data_survives_host_appdata_redirection(self):
         with tempfile.TemporaryDirectory() as folder:
             local = Path(folder)
@@ -24,7 +55,7 @@ class PackageTests(unittest.TestCase):
             with patch.object(app.sys, "frozen", True, create=True), \
                  patch.object(app.sys, "executable", str(executable)), \
                  patch.dict(app.os.environ, {"LOCALAPPDATA": str(local)}):
-                paths = runpy.run_path(str(Path(__file__).resolve().parents[1] / "runtime_paths.py"))
+                paths = runpy.run_path(str(Path(__file__).resolve().parents[1] / "src" / "pointer" / "runtime_paths.py"))
             self.assertEqual(paths["INSTALL_ROOT"], installed.resolve())
             self.assertEqual(paths["DATA_ROOT"], installed.resolve().parent / "data")
 
