@@ -1,0 +1,35 @@
+# Build environments and generated distributions.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.build-env/
+build/
+dist/
+*.spec
+*.egg-info/
+
+# Per-user settings, backups and diagnostic output must stay on this machine.
+original-cursor-settings.json
+contrast-switcher-status.json
+contrast-switcher-startup-backup.json
+last-operation.json
+*-report.json
+diagnostics*.json
+*-diagnose.json
+data/
+*.log
+*.tmp
+*.zip
+*.sha256
+
+# Prototype screenshots; keep the two public theme previews.
+/*.jpg
+/*preview*.png
+/*preview*.gif
+!/dual-contrast-preview.png
+!/theme-preview.png
+
+.DS_Store
+Thumbs.db
+Desktop.ini

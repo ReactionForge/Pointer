@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>光标试验台 · Pointer</title>
+  <style>
+    :root{--bg:#101216;--panel:#191c22;--line:#30343d;--ink:#eeeef1;--muted:#a1a6b1;--accent:#deb58a;--good:#b8d5bf;--bad:#edb4a6;--stage-light:#eef0f3;--stage-dark:#101216;--stage-bg:linear-gradient(90deg,var(--stage-light) 50%,var(--stage-dark) 50%);font-family:"Segoe UI","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg);cursor:default;font-synthesis:none;scroll-behavior:smooth}
+    *{box-sizing:border-box}body{margin:0}button,input,textarea{font:inherit}button,a{cursor:pointer}button{color:inherit}a{color:inherit;text-decoration:none}button{border:0}button:focus-visible,a:focus-visible,[tabindex]:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:4px}svg{display:block}button:disabled{cursor:not-allowed;opacity:.5}::selection{background:#806044;color:white}
+    .wrap{width:min(1240px,calc(100% - 64px));margin:auto}.top{border-bottom:1px solid var(--line)}.top-inner{min-height:80px;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand{display:flex;align-items:center;gap:13px;font-size:15px;font-weight:650}.brand-mark{width:24px;height:28px}.brand small{font:11px "Cascadia Mono",Consolas,monospace;color:var(--muted);letter-spacing:1.6px}.brand-name{display:flex;flex-direction:column;gap:4px}.nav{display:flex;gap:24px;font-size:13px;color:var(--muted)}.nav a:hover{color:var(--ink)}
+    .hero{padding:54px 0 37px;display:grid;grid-template-columns:1fr 380px;gap:50px;align-items:end}.eyebrow{color:var(--accent);font:12px "Cascadia Mono",Consolas,monospace;letter-spacing:2px;margin:0 0 19px}.hero h1{font-size:clamp(34px,4.1vw,54px);line-height:1.24;letter-spacing:-1.5px;font-weight:650;margin:0 0 20px}.intro{color:var(--muted);font-size:15px;line-height:1.8;margin:0;max-width:580px}.intro strong{color:var(--ink);font-weight:500}.summary{background:var(--panel);padding:26px;border:1px solid var(--line);border-radius:14px}.summary-head{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}.count{font:30px "Bahnschrift","Segoe UI",sans-serif;display:block;margin-bottom:5px}.counts small{color:var(--muted);font-size:12px}.counts .ok{color:var(--good)}.counts .issue{color:var(--bad)}.meter{height:3px;background:var(--line);overflow:hidden}.meter-fill{height:100%;width:0;background:var(--accent);transition:width .2s}.summary-note{font-size:12px;color:var(--muted);margin:14px 0 0}
+    .toolbar{position:sticky;top:0;z-index:10;background:rgba(16,18,22,.97);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:17px 0;margin-bottom:32px}.toolbar-inner{display:flex;gap:20px;align-items:center;justify-content:space-between}.live{display:flex;align-items:center;gap:13px;min-width:0}.live-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}.live small{color:var(--muted);font-size:11px;display:block;margin-bottom:3px}.live strong{font-size:14px;font-weight:550;display:block}.controls{display:flex;align-items:center;gap:15px}.controls-label{font-size:12px;color:var(--muted)}.segmented{display:flex;border:1px solid var(--line);border-radius:7px;padding:3px}.segmented button{background:none;color:var(--muted);font-size:12px;padding:7px 13px;border-radius:4px}.segmented button[aria-pressed="true"]{background:#353b45;color:white}.plain-btn{background:none;color:var(--muted);font-size:12px;padding:8px;border-radius:5px}.plain-btn:hover{color:var(--ink);background:#242932}.section{scroll-margin-top:110px;margin-bottom:46px}.section-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:20px}.section-head h2{font-size:22px;font-weight:550;letter-spacing:-.4px;margin:0 0 7px}.section-head p{font-size:13px;line-height:1.65;color:var(--muted);margin:0}.section-tag{font:11px "Cascadia Mono",Consolas,monospace;color:var(--muted);white-space:nowrap;padding-bottom:5px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:11px;overflow:hidden;transition:border-color .15s}.card:hover{border-color:#636872}.card-top{padding:16px 16px 13px;display:flex;justify-content:space-between;gap:8px;align-items:center}.card-title{font-size:14px;font-weight:550}.badge{font-size:10px;color:var(--muted);border:1px solid #3b414c;border-radius:4px;padding:3px 5px;white-space:nowrap}.card[data-verdict="ok"] .badge{color:var(--good);border-color:#435a4a}.card[data-verdict="issue"] .badge{color:var(--bad);border-color:#71504c}.test-surface{margin:0 12px;border-radius:6px;height:104px;background:var(--stage-bg);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;isolation:isolate}.surface-mark{width:40px;height:40px;opacity:.7;color:#87909e;pointer-events:none}.surface-hint{position:absolute;left:9px;right:9px;bottom:7px;font-size:10px;color:#8992a0;text-align:center;pointer-events:none}.card-footer{padding:10px 13px 13px;display:flex;justify-content:space-between;gap:7px;align-items:center}.css-key{font:10px "Cascadia Mono",Consolas,monospace;color:#9a9fab}.verdict-buttons{display:flex;gap:4px}.verdict-buttons button{background:transparent;border:1px solid #414752;color:var(--muted);font-size:11px;padding:5px 7px;border-radius:4px}.verdict-buttons button:hover{background:#333945;color:var(--ink)}.verdict-buttons button[aria-pressed="true"][data-verdict="ok"]{background:#293e30;color:var(--good);border-color:#5c8065}.verdict-buttons button[aria-pressed="true"][data-verdict="issue"]{background:#482f2c;color:var(--bad);border-color:#9b6258}.help-note{padding:16px 19px;margin-top:15px;border-left:2px solid #676e7b;background:#191c22;color:var(--muted);font-size:12px;line-height:1.8}.help-note strong{font-weight:500;color:var(--ink)}
+    .adaptive-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.adaptive-panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:20px;min-width:0}.adaptive-panel h3{font-size:15px;font-weight:550;margin:0 0 8px}.adaptive-panel p{font-size:12px;color:var(--muted);line-height:1.7;margin:0 0 16px}.brightness-control{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:8px;font-size:12px;color:var(--muted)}.brightness-control output{font:11px "Cascadia Mono",Consolas,monospace;color:var(--ink)}.brightness-range{width:100%;margin:0 0 18px;accent-color:var(--accent);cursor:default}.brightness-range:focus-visible{outline:2px solid var(--accent);outline-offset:4px}.adaptive-surface{height:172px;border-radius:7px;position:relative;cursor:default;overflow:hidden;user-select:none}.adaptive-surface *{cursor:inherit;pointer-events:none}.brightness-surface{background:rgb(128,128,128)}.adaptive-surface-label{position:absolute;left:13px;bottom:12px;font-size:11px;color:#080808}.boundary-surface{background:linear-gradient(90deg,#fff 50%,#080808 50%);height:224px}.boundary-surface .adaptive-surface-label{left:13px;color:#080808}.boundary-surface .dark-label{left:auto;right:13px;color:#d0d2d5}.adaptive-swatches{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:16px}.adaptive-swatch{height:130px;border:1px solid #525861}.adaptive-swatch .adaptive-surface-label{display:flex;justify-content:space-between;gap:8px;left:12px;right:12px}.adaptive-swatch code{font:10px "Cascadia Mono",Consolas,monospace;opacity:.75}.adaptive-note{display:flex;gap:10px;align-items:flex-start;margin-top:16px;color:var(--muted);font-size:12px;line-height:1.8}.adaptive-note span{flex-shrink:0;color:var(--accent)}.adaptive-note p{margin:0}.adaptive-note strong{font-weight:500;color:var(--ink)}
+    .practice-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.practice{border:1px solid var(--line);border-radius:11px;background:var(--panel);padding:21px;min-width:0}.practice h3{font-weight:550;font-size:15px;margin:0 0 8px}.practice p{font-size:12px;color:var(--muted);line-height:1.7;margin:0 0 16px}.text-input{width:100%;height:138px;border:1px solid #565d68;border-radius:7px;padding:17px;background:#11151c;color:#d0d2d5;line-height:1.8;resize:vertical;cursor:text}.test-stage{height:170px;border-radius:7px;background:var(--stage-bg);position:relative;overflow:hidden;touch-action:none}.drag-piece{position:absolute;left:30px;top:50px;width:106px;height:64px;border:2px solid #d0d2d5;border-radius:10px;background:#080808;display:flex;align-items:center;justify-content:center;color:#d0d2d5;font-size:13px;cursor:move;touch-action:none;user-select:none}.drag-piece:active{background:#20242b}.readout{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:12px}.readout output{font-family:"Cascadia Mono",Consolas,monospace}.precision-stage{cursor:crosshair;background-image:radial-gradient(#7a839033 1px,transparent 1px),var(--stage-bg);background-size:20px 20px,100% 100%}.bullseye{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border:1px solid #a3abb8;border-radius:50%;pointer-events:none}.bullseye:before,.bullseye:after{content:"";position:absolute;background:#a3abb8}.bullseye:before{height:1px;width:44px;top:15px;left:-7px}.bullseye:after{height:44px;width:1px;left:15px;top:-7px}.click-mark{width:6px;height:6px;border:1px solid #080808;box-shadow:0 0 0 2px #d0d2d5;background:#deb58a;position:absolute;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);display:none}.resize-stage{height:170px}.resize-box{position:absolute;left:36px;top:25px;width:220px;height:112px;border:2px solid #d0d2d5;border-radius:6px;background:#080808;display:flex;align-items:center;justify-content:center;color:#d0d2d5;font-size:12px;user-select:none}.resize-handle{position:absolute;background:#d0d2d5;border:2px solid #080808;width:13px;height:13px;border-radius:3px;touch-action:none;padding:0}.handle-n{top:-7px;left:calc(50% - 6px);cursor:ns-resize}.handle-s{bottom:-7px;left:calc(50% - 6px);cursor:ns-resize}.handle-w{left:-7px;top:calc(50% - 6px);cursor:ew-resize}.handle-e{right:-7px;top:calc(50% - 6px);cursor:ew-resize}.handle-nw{left:-7px;top:-7px;cursor:nwse-resize}.handle-se{right:-7px;bottom:-7px;cursor:nwse-resize}.handle-ne{right:-7px;top:-7px;cursor:nesw-resize}.handle-sw{left:-7px;bottom:-7px;cursor:nesw-resize}.link-demo{background:none;color:var(--accent);padding:8px 0;text-decoration:underline;text-underline-offset:5px;cursor:pointer}.link-feedback{height:22px;font-size:12px;color:var(--good)}
+    .image-layout{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:center}.image-viewer{height:250px;border-radius:8px;overflow:hidden;position:relative;background:#252b33;cursor:grab;touch-action:none;user-select:none}.image-viewer.is-grabbing{cursor:grabbing}.scene{position:absolute;inset:0;width:100%;height:100%;transform:scale(1.5);pointer-events:none}.image-tools{display:flex;align-items:center;gap:8px;margin-top:12px}.image-tools button{width:34px;height:32px;border:1px solid #49515e;border-radius:5px;background:#232a34;color:var(--ink);font-size:19px}.image-tools [data-zoom="in"]{cursor:zoom-in}.image-tools [data-zoom="out"]{cursor:zoom-out}.image-tools [data-zoom="reset"]{width:auto;font-size:12px;padding:0 12px}.image-tools output{color:var(--muted);font:12px "Cascadia Mono",Consolas,monospace;margin-left:auto}.browser-note h3{font-size:18px;margin-bottom:13px}.browser-note p{font-size:13px;line-height:1.9}.browser-note ul{padding-left:20px;font-size:12px;line-height:2;color:var(--muted)}.browser-note code{font:11px "Cascadia Mono",Consolas,monospace;color:var(--accent)}
+    .footer{border-top:1px solid var(--line);padding:26px 0 38px;display:flex;justify-content:space-between;gap:24px;color:var(--muted);font-size:11px;line-height:1.8}.footer p{margin:0}.footer a{text-decoration:underline;text-underline-offset:3px}.footer-note{max-width:730px}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    [data-background="light"]{--stage-bg:var(--stage-light)}[data-background="dark"]{--stage-bg:var(--stage-dark)}body.is-dragging,body.is-dragging *{cursor:var(--drag-cursor,move)!important;user-select:none!important}
+    @media(max-width:1040px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero{grid-template-columns:1fr 320px;gap:30px}.wrap{width:calc(100% - 40px)}}
+    @media(max-width:760px){.top-inner{min-height:72px}.nav{gap:14px;font-size:12px}.hero{grid-template-columns:1fr;gap:25px;padding-top:36px}.hero h1{font-size:36px}.summary{padding:20px}.counts{margin:14px 0}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.practice-grid,.image-layout,.adaptive-grid{grid-template-columns:1fr}.adaptive-swatches{grid-template-columns:repeat(2,minmax(0,1fr))}.adaptive-panel{padding:17px}.boundary-surface{height:172px}.toolbar-inner{align-items:flex-start;gap:12px}.controls{gap:5px;flex-wrap:wrap;justify-content:flex-end}.controls-label{display:none}.segmented button{padding:6px 10px}.section-tag{display:none}.footer{flex-direction:column;gap:12px}.wrap{width:calc(100% - 28px)}.practice{padding:17px}.resize-box{width:180px;left:24px}.live strong{font-size:12px}}
+    @media(max-width:430px){.brand small{display:none}.nav a:last-child{display:none}.card-top{padding:12px 10px;flex-wrap:wrap}.card-footer{align-items:flex-start;flex-direction:column;gap:8px}.verdict-buttons{width:100%}.verdict-buttons button{flex:1}.test-surface{margin:0 8px}.toolbar-inner{flex-direction:column;align-items:stretch}.controls{justify-content:space-between}.segmented{order:0}.hero h1{font-size:33px}}
+    @media(max-width:430px){.nav a:nth-child(3){display:none}}
+    @media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}*{transition:none!important}}
+  </style>
+</head>
+<body data-background="split">
+  <header class="top">
+    <div class="wrap top-inner">
+      <a class="brand" href="#top" aria-label="回到光标试验台顶部">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 3Q1.5 1.8 3.1 6.1L11.1 26Q12.4 29.6 14 26L17.2 18.4Q17.8 16.8 19.3 16.2L26.2 13.7Q29.8 11.8 26.4 10.5Z" fill="#080808" stroke="#d0d2d5" stroke-width="3" stroke-linejoin="round"/></svg>
+        <span class="brand-name">光标试验台<small>POINTER / LOCAL</small></span>
+      </a>
+      <nav class="nav" aria-label="页面导航"><a href="#adaptive">深浅自适应</a><a href="#system">系统状态</a><a href="#practice">交互演练</a><a href="#image-test">图片拖动</a></nav>
+    </div>
+  </header>
+  <main id="top" class="wrap">
+    <section class="hero" aria-labelledby="page-title">
+      <div><p class="eyebrow">ADAPTIVE / BLACK &amp; WHITE / NO GLOW</p><h1 id="page-title">把每一种光标<br>都试一遍。</h1><p class="intro">浅色底：纯黑主体、纯白描边；深色底：纯白主体、纯黑描边。保留圆角造型，没有蓝光。<br><strong>测试区调用系统光标，没有用网页图片替换指针。</strong></p></div>
+      <aside class="summary" aria-label="你的手动测试记录"><div class="summary-head"><span>你的检查记录</span><span>13 项系统测试</span></div><div class="counts"><div><strong id="pending-count" class="count">13</strong><small>待判断</small></div><div><strong id="ok-count" class="count ok">0</strong><small>正常</small></div><div><strong id="issue-count" class="count issue">0</strong><small>需检查</small></div></div><div class="meter"><div id="meter-fill" class="meter-fill"></div></div><p class="summary-note">看完后手动标记；鼠标经过不算测试通过。</p></aside>
+    </section>
+  </main>
+  <div class="toolbar"><div class="wrap toolbar-inner"><div class="live"><span class="live-dot"></span><div><small>当前测试区域</small><strong id="live-name" aria-live="polite">把鼠标移到下方测试区</strong></div></div><div class="controls"><span class="controls-label">测试背景</span><div class="segmented" role="group" aria-label="选择测试区背景"><button type="button" data-background="split" aria-pressed="true">双色</button><button type="button" data-background="light" aria-pressed="false">浅色</button><button type="button" data-background="dark" aria-pressed="false">深色</button></div><button type="button" id="reset-records" class="plain-btn">重置记录</button></div></div></div>
+  <div class="wrap">
+    <section id="adaptive" class="section" aria-labelledby="adaptive-title">
+      <div class="section-head"><div><h2 id="adaptive-title">深浅背景 · 自适应测试</h2><p>在色块之间移动鼠标，检查浅色底的黑主体白描边，以及深色底的白主体黑描边。</p></div><span class="section-tag">CONTRAST / LIVE BACKGROUND</span></div>
+      <div class="adaptive-grid">
+        <article class="adaptive-panel"><h3>从黑到白，连续调节</h3><p>拖动滑块后，将鼠标移到色块里观察。也可先点滑块，再把鼠标留在色块里，用方向键调节亮度。</p><div class="brightness-control"><label for="adaptive-brightness">灰度亮度</label><output id="adaptive-brightness-value" for="adaptive-brightness">128 / 255 · #808080</output></div><input id="adaptive-brightness" class="brightness-range" type="range" min="0" max="255" step="1" value="128" aria-controls="adaptive-brightness-surface" aria-valuetext="亮度 128，灰度颜色 #808080"><div id="adaptive-brightness-surface" class="adaptive-surface brightness-surface" data-adaptive-test="自适应 · 连续亮度" aria-label="可调灰度背景，观察系统箭头"><span class="adaptive-surface-label">把鼠标移到这里观察</span></div></article>
+        <article class="adaptive-panel"><h3>跨过黑白交界</h3><p>缓慢穿过中线，让箭头覆盖交界处，观察整只光标在两套黑白配色之间切换。</p><div class="adaptive-surface boundary-surface" data-adaptive-test="自适应 · 黑白交界" aria-label="左侧白色，右侧黑色的背景测试区"><span class="adaptive-surface-label">白色背景</span><span class="adaptive-surface-label dark-label">黑色背景</span></div></article>
+      </div>
+      <div class="adaptive-swatches" aria-label="四种固定亮度背景">
+        <div class="adaptive-surface adaptive-swatch" style="background:#ffffff" data-adaptive-test="自适应 · 白色背景" aria-label="白色背景测试区"><span class="adaptive-surface-label">白色 <code>#FFFFFF</code></span></div>
+        <div class="adaptive-surface adaptive-swatch" style="background:#eeeeee" data-adaptive-test="自适应 · 浅灰背景" aria-label="浅灰背景测试区"><span class="adaptive-surface-label">浅灰 <code>#EEEEEE</code></span></div>
+        <div class="adaptive-surface adaptive-swatch" style="background:#808080" data-adaptive-test="自适应 · 中灰背景" aria-label="中灰背景测试区"><span class="adaptive-surface-label">中灰 <code>#808080</code></span></div>
+        <div class="adaptive-surface adaptive-swatch" style="background:#080808" data-adaptive-test="自适应 · 黑色背景" aria-label="黑色背景测试区"><span class="adaptive-surface-label" style="color:#d0d2d5">黑色 <code>#080808</code></span></div>
+      </div>
+      <div class="adaptive-note"><span>↔</span><p><strong>请用眼睛判断：</strong>本地后台程序根据光标所在区域的背景亮度切换配色；亮度在 112–144 的中灰区间内保留当前配色，避免来回切换。这里调用系统普通箭头，颜色按整只光标切换。上方“测试背景”开关不改变这些对照色块，测试结果由你手动判断。</p></div>
+    </section>
+    <section id="system" class="section" aria-labelledby="system-title"><div class="section-head"><div><h2 id="system-title">系统光标 · 逐项检查</h2><p>把鼠标停在卡片的色块上，观察形状、描边和动画，再点击“正常”或“需检查”。</p></div><span class="section-tag">SYSTEM / 13 STATES</span></div><div id="cursor-grid" class="grid"></div><div class="help-note"><strong>观察重点：</strong>浅色背景上应为纯黑主体、纯白描边，深色背景上应为纯白主体、纯黑描边；加载圆环应持续旋转，17 种系统光标都没有蓝色光晕。</div></section>
+    <section id="practice" class="section" aria-labelledby="practice-title"><div class="section-head"><div><h2 id="practice-title">交互演练 · 真的动手试</h2><p>检查输入、点击落点、拖动和调整大小时，光标是否切换自然。</p></div><span class="section-tag">INPUT / CLICK / DRAG</span></div><div class="practice-grid">
+      <article class="practice"><h3>输入与文字选择</h3><p>点击输入框写几个字，再按住鼠标拖选文字。输入区应显示 I 形光标。</p><label for="text-test" class="visually-hidden">文字输入测试</label><textarea id="text-test" class="text-input" data-test="text" spellcheck="false">浅底黑主体白边，深底白主体黑边。
+试着输入文字，再选中这一行。</textarea><button id="link-test" class="link-demo" type="button" data-test="pointer">再点这里，测试链接小手 →</button><div id="link-feedback" class="link-feedback" role="status"></div></article>
+      <article class="practice"><h3>移动</h3><p>按住黑色方块，在区域内拖动。光标应显示四向移动箭头。</p><div id="move-stage" class="test-stage"><div id="drag-piece" class="drag-piece" tabindex="0" role="button" aria-label="可拖动方块，也可用方向键移动" data-test="move">按住拖动</div></div><div class="readout"><span>方向键也可移动</span><output id="move-readout">X 30 · Y 50</output></div></article>
+      <article class="practice"><h3>精确落点</h3><p>用十字光标点击靶心，看看点击标记是否落在你指向的位置。</p><div id="precision-stage" class="test-stage precision-stage" data-test="crosshair"><span class="bullseye"></span><span id="click-mark" class="click-mark"></span></div><div class="readout"><span>点击任意位置</span><output id="precision-readout">尚未点击</output></div></article>
+      <article class="practice"><h3>调整大小</h3><p>拖动方框四边和四角的小方点，分别测试四种双向箭头。</p><div id="resize-stage" class="test-stage resize-stage"><div id="resize-box" class="resize-box"><span>拖动边缘或角点</span><button type="button" class="resize-handle handle-n" data-direction="n" data-test="ns-resize" aria-label="调整上边缘"></button><button type="button" class="resize-handle handle-s" data-direction="s" data-test="ns-resize" aria-label="调整下边缘"></button><button type="button" class="resize-handle handle-w" data-direction="w" data-test="ew-resize" aria-label="调整左边缘"></button><button type="button" class="resize-handle handle-e" data-direction="e" data-test="ew-resize" aria-label="调整右边缘"></button><button type="button" class="resize-handle handle-nw" data-direction="nw" data-test="nwse-resize" aria-label="调整左上角"></button><button type="button" class="resize-handle handle-se" data-direction="se" data-test="nwse-resize" aria-label="调整右下角"></button><button type="button" class="resize-handle handle-ne" data-direction="ne" data-test="nesw-resize" aria-label="调整右上角"></button><button type="button" class="resize-handle handle-sw" data-direction="sw" data-test="nesw-resize" aria-label="调整左下角"></button></div></div><div class="readout"><span>最小尺寸 110 × 65</span><output id="resize-readout">220 × 112</output></div></article>
+    </div></section>
+    <section id="image-test" class="section" aria-labelledby="image-title"><div class="section-head"><div><h2 id="image-title">图片拖动 · 浏览器光标对照</h2><p>这一组用来区分系统小手和软件自己的抓取手掌。</p></div><span class="section-tag">BROWSER / COMPARISON</span></div><div class="practice image-layout"><div><div id="image-viewer" class="image-viewer" tabindex="0" aria-label="图片拖动测试，可按住拖动或使用方向键移动" data-browser-cursor="grab"><svg id="scene" class="scene" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice" role="img" aria-label="用于拖动测试的山景插画"><rect width="800" height="400" fill="#ccd0d2"/><circle cx="560" cy="100" r="44" fill="#ddb78f"/><path d="M0 315L160 110L270 230L360 145L510 320L655 150L800 310V400H0Z" fill="#717e88"/><path d="M0 360L170 250L320 355L490 245L690 360L800 275V400H0Z" fill="#3d4c58"/><path d="M0 388L180 350L340 393L565 344L800 389V400H0Z" fill="#202b35"/><path d="M160 110L112 175L161 157L197 172Z M360 145L325 190L361 179L389 189Z M655 150L620 190L655 179L685 194Z" fill="#e6e8e8"/><path d="M190 400L390 313L418 322L245 400Z" fill="#a2aab0"/></svg></div><div class="image-tools"><button type="button" data-zoom="out" data-browser-cursor="zoom-out" aria-label="缩小图片">−</button><button type="button" data-zoom="in" data-browser-cursor="zoom-in" aria-label="放大图片">＋</button><button type="button" data-zoom="reset">复位</button><output id="image-scale">150%</output></div></div><div class="browser-note"><h3>小手不只有一种。</h3><p>上方系统卡片的“链接小手”会使用你的 Windows 方案。这里图片上的张开手掌和按住后的握拳手掌，则由浏览器提供，外观可能不同。</p><ul><li>移入图片：张开手掌 <code>grab</code></li><li>按住拖动：握住手掌 <code>grabbing</code></li><li>移到缩放按钮：浏览器的放大镜光标</li></ul><p>Windows「照片」也有自己的拖动手掌；它保留原样，不代表整套系统光标失效。</p></div></div></section>
+    <footer class="footer"><div class="footer-note"><p>网页可触发 13 类系统状态。手写笔、备用选择、位置选择、人物选择没有对应的网页指令，需要在 Windows 原生使用场景中检查。</p><p>浏览器允许本地存储时，会保留你的测试记录。页面不会修改系统设置，也不会自动判定光标外观是否正常。</p></div><div><a href="https://chromium.googlesource.com/chromium/src/+/main/ui/base/win/win_cursor_factory.cc" target="_blank" rel="noopener noreferrer">浏览器光标映射说明 ↗</a><br><span>POINTER · LOCAL TEST</span></div></footer>
+  </div>
+  <script>
+    (() => {
+      'use strict';
+      const tests = [
+        {id:'default',title:'普通选择',hint:'观察圆角箭头切换黑白配色',icon:'M8 5L27 12L18 17L13 28Z'},
+        {id:'text',title:'文字选择',hint:'观察 I 形光标',icon:'M11 6H23M17 6V28M11 28H23'},
+        {id:'pointer',title:'链接小手',hint:'观察伸出食指的小手',icon:'M13 18V7Q13 3 17 7V14Q21 11 21 16Q25 13 25 18Q29 16 29 22L25 29H15L7 20Q6 16 10 18Z'},
+        {id:'wait',title:'加载',hint:'保持停留，观察圆环旋转',icon:'M27 12A11 11 0 1 0 27 23'},
+        {id:'progress',title:'后台加载',hint:'箭头旁的小圆环应旋转',icon:'M5 5L23 12L15 16L11 26ZM29 22A5 5 0 1 0 28 30'},
+        {id:'help',title:'帮助',hint:'观察箭头旁的问号',icon:'M5 5L23 12L15 16L11 26M24 21Q24 17 28 19Q32 22 27 25V26M27 29H27.1'},
+        {id:'crosshair',title:'精确选择',hint:'观察十字光标',icon:'M17 5V29M5 17H29'},
+        {id:'not-allowed',title:'禁止操作',hint:'观察圆圈与斜线',icon:'M28 17A11 11 0 1 1 6 17A11 11 0 1 1 28 17M9 25L25 9'},
+        {id:'move',title:'移动',hint:'观察四向箭头',icon:'M17 3V31M3 17H31M12 8L17 3L22 8M12 26L17 31L22 26M8 12L3 17L8 22M26 12L31 17L26 22'},
+        {id:'ew-resize',title:'左右调整',hint:'观察左右双向箭头',icon:'M3 17H31M9 11L3 17L9 23M25 11L31 17L25 23'},
+        {id:'ns-resize',title:'上下调整',hint:'观察上下双向箭头',icon:'M17 3V31M11 9L17 3L23 9M11 25L17 31L23 25'},
+        {id:'nwse-resize',title:'左上 / 右下',hint:'观察第一组斜向箭头',icon:'M5 5L29 29M5 13V5H13M21 29H29V21'},
+        {id:'nesw-resize',title:'右上 / 左下',hint:'观察第二组斜向箭头',icon:'M29 5L5 29M21 5H29V13M5 21V29H13'}
+      ];
+      const storageKey = 'pointer-native-cursor-test-v1';
+      let records = {};
+      try { records = JSON.parse(localStorage.getItem(storageKey) || '{}') || {}; } catch { records = {}; }
+      if (typeof records !== 'object' || Array.isArray(records)) records = {};
+      const names = new Map(tests.map(item => [item.id,item.title]));
+      const grid = document.getElementById('cursor-grid');
+      const liveName = document.getElementById('live-name');
+      let dragState = null;
+      tests.forEach(test => {
+        const card = document.createElement('article');
+        card.className = 'card'; card.dataset.id = test.id;
+        card.innerHTML = `<div class="card-top"><span class="card-title">${test.title}</span><span class="badge">未检查</span></div><div class="test-surface" data-test="${test.id}" style="cursor:${test.id}"><svg class="surface-mark" viewBox="0 0 34 34" aria-hidden="true"><path d="${test.icon}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="surface-hint">${test.hint}</span></div><div class="card-footer"><span class="css-key">${test.id}</span><div class="verdict-buttons"><button type="button" data-verdict="ok" aria-label="将${test.title}标记为正常" aria-pressed="false">正常</button><button type="button" data-verdict="issue" aria-label="将${test.title}标记为需检查" aria-pressed="false">需检查</button></div></div>`;
+        card.querySelectorAll('[data-verdict]').forEach(button => button.addEventListener('click', () => {
+          records[test.id] = records[test.id] === button.dataset.verdict ? undefined : button.dataset.verdict;
+          saveRecords(); updateRecords();
+        }));
+        grid.append(card);
+      });
+      function saveRecords() { try { localStorage.setItem(storageKey,JSON.stringify(records)); } catch {} }
+      function updateRecords() {
+        let ok = 0, issue = 0;
+        tests.forEach(test => {
+          const verdict = ['ok','issue'].includes(records[test.id]) ? records[test.id] : '';
+          const card = grid.querySelector(`[data-id="${test.id}"]`);
+          card.dataset.verdict = verdict;
+          card.querySelector('.badge').textContent = verdict === 'ok' ? '正常' : verdict === 'issue' ? '需检查' : '未检查';
+          card.querySelectorAll('[data-verdict]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.verdict === verdict)));
+          if (verdict === 'ok') ok++; if (verdict === 'issue') issue++;
+        });
+        document.getElementById('ok-count').textContent = ok;
+        document.getElementById('issue-count').textContent = issue;
+        document.getElementById('pending-count').textContent = tests.length - ok - issue;
+        document.getElementById('meter-fill').style.width = `${(ok+issue)/tests.length*100}%`;
+      }
+      updateRecords();
+      document.getElementById('reset-records').addEventListener('click', () => { records = {}; saveRecords(); updateRecords(); });
+      document.querySelectorAll('.segmented [data-background]').forEach(button => button.addEventListener('click', () => {
+        document.body.dataset.background = button.dataset.background;
+        document.querySelectorAll('.segmented [data-background]').forEach(item => item.setAttribute('aria-pressed',String(item === button)));
+      }));
+      const brightnessRange = document.getElementById('adaptive-brightness');
+      const brightnessSurface = document.getElementById('adaptive-brightness-surface');
+      function updateBrightness() {
+        const value = Number(brightnessRange.value), hex = value.toString(16).padStart(2,'0').repeat(3).toUpperCase();
+        brightnessSurface.style.backgroundColor = `rgb(${value},${value},${value})`;
+        brightnessSurface.querySelector('.adaptive-surface-label').style.color = value >= 120 ? '#080808' : '#d0d2d5';
+        document.getElementById('adaptive-brightness-value').textContent = `${value} / 255 · #${hex}`;
+        brightnessRange.setAttribute('aria-valuetext',`亮度 ${value}，灰度颜色 #${hex}`);
+      }
+      brightnessRange.addEventListener('input',updateBrightness); updateBrightness();
+      function showRegion(element) {
+        if (element?.dataset.adaptiveTest) liveName.textContent = element.dataset.adaptiveTest;
+        else if (element?.dataset.test) liveName.textContent = names.get(element.dataset.test) || element.dataset.test;
+        else if (element?.dataset.browserCursor) liveName.textContent = `浏览器对照 · ${element.dataset.browserCursor}`;
+        else liveName.textContent = '把鼠标移到测试区';
+      }
+      document.addEventListener('pointerover', event => { if (!dragState) showRegion(event.target.closest('[data-test],[data-browser-cursor],[data-adaptive-test]')); });
+      document.getElementById('link-test').addEventListener('click', () => { document.getElementById('link-feedback').textContent = '点击收到。小手的点击位置可以正常使用。'; });
+      const clamp = (value,min,max) => Math.min(Math.max(value,min),Math.max(min,max));
+      function startDrag(event,element,cursor,update) {
+        if (event.button !== 0) return;
+        event.preventDefault(); element.focus({preventScroll:true}); element.setPointerCapture(event.pointerId);
+        dragState = {pointerId:event.pointerId,element,update};
+        document.body.classList.add('is-dragging'); document.body.style.setProperty('--drag-cursor',cursor);
+        showRegion(element);
+      }
+      document.addEventListener('pointermove', event => { if (dragState?.pointerId === event.pointerId) dragState.update(event); });
+      function finishDrag(event) {
+        if (!dragState || event.pointerId !== dragState.pointerId) return;
+        const element = dragState.element;
+        if (element.hasPointerCapture(event.pointerId)) element.releasePointerCapture(event.pointerId);
+        dragState = null; document.body.classList.remove('is-dragging'); document.body.style.removeProperty('--drag-cursor');
+        document.getElementById('image-viewer').classList.remove('is-grabbing');
+        document.getElementById('image-viewer').dataset.browserCursor = 'grab';
+        showRegion(document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-test],[data-browser-cursor],[data-adaptive-test]'));
+      }
+      document.addEventListener('pointerup',finishDrag); document.addEventListener('pointercancel',finishDrag);
+      document.addEventListener('lostpointercapture',finishDrag);
+      const moveStage = document.getElementById('move-stage'), piece = document.getElementById('drag-piece');
+      let move = {x:30,y:50};
+      function setMove(x,y) {
+        move = {x:clamp(x,0,moveStage.clientWidth-piece.offsetWidth),y:clamp(y,0,moveStage.clientHeight-piece.offsetHeight)};
+        piece.style.left = `${move.x}px`; piece.style.top = `${move.y}px`;
+        document.getElementById('move-readout').textContent = `X ${Math.round(move.x)} · Y ${Math.round(move.y)}`;
+      }
+      piece.addEventListener('pointerdown', event => {
+        const origin = {...move}, start = {x:event.clientX,y:event.clientY};
+        startDrag(event,piece,'move',current => setMove(origin.x+current.clientX-start.x,origin.y+current.clientY-start.y));
+      });
+      piece.addEventListener('keydown',event => {
+        const offsets = {ArrowLeft:[-10,0],ArrowRight:[10,0],ArrowUp:[0,-10],ArrowDown:[0,10]};
+        if (offsets[event.key]) { event.preventDefault(); setMove(move.x+offsets[event.key][0],move.y+offsets[event.key][1]); }
+      });
+      const precision = document.getElementById('precision-stage');
+      precision.addEventListener('pointerdown',event => {
+        if (event.button !== 0) return;
+        const rect = precision.getBoundingClientRect(), x = event.clientX-rect.left, y = event.clientY-rect.top;
+        const mark = document.getElementById('click-mark'); mark.style.display = 'block'; mark.style.left = `${x}px`; mark.style.top = `${y}px`;
+        document.getElementById('precision-readout').textContent = `X ${Math.round(x)} · Y ${Math.round(y)}`;
+      });
+      const resizeStage = document.getElementById('resize-stage'), box = document.getElementById('resize-box');
+      let geometry = {x:36,y:25,w:220,h:112};
+      function paintBox() {
+        box.style.left = `${geometry.x}px`; box.style.top = `${geometry.y}px`; box.style.width = `${geometry.w}px`; box.style.height = `${geometry.h}px`;
+        document.getElementById('resize-readout').textContent = `${Math.round(geometry.w)} × ${Math.round(geometry.h)}`;
+      }
+      function resizeBy(origin,direction,dx,dy) {
+        let left=origin.x,top=origin.y,right=origin.x+origin.w,bottom=origin.y+origin.h;
+        if (direction.includes('w')) left=clamp(origin.x+dx,8,right-110);
+        if (direction.includes('e')) right=clamp(right+dx,left+110,resizeStage.clientWidth-8);
+        if (direction.includes('n')) top=clamp(origin.y+dy,8,bottom-65);
+        if (direction.includes('s')) bottom=clamp(bottom+dy,top+65,resizeStage.clientHeight-8);
+        geometry={x:left,y:top,w:right-left,h:bottom-top}; paintBox();
+      }
+      box.querySelectorAll('[data-direction]').forEach(handle => {
+        handle.addEventListener('pointerdown',event => {
+          const origin={...geometry},start={x:event.clientX,y:event.clientY};
+          startDrag(event,handle,handle.dataset.test,current => resizeBy(origin,handle.dataset.direction,current.clientX-start.x,current.clientY-start.y));
+        });
+        handle.addEventListener('keydown',event => {
+          const offsets={ArrowLeft:[-8,0],ArrowRight:[8,0],ArrowUp:[0,-8],ArrowDown:[0,8]};
+          if (offsets[event.key]) {event.preventDefault();resizeBy({...geometry},handle.dataset.direction,...offsets[event.key]);}
+        });
+      });
+      const viewer=document.getElementById('image-viewer'),scene=document.getElementById('scene');
+      let image={x:0,y:0,scale:1.5};
+      function paintImage() {
+        image.x=clamp(image.x,-viewer.clientWidth*(image.scale-1)/2,viewer.clientWidth*(image.scale-1)/2);
+        image.y=clamp(image.y,-viewer.clientHeight*(image.scale-1)/2,viewer.clientHeight*(image.scale-1)/2);
+        scene.style.transform=`translate(${image.x}px,${image.y}px) scale(${image.scale})`;
+        document.getElementById('image-scale').textContent=`${Math.round(image.scale*100)}%`;
+      }
+      viewer.addEventListener('pointerdown',event => {
+        if (event.button!==0) return;
+        const origin={...image},start={x:event.clientX,y:event.clientY};
+        viewer.classList.add('is-grabbing');viewer.dataset.browserCursor='grabbing';
+        startDrag(event,viewer,'grabbing',current=>{image.x=origin.x+current.clientX-start.x;image.y=origin.y+current.clientY-start.y;paintImage();});
+      });
+      viewer.addEventListener('keydown',event=>{
+        const offsets={ArrowLeft:[-20,0],ArrowRight:[20,0],ArrowUp:[0,-20],ArrowDown:[0,20]};
+        if(offsets[event.key]){event.preventDefault();image.x+=offsets[event.key][0];image.y+=offsets[event.key][1];paintImage();}
+      });
+      document.querySelectorAll('[data-zoom]').forEach(button=>button.addEventListener('click',()=>{
+        if(button.dataset.zoom==='reset') image={x:0,y:0,scale:1.5};
+        else image.scale=clamp(image.scale+(button.dataset.zoom==='in'?.25:-.25),1,3);
+        paintImage();
+      }));
+      function fitStages(){
+        setMove(move.x,move.y);
+        geometry.w=clamp(geometry.w,110,resizeStage.clientWidth-16);geometry.h=clamp(geometry.h,65,resizeStage.clientHeight-16);
+        geometry.x=clamp(geometry.x,8,resizeStage.clientWidth-geometry.w-8);geometry.y=clamp(geometry.y,8,resizeStage.clientHeight-geometry.h-8);paintBox();paintImage();
+      }
+      new ResizeObserver(fitStages).observe(resizeStage);
+      new ResizeObserver(()=>paintImage()).observe(viewer);
+      window.addEventListener('blur',()=>{if(dragState)finishDrag({pointerId:dragState.pointerId,clientX:0,clientY:0});});
+      fitStages();
+    })();
+  </script>
+</body>
+</html>
