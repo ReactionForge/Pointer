@@ -1,10 +1,11 @@
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
-from .create_cursor import render, render_ibeam, render_loading
-from .create_hand_cursor import render_hand
-from .create_extra_cursors import render_extra
+from pointer.cursor.art.arrow import render, render_ibeam
+from pointer.cursor.art.animation import render_loading
+from pointer.cursor.art.hand import render_hand
+from pointer.cursor.art.roles import render_extra
 
-from pointer.runtime_paths import PREVIEW_ROOT
+from pointer.paths import PREVIEW_ROOT
 
 ROOT = PREVIEW_ROOT
 LABELS = [

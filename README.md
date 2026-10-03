@@ -59,7 +59,7 @@ python -m venv .build-env
 本地网页测试服务：
 
 ```powershell
-.\.build-env\Scripts\python.exe -m tools.serve_test
+.\.build-env\Scripts\python.exe -m scripts.serve_test
 ```
 
 访问 `http://127.0.0.1:9167/`。绘图生成与原生验证工具需要额外安装 `requirements/art.txt`，操作入口见 [assets 说明](assets/README.md)。
@@ -69,7 +69,7 @@ python -m venv .build-env
 ## 构建和发布
 
 ```powershell
-.\.build-env\Scripts\python.exe -m tools.build_release
+.\.build-env\Scripts\python.exe -m scripts.build_release
 ```
 
 输出 `dist/Pointer-v<版本>-windows-x64.zip` 和校验文件。包内资源仍按 `assets/`、`web/` 分类，个人数据不会打包。

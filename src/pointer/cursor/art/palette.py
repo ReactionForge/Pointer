@@ -4,10 +4,12 @@ import struct
 
 from PIL import Image
 
-from pointer.contrast_theme import theme_paths
-from pointer.runtime_paths import ASSET_ROOT
-from .create_adaptive_cursors import RENDERERS
-from .create_cursor import SIZES, ANIMATION_FRAMES, render_loading, cursor_bytes, riff_chunk
+from pointer.cursor.theme import theme_paths
+from pointer.paths import ASSET_ROOT
+from pointer.cursor.art.catalog import RENDERERS
+from .arrow import SIZES, ANIMATION_FRAMES
+from .animation import render_loading
+from .codec import cursor_bytes, riff_chunk
 
 
 def recolor(image, theme):

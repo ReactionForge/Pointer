@@ -8,9 +8,9 @@ from pathlib import Path
 
 class ClickMotionTests(unittest.TestCase):
     def motion(self):
-        self.assertIsNotNone(importlib.util.find_spec("pointer.click_motion"),
+        self.assertIsNotNone(importlib.util.find_spec("pointer.cursor.motion"),
                              "Click motion is not implemented")
-        from pointer.click_motion import ClickMotion
+        from pointer.cursor.motion import ClickMotion
         return ClickMotion()
 
     def test_press_holds_until_release_and_returns_to_rest(self):
@@ -57,7 +57,7 @@ class ClickMotionTests(unittest.TestCase):
 
 class ClickResourceTests(unittest.TestCase):
     def test_pressed_frames_keep_all_hotspots_and_shrink_the_silhouette(self):
-        root = Path(__file__).resolve().parents[1] / "assets" / "cursors" / "adaptive"
+        root = Path(__file__).resolve().parents[3] / "assets" / "cursors" / "adaptive"
         for theme in ("light", "dark"):
             for role in ("arrow", "hand"):
                 normal = (root / theme / f"adaptive-{role}.cur").read_bytes()

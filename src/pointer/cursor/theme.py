@@ -1,6 +1,6 @@
 """Shared paths and switching thresholds for the paired black-and-white theme."""
 
-from .runtime_paths import ASSET_ROOT
+from pointer.paths import ASSET_ROOT
 THEME_NAME = "Screenshot Adaptive Contrast"
 ROLE_IDS = {
     "Arrow": 32512, "IBeam": 32513, "Wait": 32514,

@@ -4,9 +4,9 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-from .create_cursor import SIZES, cursor_bytes
+from pointer.cursor.art.arrow import SIZES, cursor_bytes
 
-from pointer.runtime_paths import ASSET_ROOT, PREVIEW_ROOT
+from pointer.paths import ASSET_ROOT, PREVIEW_ROOT
 
 ROOT = ASSET_ROOT / "reference"
 INK = (8, 8, 8, 255)

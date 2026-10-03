@@ -52,3 +52,10 @@ class ClickMotion:
             if down:
                 self.presses += 1
         return min(4, max(0, round((1 - scale) / .025)))
+
+
+def atomic_json(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.replace(temporary, path)

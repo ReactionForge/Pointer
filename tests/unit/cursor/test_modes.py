@@ -7,8 +7,8 @@ import unittest
 import subprocess
 from pathlib import Path
 
-from pointer import click_motion
-from pointer import app
+from pointer.cursor import motion as click_motion
+from pointer import cli as app
 from unittest.mock import patch
 
 
@@ -46,7 +46,7 @@ class ClickModeTests(unittest.TestCase):
 
 class TiltResourceTests(unittest.TestCase):
     def test_arrow_rotates_as_one_shape_with_top_moving_further(self):
-        from tools.generate.create_cursor import arrow_contour
+        from pointer.cursor.art.arrow import arrow_contour
         import math
         normal = arrow_contour()
         previous = normal[0]
@@ -65,7 +65,7 @@ class TiltResourceTests(unittest.TestCase):
             previous = tilted[0]
 
     def test_motion_preserves_hotspots_and_unclipped_shapes(self):
-        root = Path(__file__).resolve().parents[1] / "assets" / "cursors" / "adaptive"
+        root = Path(__file__).resolve().parents[3] / "assets" / "cursors" / "adaptive"
         for theme in ("light", "dark"):
             for role in ("arrow", "hand"):
                 normal = (root / theme / f"adaptive-{role}.cur").read_bytes()

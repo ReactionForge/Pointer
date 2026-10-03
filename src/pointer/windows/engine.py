@@ -13,7 +13,7 @@ import sys
 import time
 import winreg
 
-from .runtime_paths import DATA_ROOT, FROZEN, ROOT
+from pointer.paths import DATA_ROOT, FROZEN, ROOT
 
 
 STATUS_FILE = DATA_ROOT / "contrast-switcher-status.json"
@@ -32,63 +32,9 @@ IMAGE_CURSOR, LR_LOADFROMFILE, LR_DEFAULTSIZE = 2, 0x10, 0x40
 PERIOD, BACKGROUND_PERIOD = 1 / 120, .05
 STABLE_SECONDS, MIN_SWITCH_SECONDS = .1, .2
 
-USER32 = ctypes.WinDLL("user32", use_last_error=True)
-GDI32 = ctypes.WinDLL("gdi32", use_last_error=True)
-KERNEL32 = ctypes.WinDLL("kernel32", use_last_error=True)
-
-
-class POINT(ctypes.Structure):
-    _fields_ = [("x", wintypes.LONG), ("y", wintypes.LONG)]
-
-
-class CURSORINFO(ctypes.Structure):
-    _fields_ = [("cbSize", wintypes.DWORD), ("flags", wintypes.DWORD),
-                ("hCursor", wintypes.HANDLE), ("ptScreenPos", POINT)]
-
-
-class BITMAPINFOHEADER(ctypes.Structure):
-    _fields_ = [("biSize", wintypes.DWORD), ("biWidth", wintypes.LONG),
-                ("biHeight", wintypes.LONG), ("biPlanes", wintypes.WORD),
-                ("biBitCount", wintypes.WORD), ("biCompression", wintypes.DWORD),
-                ("biSizeImage", wintypes.DWORD), ("biXPelsPerMeter", wintypes.LONG),
-                ("biYPelsPerMeter", wintypes.LONG), ("biClrUsed", wintypes.DWORD),
-                ("biClrImportant", wintypes.DWORD)]
-
-
-def _signature(library, name, arguments, result):
-    function = getattr(library, name)
-    function.argtypes, function.restype = arguments, result
-    return function
-
-
-_signature(KERNEL32, "CreateMutexW", [ctypes.c_void_p, wintypes.BOOL, wintypes.LPCWSTR], wintypes.HANDLE)
-_signature(KERNEL32, "OpenMutexW", [wintypes.DWORD, wintypes.BOOL, wintypes.LPCWSTR], wintypes.HANDLE)
-_signature(KERNEL32, "ReleaseMutex", [wintypes.HANDLE], wintypes.BOOL)
-_signature(KERNEL32, "CreateEventW", [ctypes.c_void_p, wintypes.BOOL, wintypes.BOOL, wintypes.LPCWSTR], wintypes.HANDLE)
-_signature(KERNEL32, "OpenEventW", [wintypes.DWORD, wintypes.BOOL, wintypes.LPCWSTR], wintypes.HANDLE)
-_signature(KERNEL32, "SetEvent", [wintypes.HANDLE], wintypes.BOOL)
-_signature(KERNEL32, "ResetEvent", [wintypes.HANDLE], wintypes.BOOL)
-_signature(KERNEL32, "WaitForSingleObject", [wintypes.HANDLE, wintypes.DWORD], wintypes.DWORD)
-_signature(KERNEL32, "CloseHandle", [wintypes.HANDLE], wintypes.BOOL)
-_signature(USER32, "GetCursorPos", [ctypes.POINTER(POINT)], wintypes.BOOL)
-_signature(USER32, "GetCursorInfo", [ctypes.POINTER(CURSORINFO)], wintypes.BOOL)
-_signature(USER32, "GetAsyncKeyState", [ctypes.c_int], ctypes.c_short)
-_signature(USER32, "GetSystemMetrics", [ctypes.c_int], ctypes.c_int)
-_signature(USER32, "GetDC", [wintypes.HWND], wintypes.HDC)
-_signature(USER32, "ReleaseDC", [wintypes.HWND, wintypes.HDC], ctypes.c_int)
-_signature(USER32, "LoadImageW", [wintypes.HINSTANCE, wintypes.LPCWSTR, wintypes.UINT, ctypes.c_int, ctypes.c_int, wintypes.UINT], wintypes.HANDLE)
-_signature(USER32, "LoadCursorFromFileW", [wintypes.LPCWSTR], wintypes.HANDLE)
-_signature(USER32, "CopyImage", [wintypes.HANDLE, wintypes.UINT, ctypes.c_int, ctypes.c_int, wintypes.UINT], wintypes.HANDLE)
-_signature(USER32, "DestroyCursor", [wintypes.HANDLE], wintypes.BOOL)
-_signature(USER32, "SetSystemCursor", [wintypes.HANDLE, wintypes.DWORD], wintypes.BOOL)
-_signature(USER32, "DrawIconEx", [wintypes.HDC, ctypes.c_int, ctypes.c_int, wintypes.HANDLE, ctypes.c_int, ctypes.c_int, wintypes.UINT, wintypes.HBRUSH, wintypes.UINT], wintypes.BOOL)
-_signature(GDI32, "GetPixel", [wintypes.HDC, ctypes.c_int, ctypes.c_int], wintypes.DWORD)
-_signature(GDI32, "CreateCompatibleDC", [wintypes.HDC], wintypes.HDC)
-_signature(GDI32, "CreateDIBSection", [wintypes.HDC, ctypes.c_void_p, wintypes.UINT, ctypes.POINTER(ctypes.c_void_p), wintypes.HANDLE, wintypes.DWORD], wintypes.HBITMAP)
-_signature(GDI32, "SelectObject", [wintypes.HDC, wintypes.HANDLE], wintypes.HANDLE)
-_signature(GDI32, "DeleteObject", [wintypes.HANDLE], wintypes.BOOL)
-_signature(GDI32, "DeleteDC", [wintypes.HDC], wintypes.BOOL)
-_signature(GDI32, "GdiFlush", [], wintypes.BOOL)
+from .api import *
+from .api import _signature
+from .startup import enable_startup, disable_startup
 
 
 def _atomic_json(path, value):
@@ -279,8 +225,8 @@ def _run():
             last_written = dict(state)
 
     try:
-        from .contrast_theme import THEME_NAME, ROLE_IDS, choose_theme, theme_paths, click_paths
-        from .click_motion import ClickMotion, read_mode
+        from pointer.cursor.theme import THEME_NAME, ROLE_IDS, choose_theme, theme_paths, click_paths
+        from pointer.cursor.motion import ClickMotion, read_mode
         scheme_name = THEME_NAME
         event = KERNEL32.CreateEventW(None, True, False, EVENT_NAME)
         if not event:
@@ -351,7 +297,7 @@ def _run():
         # Never reload over a scheme the user selected while the helper was running.
         try:
             if state.get("shutdown_reason") == "error" and scheme_name and _scheme_name() == scheme_name:
-                from .configure_cursor import reload_cursors
+                from pointer.windows.scheme import reload_cursors
                 reload_cursors()
         except Exception as error:
             recovery = f"Cursor reload failed: {type(error).__name__}: {error}"
@@ -424,53 +370,10 @@ def start():
     raise RuntimeError("Cursor helper did not become ready within five seconds")
 
 
-def _startup_command():
-    return subprocess.list2cmdline(_helper_command())
 
 
-def enable_startup():
-    """Write the Run value only when it changes, preserving any previous value."""
-    command = _startup_command()
-    with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_QUERY_VALUE | winreg.KEY_SET_VALUE) as key:
-        backup = json.loads(STARTUP_BACKUP.read_text(encoding="utf-8")) if STARTUP_BACKUP.exists() else None
-        try:
-            value, kind = winreg.QueryValueEx(key, RUN_VALUE)
-            previous = {"value": base64.b64encode(value).decode("ascii") if isinstance(value, bytes) else value,
-                        "type": kind, "binary": isinstance(value, bytes)}
-        except FileNotFoundError:
-            value, kind, previous = None, None, None
-        # Rewriting an identical value can prompt startup protection again.
-        if value == command and kind == winreg.REG_SZ:
-            return {"startup_enabled": True, "value_name": RUN_VALUE, "changed": False}
-        if not backup or value != backup.get("installed_command"):
-            backup = {"value_name": RUN_VALUE, "previous": previous}
-        backup["installed_command"] = command
-        _atomic_json(STARTUP_BACKUP, backup)
-        winreg.SetValueEx(key, RUN_VALUE, 0, winreg.REG_SZ, command)
-    return {"startup_enabled": True, "value_name": RUN_VALUE, "changed": True}
 
 
-def disable_startup():
-    """Restore this Run value only if it still points to our helper."""
-    backup = json.loads(STARTUP_BACKUP.read_text(encoding="utf-8")) if STARTUP_BACKUP.exists() else None
-    try:
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_QUERY_VALUE | winreg.KEY_SET_VALUE) as key:
-            try:
-                current = winreg.QueryValueEx(key, RUN_VALUE)[0]
-            except FileNotFoundError:
-                return {"startup_enabled": False}
-            expected = backup["installed_command"] if backup else _startup_command()
-            if current != expected:
-                return {"startup_enabled": False, "preserved_changed_run_value": True}
-            previous = backup.get("previous") if backup else None
-            if previous is None:
-                winreg.DeleteValue(key, RUN_VALUE)
-            else:
-                value = base64.b64decode(previous["value"]) if previous.get("binary") else previous["value"]
-                winreg.SetValueEx(key, RUN_VALUE, 0, previous["type"], value)
-    except FileNotFoundError:
-        pass
-    return {"startup_enabled": False}
 
 
 def stop_directory(directory):
@@ -528,9 +431,9 @@ if __name__ == "__main__":
         _run()
     elif "--stop" in sys.argv:
         result = stop()
-        from .contrast_theme import THEME_NAME
+        from pointer.cursor.theme import THEME_NAME
         if _scheme_name() == THEME_NAME:
-            from .configure_cursor import reload_cursors
+            from pointer.windows.scheme import reload_cursors
             reload_cursors()
         print(json.dumps(result, ensure_ascii=False))
     else:

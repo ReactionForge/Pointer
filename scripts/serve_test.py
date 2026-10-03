@@ -4,7 +4,7 @@ import argparse
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
-from pointer.runtime_paths import WEB_ROOT
+from pointer.paths import WEB_ROOT
 
 
 def main():

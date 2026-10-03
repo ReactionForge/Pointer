@@ -6,11 +6,11 @@ import struct
 
 from PIL import Image, ImageDraw, ImageFont
 
-from .create_cursor import SIZES, cursor_bytes, render as render_arrow
-from .create_hand_cursor import render_hand
+from pointer.cursor.art.arrow import SIZES, cursor_bytes, render as render_arrow
+from pointer.cursor.art.hand import render_hand
 
 
-from pointer.runtime_paths import ASSET_ROOT, PREVIEW_ROOT
+from pointer.paths import ASSET_ROOT, PREVIEW_ROOT
 
 ROOT = ASSET_ROOT / "reference"
 INK = (8, 8, 8, 255)

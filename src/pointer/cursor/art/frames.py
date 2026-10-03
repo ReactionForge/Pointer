@@ -3,11 +3,11 @@
 import math
 from PIL import Image
 
-from pointer.click_motion import SCALES, ANGLES
-from pointer.runtime_paths import ASSET_ROOT
-from .create_adaptive_cursors import RENDERERS
-from .create_cursor import SIZES, cursor_bytes, render
-from .create_dual_contrast import recolor
+from pointer.cursor.motion import SCALES, ANGLES
+from pointer.paths import ASSET_ROOT
+from pointer.cursor.art.catalog import RENDERERS
+from pointer.cursor.art.arrow import SIZES, cursor_bytes, render
+from pointer.cursor.art.palette import recolor
 
 
 def main():

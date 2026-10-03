@@ -11,8 +11,8 @@ import sys
 from contextlib import ExitStack
 from unittest.mock import patch
 
-from pointer import configure_cursor as config
-from pointer import app
+from pointer.windows import scheme as config
+from pointer import cli as app
 
 
 class PackageTests(unittest.TestCase):
@@ -36,14 +36,14 @@ class PackageTests(unittest.TestCase):
             startup = Path(folder) / "startup.json"
             startup.write_bytes(b'{"previous": null, "installed_command": "unchanged"}')
             original = startup.read_bytes()
-            stack.enter_context(patch.object(app.switcher, "STARTUP_BACKUP", startup))
-            stack.enter_context(patch.object(app.switcher, "_startup_command", return_value="unchanged"))
+            stack.enter_context(patch.object(app.startup, "STARTUP_BACKUP", startup))
+            stack.enter_context(patch.object(app.startup, "_startup_command", return_value="unchanged"))
             stack.enter_context(patch.object(app.winreg, "CreateKeyEx"))
             stack.enter_context(patch.object(app.winreg, "QueryValueEx", return_value=("unchanged", app.winreg.REG_SZ)))
             write = stack.enter_context(patch.object(app.winreg, "SetValueEx"))
-            backup = stack.enter_context(patch.object(app.switcher, "_atomic_json"))
+            backup = stack.enter_context(patch.object(app.startup, "_atomic_json"))
             for _ in range(5):
-                self.assertFalse(app.switcher.enable_startup()["changed"])
+                self.assertFalse(app.startup.enable_startup()["changed"])
             write.assert_not_called()
             backup.assert_not_called()
             self.assertEqual(startup.read_bytes(), original)
@@ -51,14 +51,14 @@ class PackageTests(unittest.TestCase):
     def test_startup_upgrade_keeps_original_backup(self):
         with tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
             startup = Path(folder) / "startup.json"
-            startup.write_text(json.dumps({"value_name": app.switcher.RUN_VALUE,
+            startup.write_text(json.dumps({"value_name": app.startup.RUN_VALUE,
                                           "previous": None, "installed_command": "old path"}))
-            stack.enter_context(patch.object(app.switcher, "STARTUP_BACKUP", startup))
-            stack.enter_context(patch.object(app.switcher, "_startup_command", return_value="new path"))
+            stack.enter_context(patch.object(app.startup, "STARTUP_BACKUP", startup))
+            stack.enter_context(patch.object(app.startup, "_startup_command", return_value="new path"))
             stack.enter_context(patch.object(app.winreg, "CreateKeyEx"))
             stack.enter_context(patch.object(app.winreg, "QueryValueEx", return_value=("old path", app.winreg.REG_SZ)))
             write = stack.enter_context(patch.object(app.winreg, "SetValueEx"))
-            self.assertTrue(app.switcher.enable_startup()["changed"])
+            self.assertTrue(app.startup.enable_startup()["changed"])
             write.assert_called_once()
             data = json.loads(startup.read_text())
             self.assertIsNone(data["previous"])
@@ -82,7 +82,7 @@ class PackageTests(unittest.TestCase):
             self.assertEqual(unowned.read_text(), "user notes")
 
     def test_source_entrypoint_works_without_site_packages_from_another_directory(self):
-        repository = Path(__file__).resolve().parents[1]
+        repository = Path(__file__).resolve().parents[3]
         with tempfile.TemporaryDirectory(prefix="Pointer 中文 ") as folder:
             report = Path(folder) / "diagnostics.json"
             process = subprocess.run([sys.executable, "-S", str(repository / "packaging" / "windows" / "entrypoint.py"),
@@ -104,7 +104,7 @@ class PackageTests(unittest.TestCase):
             with patch.object(app.sys, "frozen", True, create=True), \
                  patch.object(app.sys, "executable", str(executable)), \
                  patch.dict(app.os.environ, {"LOCALAPPDATA": str(local)}):
-                paths = runpy.run_path(str(Path(__file__).resolve().parents[1] / "src" / "pointer" / "runtime_paths.py"))
+                paths = runpy.run_path(str(Path(__file__).resolve().parents[3] / "src" / "pointer" / "paths.py"))
             self.assertEqual(paths["INSTALL_ROOT"], installed.resolve())
             self.assertEqual(paths["DATA_ROOT"], installed.resolve().parent / "data")
 

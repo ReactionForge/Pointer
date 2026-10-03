@@ -10,12 +10,12 @@
 
 | 模块 | 职责 |
 | --- | --- |
-| `src/pointer/app.py` | 安装、停止、恢复、诊断与控制入口；下载目录中的按钮转交安装版 |
-| `src/pointer/configure_cursor.py` | 光标注册表配置、原始备份校验、Windows 重新加载与恢复 |
-| `src/pointer/adaptive_switcher.py` | 亮度采样、配色切换、动画载入、单实例和登录启动 |
-| `src/pointer/click_motion.py` | 左键边沿、长按和 150 毫秒回弹的纯时间状态机 |
-| `src/pointer/contrast_theme.py` | 17 个系统角色、资源名称和切换阈值 |
-| `src/pointer/runtime_paths.py` | 源码、安装资源和持久数据路径的统一定义 |
+| `src/pointer/cli.py` | 安装、停止、恢复、诊断与控制入口；下载目录中的按钮转交安装版 |
+| `src/pointer/windows/scheme.py` | 光标注册表配置、原始备份校验、Windows 重新加载与恢复 |
+| `src/pointer/windows/engine.py` | 亮度采样、配色切换、动画载入、单实例和登录启动 |
+| `src/pointer/cursor/motion.py` | 左键边沿、长按和 150 毫秒回弹的纯时间状态机 |
+| `src/pointer/cursor/theme.py` | 17 个系统角色、资源名称和切换阈值 |
+| `src/pointer/paths.py` | 源码、安装资源和持久数据路径的统一定义 |
 | `src/pointer/__main__.py` | Python 模块命令入口 |
 | `packaging/windows/entrypoint.py` | PyInstaller 和源码快捷命令的启动入口 |
 
@@ -26,8 +26,8 @@
 - `assets/cursors/adaptive/light`、`dark`：两套正式配色，共 34 个资源。
 - `assets/cursors/reference`：原始固定黑色造型，17 个资源。
 - `assets/cursors/legacy-invert`：历史原生反色实验，仅保留在源码中；正式安装包不包含它。
-- `tools/generate`：CUR/ANI 和公开预览的生成代码。
-- `tools/verify`：Windows 原生绘制、热点和动画检查，避免只检查文件是否存在。
+- `src/pointer/cursor/art`：CUR/ANI 和公开预览的生成代码。
+- `tests/integration`：Windows 原生绘制、热点和动画检查，避免只检查文件是否存在。
 - `web/cursor-test`：自包含测试网页。它使用系统光标，并由用户观察外观后记录结果。
 - `docs/images`：README 引用的公开图片；其他实验截图归入 `.local/archive`。
 
