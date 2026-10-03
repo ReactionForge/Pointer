@@ -62,13 +62,37 @@
 
 ## 配置与资源架构
 
-- `src/pointer/settings.py`：纯数据模型、格式版本、取值校验、原子写入、旧配置迁移、导入导出。
-- `src/pointer/rendering/`：共享轮廓、配色和 CUR/ANI 编码；从现有 `tools/generate` 提取可复用实现，命令行生成工具调用同一实现。
-- `src/pointer/resources.py`：根据设置生成、校验和选择用户缓存。配置哈希作为缓存键，默认资源可直接复用。
-- `src/pointer/service.py`：应用、暂停、恢复、开机启动及升级准备等操作；与 GUI 无关。
-- `src/pointer/gui/`：主窗口、外观页、动效页、测试页、设置页和预览控件。模块按功能划分，主窗口只协调页面。
-- `adaptive_switcher.py`：读取已应用设置，预加载资源，处理背景识别和物理按键状态，发布状态。
-- `packaging/windows/`：入口、Inno Setup 脚本及安装文档；`tools/build_release.py` 生成 ZIP、安装 EXE、清单和校验。
+用户追加要求：制作 APP 时同步重构文件架构，清晰、简洁。最终目录按功能组织，界面只调用 application，不直接操作注册表；光标配置与绘图可以独立测试。移除重复实现，不长期保留整套新旧模块。
+
+```text
+src/pointer/
+  __main__.py, cli.py, paths.py, application.py
+  cursor/
+    settings.py, motion.py, resources.py
+    art/                  # arrow、hand、roles、palette、animation、codec
+  windows/
+    api.py, scheme.py, startup.py, engine.py, installation.py
+  ui/
+    main_window.py, preview.py, theme.py, workers.py
+    pages/                # appearance、motion、tests、preferences
+assets/cursors/           # adaptive 与 reference 默认资源
+packaging/windows/        # 入口、安装脚本、图标与用户说明
+requirements/             # runtime、build、dev 依赖
+scripts/                  # 构建、默认资源生成、开发测试页启动
+web/cursor-test/          # 保留原网页，作为额外开发测试工具
+tests/
+  unit/                   # cursor、windows、ui
+  integration/            # 原生光标、升级与打包验证
+docs/
+  design/                 # 设计文档
+  plans/                  # 实施计划
+  architecture.md, usage.txt
+.github/workflows/        # 测试与发布
+```
+
+`cursor/settings.py` 负责纯数据模型、校验、原子存储、迁移和导入导出；`cursor/art` 是预览和系统资源共用的唯一绘图实现；`cursor/resources.py` 准备并校验缓存。`windows` 封装 Windows API、注册表方案、启动项、后台引擎和安装文件生命周期。`application.py` 编排应用、暂停、恢复和升级事务。`ui` 管理草稿和反馈，`cli.py` 保留原有显式命令入口。
+
+先重构现有能力并跑通现有测试，再添加界面；旧生成工具收敛成 scripts 中的单一入口。现有 CUR/ANI 与造型保持兼容，所有引用、工作流、包清单和 README 同步更新。测试使用逐层 discover 支持的包结构，任何旧测试都不得因移动而悄悄漏跑。
 
 用户数据仍放在用户目录下的 `Pointer/data`，与安装程序文件隔离。新增版本化 `settings.json`；首次迁移从 `click-motion-settings.json` 读取旧动效选择，缺失时采用默认值。迁移不修改原光标和启动项备份。
 
@@ -105,4 +129,4 @@ ZIP 双击 `Pointer.exe` 打开界面，可直接预览。首次应用时将持�
 
 ## 设计审查
 
-已将新增 APP 测试页纳入首版，保留用户已确认的外观和动效偏好。预览不修改系统、测试反映已应用状态，二者职责明确。启动项与应用配置解耦，避免重复弹出启动提示。安装/升级/卸载及旧设置迁移均纳入同一交付，未留待补功能。
+已将新增 APP 测试页和清晰文件架构重构纳入首版，保留用户已确认的外观和动效偏好。预览不修改系统、测试反映已应用状态，二者职责明确。启动项与应用配置解耦，避免重复弹出启动提示。安装/升级/卸载及旧设置迁移均纳入同一交付，未留待补功能。
