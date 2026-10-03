@@ -6,7 +6,7 @@ Windows 黑白自适应光标：浅色背景显示**黑色主体、白色边框*
 
 ## 一键配置
 
-1. 在 [Releases](https://github.com/ReactionForge/Pointer/releases/latest) 下载 `Pointer-v1.0.0-windows-x64.zip`。
+1. 在 [Releases](https://github.com/ReactionForge/Pointer/releases/latest) 下载 `Pointer-v1.0.1-windows-x64.zip`。
 2. 完整解压，打开其中的 `Pointer` 文件夹。
 3. 双击 `一键安装.cmd`（也可使用 `install.cmd`），等待安装完成提示。
 

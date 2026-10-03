@@ -25,8 +25,8 @@ class PackageTests(unittest.TestCase):
                  patch.object(app.sys, "executable", str(executable)), \
                  patch.dict(app.os.environ, {"LOCALAPPDATA": str(local)}):
                 paths = runpy.run_path(str(Path(__file__).resolve().parents[1] / "runtime_paths.py"))
-            self.assertEqual(paths["INSTALL_ROOT"], installed)
-            self.assertEqual(paths["DATA_ROOT"], installed.parent / "data")
+            self.assertEqual(paths["INSTALL_ROOT"], installed.resolve())
+            self.assertEqual(paths["DATA_ROOT"], installed.resolve().parent / "data")
 
     def make_package(self, root):
         (root / "Pointer.exe").write_bytes(b"test executable")
