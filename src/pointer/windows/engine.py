@@ -395,9 +395,9 @@ def _running():
     return running_directory(ROOT, DATA_ROOT)
 
 
-def running_directory(directory, data_root=None):
+def running_directory(directory, data_root=None, _legacy=False):
     names = [_identity(directory,data_root)]
-    if not os.environ.get('POINTER_DATA_DIR'):
+    if _legacy or not os.environ.get('POINTER_DATA_DIR'):
         names.append(_identity(directory))
     return any(_mutex_running(rf'Local\PointerAdaptiveContrast_{identity}_Mutex') for identity in names)
 

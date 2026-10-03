@@ -1,9 +1,23 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
+from pathlib import Path
+import runpy
+import sys
 from scripts import build_release
 
 
 class BuildTests(unittest.TestCase):
+    def test_background_runtime_hook_skips_qt_import_without_affecting_gui(self):
+        hook=Path(__file__).resolve().parents[3]/'packaging/windows/headless_runtime.py'
+        self.assertTrue(hook.exists(),'Headless runtime hook missing')
+        for args,skip in ((['Pointer.exe','--run'],True),(['Pointer.exe','--gui'],False)):
+            with self.subTest(args=args):
+                qt=Mock();original=qt.create_embedded_qt_conf
+                utility=Mock(qt=qt)
+                with patch.object(sys,'argv',args),patch.dict(sys.modules,{'_pyi_rth_utils':utility}):
+                    runpy.run_path(str(hook))
+                    qt.create_embedded_qt_conf('PySide6','prefix')
+                    self.assertEqual(original.called,not skip)
     def test_build_path_excludes_unrelated_icu_libraries(self):
         self.assertTrue(hasattr(build_release,'clean_build_environment'),'Isolated build environment missing')
         with patch.dict(build_release.os.environ,{'PATH':r'C:\foreign\poppler\bin;C:\Windows\System32'}):

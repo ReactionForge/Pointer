@@ -22,7 +22,7 @@ class InstallationTests(unittest.TestCase):
     def test_custom_install_identity_is_written_and_resolved_on_normal_launch(self):
         from pointer.paths import resolve_paths
         with tempfile.TemporaryDirectory() as folder:
-            root=Path(folder);source=root/'source';target=root/'Custom Location'
+            root=Path(folder).resolve();source=root/'source';target=root/'Custom Location'
             package(source)
             installation.deploy_package(source,target)
             paths=resolve_paths(target,root/'different AppData',True)
@@ -32,7 +32,7 @@ class InstallationTests(unittest.TestCase):
 
     def test_cached_scheme_locates_verified_previous_installation(self):
         with tempfile.TemporaryDirectory() as folder:
-            root=Path(folder);target=root/'Pointer/app'
+            root=Path(folder).resolve();target=root/'Pointer/app'
             target.parent.mkdir();package(target.parent/'source')
             installation.deploy_package(target.parent/'source',target)
             arrow=root/'Pointer/data/cursor-cache/key/light/adaptive-arrow.cur'
@@ -93,7 +93,7 @@ class InstallationTests(unittest.TestCase):
 
     def test_missing_backup_aborts_uninstall_of_active_cached_scheme(self):
         with tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
-            root=Path(folder);target=root/'app';data=root/'data'
+            root=Path(folder).resolve();target=root/'app';data=root/'data'
             package(target);data.mkdir()
             backend=Mock();backend.backup=data/'missing.json'
             application=Mock(backend=backend)

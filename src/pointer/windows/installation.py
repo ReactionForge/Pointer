@@ -220,9 +220,12 @@ def install():
                 shutil.copy2(source,destination)
     _migrate_backup(previous)
     upgrade_state = None
-    was_running = switcher.running_directory(INSTALL_ROOT,DATA_ROOT)
+    if (INSTALL_ROOT/'PACKAGE.json').is_file():
+        package_files(INSTALL_ROOT)
+    was_running = switcher.running_directory(INSTALL_ROOT,DATA_ROOT,_legacy=True)
     if previous:
-        was_running = was_running or switcher.running_directory(previous,previous.parent/'data')
+        package_files(previous)
+        was_running = was_running or switcher.running_directory(previous,previous.parent/'data',_legacy=True)
     if (INSTALL_ROOT/'PACKAGE.json').is_file() and ROOT != INSTALL_ROOT:
         package_files(INSTALL_ROOT)
         version = (INSTALL_ROOT/'VERSION').read_text().strip()

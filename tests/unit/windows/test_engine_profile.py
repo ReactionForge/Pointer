@@ -14,6 +14,9 @@ from pointer.windows import engine
 
 
 class EngineProfileTests(unittest.TestCase):
+    def test_verified_upgrade_can_detect_legacy_helper_with_explicit_paths(self):
+        with patch.dict(engine.os.environ,{'POINTER_DATA_DIR':'isolated'}),patch.object(engine,'_mutex_running',side_effect=[False,True]):
+            self.assertTrue(engine.running_directory(Path('C:/Pointer/app'),Path('C:/Pointer/data'),_legacy=True))
     def run_stopped_loop(self):
         from pointer.cursor import motion
         from pointer.cursor.theme import THEME_NAME

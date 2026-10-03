@@ -54,6 +54,7 @@ def build_release(version, compiler=None, skip_installer=False):
 """, encoding="utf-8")
     subprocess.run([sys.executable, "-m", "PyInstaller", "--noconfirm", '--clean', "--windowed", "--onedir",
                     '--icon',str(ROOT/'packaging/windows/pointer.ico'),
+                    '--runtime-hook',str(ROOT/'packaging/windows/headless_runtime.py'),
                     '--exclude-module','PySide6.QtQml','--exclude-module','PySide6.QtQuick',
                     '--exclude-module','PySide6.QtWebEngineCore','--exclude-module','PySide6.QtTest',
                     "--version-file", str(version_file),
