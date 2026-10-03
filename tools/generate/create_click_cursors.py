@@ -6,7 +6,7 @@ from PIL import Image
 from pointer.click_motion import SCALES, ANGLES
 from pointer.runtime_paths import ASSET_ROOT
 from .create_adaptive_cursors import RENDERERS
-from .create_cursor import SIZES, cursor_bytes
+from .create_cursor import SIZES, cursor_bytes, render
 from .create_dual_contrast import recolor
 
 
@@ -23,6 +23,9 @@ def main():
                 c, s = math.cos(angle) / scale, math.sin(angle) / scale
                 images = []
                 for size, image in zip(SIZES, originals):
+                    if mode == "tilt" and role == "arrow":
+                        images.append(recolor(render(size, tip_pull=frame / 4), theme))
+                        continue
                     x, y = (round(value * size / 32) for value in hotspot)
                     # Inverse affine sampling keeps the same pixel under the hotspot.
                     transform = (c, s, x - c * x - s * y,
@@ -34,7 +37,7 @@ def main():
                     images.append(image.transform(image.size, Image.Transform.AFFINE, transform,
                                                   resample=Image.Resampling.BICUBIC))
                 (folder / f"{role}-{frame}.cur").write_bytes(cursor_bytes(images, hotspot))
-    print("Created 16 shrink and 16 counterclockwise tilt frames; six DPI sizes, unchanged hotspots.")
+    print("Created 16 shrink and 16 bend/tilt frames; six DPI sizes, unchanged hotspots.")
 
 
 if __name__ == "__main__":

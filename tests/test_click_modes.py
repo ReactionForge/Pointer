@@ -45,7 +45,19 @@ class ClickModeTests(unittest.TestCase):
 
 
 class TiltResourceTests(unittest.TestCase):
-    def test_tilt_preserves_hotspots_area_and_rotates_counterclockwise(self):
+    def test_arrow_bends_only_its_top_corner(self):
+        from tools.generate.create_cursor import arrow_contour
+        normal = arrow_contour()
+        previous = normal[0]
+        for amount in (.25, .5, .75, 1):
+            bent = arrow_contour(amount)
+            self.assertEqual(bent[25:-1], normal[25:-1], "Both lower corners must stay fixed")
+            self.assertLess(bent[0][0], previous[0])
+            self.assertGreater(bent[0][1], previous[1])
+            self.assertEqual(bent[-1], bent[0])
+            previous = bent[0]
+
+    def test_motion_preserves_hotspots_and_unclipped_shapes(self):
         root = Path(__file__).resolve().parents[1] / "assets" / "cursors" / "adaptive"
         for theme in ("light", "dark"):
             for role in ("arrow", "hand"):
@@ -65,12 +77,16 @@ class TiltResourceTests(unittest.TestCase):
                             pixels = data[offset:offset + size * size * 4]
                             points = [(n % size, size - 1 - n // size)
                                       for n, alpha in enumerate(pixels[3::4]) if alpha >= 128]
-                            return len(points), sum(x for x, _ in points) / len(points)
-                        area, center_x = shape(normal)
-                        tilted_area, tilted_x = shape(tilted)
-                        self.assertGreater(tilted_area, area * .94, (theme, role, size, "clipped"))
+                            return len(points), sum(x for x, _ in points) / len(points), min(x for x, _ in points), min(y for _, y in points)
+                        area, center_x, left, top = shape(normal)
+                        tilted_area, tilted_x, tilted_left, tilted_top = shape(tilted)
+                        self.assertGreater(tilted_area, area * (.82 if role == "arrow" else .94), (theme, role, size, "clipped"))
                         self.assertLess(tilted_area, area * 1.06)
-                        self.assertGreater(tilted_x, center_x, "Counterclockwise tilt points the tip down-left and moves the body right")
+                        if role == "hand":
+                            self.assertGreater(tilted_x, center_x, "Counterclockwise hand tilt moves its body right")
+                        else:
+                            self.assertLessEqual(tilted_left, left, "Arrow tip must move left")
+                            self.assertGreater(tilted_top, top, "Arrow tip must move down")
 
 
 class ModeRecoveryTests(unittest.TestCase):
