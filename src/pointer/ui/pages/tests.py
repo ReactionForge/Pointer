@@ -27,22 +27,23 @@ QT_CURSOR_MAP = {
 
 
 class TestSurface(QFrame):
+    """High-contrast interactive test pad for tactile feel and native cursor transitions."""
     def __init__(self, page, name, role='arrow', dark=False):
         super().__init__()
         self.page, self.name, self.dragging = page, name, False
         self.setObjectName(name)
         self.setProperty('cursorRole', role)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.setMinimumHeight(100)
+        self.setMinimumHeight(104)
 
-        bg = '#0f172a' if dark else '#ffffff'
-        border = '#334155' if dark else '#e2e8f0'
-        self.setStyleSheet(f'QFrame#{name} {{ background: {bg}; border: 1.5px solid {border}; border-radius: 10px; }}')
+        bg = '#0f172a' if dark else '#f8fafc'
+        border = '#334155' if dark else '#cbd5e1'
+        self.setStyleSheet(f'QFrame#{name} {{ background: {bg}; border: 1.5px solid {border}; border-radius: 12px; }}')
 
         self.label = QLabel('深色测试区域' if dark else '浅色测试区域', self)
         self.label.move(16, 14)
-        text_color = '#e2e8f0' if dark else '#475569'
-        self.label.setStyleSheet(f'color: {text_color}; background: transparent; font-weight: 500; font-size: 12px;')
+        text_color = '#e2e8f0' if dark else '#1e293b'
+        self.label.setStyleSheet(f'color: {text_color}; background: transparent; font-weight: 600; font-size: 12px;')
         self.label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.label.adjustSize()
 
@@ -93,6 +94,7 @@ class TestSurface(QFrame):
 
 
 class TestPage(QWidget):
+    """Panoramic Interactive Sandbox: Full-bleed arena with real Windows cursor validation."""
     def __init__(self, application):
         super().__init__()
         self.application, self.down, self.presses = application, False, 0
@@ -103,7 +105,7 @@ class TestPage(QWidget):
         layout.setSpacing(16)
 
         # 1. Real-world Contrast & Grayscale
-        frame, inner = card('深浅背景跨界与灰度阶梯', '移动真实鼠标跨过黑白与灰度交界，观察自适应光标主体与边框的高清切换。')
+        frame, inner = card('🌓 深浅背景跨界与灰度阶梯', '移动真实鼠标跨过黑白与灰度交界面，观察自适应光标主体与边框的高清平滑反转。')
         row = QHBoxLayout()
         row.setSpacing(12)
         for name, dark in [('light-arrow', False), ('dark-arrow', True)]:
@@ -114,16 +116,18 @@ class TestPage(QWidget):
 
         inner.addSpacing(4)
         slider_row = QHBoxLayout()
-        slider_row.addWidget(QLabel('动态灰度调节：'))
+        sl_label = QLabel('动态连续灰度测试：')
+        sl_label.setStyleSheet('color: #cbd5e1; font-weight: 600; font-size: 12px;')
+        slider_row.addWidget(sl_label)
         self.brightness = QSlider(Qt.Orientation.Horizontal)
         self.brightness.setRange(0, 255)
         self.brightness.setValue(128)
         self.brightness.valueChanged.connect(self.set_brightness)
-        slider_row.addWidget(self.brightness)
+        slider_row.addWidget(self.brightness, 1)
         inner.addLayout(slider_row)
 
         self.gray = TestSurface(self, 'brightness')
-        self.gray.setMinimumHeight(64)
+        self.gray.setMinimumHeight(68)
         self.surfaces['brightness'] = self.gray
         inner.addWidget(self.gray)
         self.set_brightness(128)
@@ -138,16 +142,16 @@ class TestPage(QWidget):
             block.setStyleSheet(
                 f'background: rgb({level},{level},{level}); '
                 f'color: {"white" if level < 128 else "black"}; '
-                f'border-radius: 6px; font-weight: 500; font-size: 11px;'
+                f'border-radius: 7px; font-weight: 600; font-size: 11px;'
             )
             shades.addWidget(block)
         inner.addLayout(shades)
         layout.addWidget(frame)
 
         # 2. Click, Hand & Dragging Playground
-        frame, inner = card('左键动效、手型与拖动游标', '点击空白区域测试动效手感；悬浮或按住按钮测试手型；拖拽卡片体验移动光标。')
+        frame, inner = card('👆 左键动效、手型与拖动游标', '点击空白测试动效手感；悬浮或按住测试手型；拖拽卡片体验流畅移动光标。')
         self.counter = QLabel()
-        self.counter.setStyleSheet('color: #115e59; background: #f0fdfa; border: 1px solid #ccfbf1; border-radius: 8px; padding: 8px 12px; font-weight: 600;')
+        self.counter.setStyleSheet('color: #5eead4; background: rgba(44, 182, 173, 0.12); border: 1px solid rgba(44, 182, 173, 0.3); border-radius: 9px; padding: 9px 14px; font-weight: 600; font-size: 12.5px;')
         inner.addWidget(self.counter)
 
         btn_row = QHBoxLayout()
@@ -157,9 +161,9 @@ class TestPage(QWidget):
             button.setProperty('cursorRole', 'hand')
             button.setCursor(Qt.CursorShape.PointingHandCursor)
             if dark:
-                button.setStyleSheet('background: #0f172a; color: #f8fafc; border: 1px solid #334155; padding: 12px; border-radius: 8px;')
+                button.setStyleSheet('background: #0f172a; color: #f8fafc; border: 1px solid #334155; padding: 12px; border-radius: 9px; font-weight: 600;')
             else:
-                button.setStyleSheet('background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px;')
+                button.setStyleSheet('background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 12px; border-radius: 9px; font-weight: 600;')
             button.pressed.connect(self.button_press)
             button.released.connect(self.button_release)
             button.installEventFilter(self)
@@ -168,28 +172,28 @@ class TestPage(QWidget):
 
         drag = TestSurface(self, 'drag', 'move')
         drag.set_label_text('✥ 拖动这张卡片 (测试 Move 移动光标)')
-        drag.setStyleSheet('QFrame#drag { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #ffffff, stop:1 #f8fafc); border: 2px dashed #94a3b8; border-radius: 12px; }')
+        drag.setStyleSheet('QFrame#drag { background: rgba(255, 255, 255, 0.04); border: 2px dashed rgba(44, 182, 173, 0.5); border-radius: 12px; }')
         self.surfaces['drag'] = drag
         inner.addWidget(drag)
         layout.addWidget(frame)
 
         # 3. Real-world Code Editor & Busy Loading
-        frame, inner = card('代码编辑与系统等待加载', '在富代码编辑区测试 I-Beam 文字输入光标；在加载区测试旋转动画。')
+        frame, inner = card('📝 代码编辑与系统加载沙盒', '在富代码编辑区测试细腻的 I-Beam 文本输入光标；在加载区测试旋转动画。')
 
         # Code editor container
         code_box = QFrame()
-        code_box.setStyleSheet('QFrame { background: #1e293b; border: 1px solid #334155; border-radius: 10px; }')
+        code_box.setStyleSheet('QFrame { background: #0f172a; border: 1px solid #334155; border-radius: 11px; }')
         code_layout = QVBoxLayout(code_box)
         code_layout.setContentsMargins(12, 10, 12, 10)
         code_layout.setSpacing(6)
 
-        code_title = QLabel("<span style='color: #38bdf8;'>●</span> <span style='color: #94a3b8; font-size: 11px;'>demo.ts — Pointer Cursor Playground</span>")
+        code_title = QLabel("<span style='color: #38bdf8;'>●</span> <span style='color: #94a3b8; font-size: 11px; font-weight: 600;'>main.ts — Pointer Cursor Playground</span>")
         code_layout.addWidget(code_title)
 
         edit = QPlainTextEdit(
             "// 在此处点击并输入文本，检验细腻的 I-Beam 光标\n"
             "const pointer = new Pointer({\n"
-            "    theme: 'aurora-glass',\n"
+            "    theme: 'aurora-studio',\n"
             "    motion: 'tilt',\n"
             "    springStrength: 0.5\n"
             "});\n"
@@ -199,16 +203,16 @@ class TestPage(QWidget):
         edit.viewport().setProperty('cursorRole', 'ibeam')
         edit.setStyleSheet('''
             QPlainTextEdit {
-                background: #0f172a;
+                background: #080c16;
                 color: #e2e8f0;
                 font-family: "Consolas", "Courier New", monospace;
                 font-size: 12px;
-                border: 1px solid #334155;
-                border-radius: 6px;
+                border: 1px solid #1e293b;
+                border-radius: 8px;
                 padding: 10px;
             }
         ''')
-        edit.setMaximumHeight(130)
+        edit.setMaximumHeight(125)
         code_layout.addWidget(edit)
         inner.addWidget(code_box)
 
@@ -223,13 +227,13 @@ class TestPage(QWidget):
 
         area = TestSurface(self, 'wait')
         area.set_label_text('点击上方按钮，再将鼠标移入此处观察加载动画')
-        area.setStyleSheet('QFrame#wait { background: #f0fdfa; border: 1.5px solid #99f6e4; border-radius: 10px; }')
+        area.setStyleSheet('QFrame#wait { background: rgba(44, 182, 173, 0.08); border: 1.5px solid rgba(44, 182, 173, 0.35); border-radius: 11px; }')
         self.surfaces['wait'] = area
         inner.addWidget(area)
         layout.addWidget(frame)
 
         # 4. All 17 System Cursor Roles Matrix
-        frame, inner = card('全部 17 种 Windows 系统光标矩阵', '移动鼠标至各个卡片，即刻调用对应原生系统光标进行实时检验。')
+        frame, inner = card('🎯 全部 17 种 Windows 系统光标矩阵', '移动鼠标至各个卡片，即刻调用对应原生系统光标进行实时检验。')
         grid = QGridLayout()
         grid.setSpacing(10)
 
@@ -260,13 +264,13 @@ class TestPage(QWidget):
             tile.setMinimumHeight(56)
             tile.setStyleSheet('''
                 QFrame {
-                    background: #f8fafc;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 8px;
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 9px;
                     padding: 6px 10px;
                 }
                 QFrame:hover {
-                    background: #f0fdfa;
+                    background: rgba(44, 182, 173, 0.12);
                     border-color: #2cb6ad;
                 }
             ''')
@@ -276,6 +280,7 @@ class TestPage(QWidget):
 
             t_lbl = QLabel(f"<b>{text}</b>")
             t_lbl.setProperty('cursorRole', role)
+            t_lbl.setStyleSheet('color: #f1f5f9; font-size: 12px;')
             t_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
             d_lbl = QLabel(desc)
@@ -328,6 +333,6 @@ class TestPage(QWidget):
         self.button_release()
 
     def set_brightness(self, value):
-        self.gray.setStyleSheet(f'background: rgb({value},{value},{value}); border-radius: 8px;')
+        self.gray.setStyleSheet(f'background: rgb({value},{value},{value}); border-radius: 9px;')
         self.gray.set_label_text(f'材质亮度 {value} / 255')
-        self.gray.label.setStyleSheet('color: ' + ('white' if value < 128 else 'black') + '; background: transparent; font-weight: 500;')
+        self.gray.label.setStyleSheet('color: ' + ('white' if value < 128 else 'black') + '; background: transparent; font-weight: 600;')

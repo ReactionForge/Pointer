@@ -1,4 +1,4 @@
-"""Own the editable draft; Windows changes go through Application workers."""
+"""Modern Fluent Obsidian Studio MainWindow for Pointer."""
 from dataclasses import replace
 import json
 import sys
@@ -22,7 +22,7 @@ from .pages.preferences import PreferencesPage
 
 
 class ToastWidget(QFrame):
-    """Floating Acrylic Toast Notification with smooth fade and responsive sizing."""
+    """Floating Acrylic Toast Notification with smooth fade and responsive positioning."""
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName('toastNotification')
@@ -35,13 +35,13 @@ class ToastWidget(QFrame):
             QFrame#toastNotification {
                 background-color: rgba(15, 23, 42, 0.94);
                 border: 1px solid rgba(44, 182, 173, 0.45);
-                border-radius: 10px;
+                border-radius: 12px;
                 padding: 8px 16px;
             }
             QLabel {
                 color: #f8fafc;
                 font-weight: 500;
-                font-size: 12px;
+                font-size: 12.5px;
                 background: transparent;
             }
         ''')
@@ -74,10 +74,10 @@ class ToastWidget(QFrame):
                 QFrame#toastNotification {
                     background-color: rgba(69, 10, 10, 0.94);
                     border: 1px solid rgba(244, 63, 94, 0.5);
-                    border-radius: 10px;
+                    border-radius: 12px;
                     padding: 8px 16px;
                 }
-                QLabel { color: #f8fafc; font-size: 12px; background: transparent; }
+                QLabel { color: #f8fafc; font-size: 12.5px; background: transparent; }
             ''')
         else:
             self.icon_lbl.setText('✦')
@@ -86,10 +86,10 @@ class ToastWidget(QFrame):
                 QFrame#toastNotification {
                     background-color: rgba(15, 23, 42, 0.94);
                     border: 1px solid rgba(44, 182, 173, 0.45);
-                    border-radius: 10px;
+                    border-radius: 12px;
                     padding: 8px 16px;
                 }
-                QLabel { color: #f8fafc; font-size: 12px; background: transparent; }
+                QLabel { color: #f8fafc; font-size: 12.5px; background: transparent; }
             ''')
 
         if self.parent():
@@ -118,6 +118,7 @@ class ToastWidget(QFrame):
 
 
 class MainWindow(QMainWindow):
+    """Revolutionary Modern Studio Window with Integrated Header & Floating Capsule Navigation."""
     def __init__(self, application):
         super().__init__()
         initialize_fonts()
@@ -132,7 +133,7 @@ class MainWindow(QMainWindow):
             self.applied = CursorSettings()
             self.load_error = str(error)
         self._draft = self.applied
-        self.setWindowTitle('Pointer · 光标设置')
+        self.setWindowTitle('Pointer · 光标工作台')
 
         # Load window and app icon
         self.icon_path = None
@@ -148,51 +149,59 @@ class MainWindow(QMainWindow):
         if self.icon_path:
             self.setWindowIcon(QIcon(str(self.icon_path)))
 
-        self.resize(1140, 770)
+        self.resize(1180, 800)
         self.setMinimumSize(920, 680)
         self.setStyleSheet(STYLE)
 
         root = QWidget()
+        root.setObjectName('rootWidget')
         self.setCentralWidget(root)
-        horizontal = QHBoxLayout(root)
-        horizontal.setContentsMargins(0, 0, 0, 0)
-        horizontal.setSpacing(0)
+        root_layout = QVBoxLayout(root)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setSpacing(0)
 
-        # Sidebar
-        sidebar = QFrame()
-        sidebar.setObjectName('sidebar')
-        sidebar.setFixedWidth(216)
-        side = QVBoxLayout(sidebar)
-        side.setContentsMargins(18, 26, 18, 20)
-        side.setSpacing(10)
+        # ======================================================================
+        # Top Header Bar: Integrated Branding, Floating Capsule Nav, Live Telemetry
+        # ======================================================================
+        top_header = QFrame()
+        top_header.setObjectName('topHeader')
+        header_layout = QHBoxLayout(top_header)
+        header_layout.setContentsMargins(20, 12, 20, 12)
+        header_layout.setSpacing(16)
 
-        # Brand header with logo icon
-        brand_row = QHBoxLayout()
-        brand_row.setSpacing(10)
+        # 1. Left Branding Cluster
+        brand_cluster = QHBoxLayout()
+        brand_cluster.setSpacing(10)
         if self.icon_path:
-            icon_lbl = QLabel()
-            icon_pix = QPixmap(str(self.icon_path)).scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-            icon_lbl.setPixmap(icon_pix)
-            brand_row.addWidget(icon_lbl)
+            logo_lbl = QLabel()
+            logo_pix = QPixmap(str(self.icon_path)).scaled(28, 28, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            logo_lbl.setPixmap(logo_pix)
+            brand_cluster.addWidget(logo_lbl)
 
-        brand = QLabel('Pointer')
-        brand.setObjectName('brand')
-        brand_row.addWidget(brand)
-        brand_row.addStretch()
-        side.addLayout(brand_row)
+        brand_title = QLabel('POINTER')
+        brand_title.setObjectName('brandTitle')
+        brand_cluster.addWidget(brand_title)
 
-        sub_label = QLabel('双态自适应光标套件')
-        sub_label.setObjectName('sidebarSub')
-        side.addWidget(sub_label)
-        side.addSpacing(22)
+        badge_lbl = QLabel('STUDIO')
+        badge_lbl.setObjectName('brandBadge')
+        brand_cluster.addWidget(badge_lbl)
+        header_layout.addLayout(brand_cluster)
 
-        # Navigation
+        header_layout.addStretch(1)
+
+        # 2. Center Floating Capsule Navigation
+        nav_capsule = QFrame()
+        nav_capsule.setObjectName('navCapsule')
+        capsule_layout = QHBoxLayout(nav_capsule)
+        capsule_layout.setContentsMargins(4, 3, 4, 3)
+        capsule_layout.setSpacing(4)
+
         self.navigation = []
         nav_items = [
-            ('🎨  光标外观', 0),
-            ('⚡  左键动效', 1),
-            ('🎯  光标测试', 2),
-            ('⚙️  应用设置', 3),
+            ('🎨  光标工坊', 0),
+            ('⚡  动效实验室', 1),
+            ('🎯  全景沙盒', 2),
+            ('⚙️  系统偏好', 3),
         ]
         for title, index in nav_items:
             button = QPushButton(title)
@@ -200,55 +209,70 @@ class MainWindow(QMainWindow):
             button.setObjectName(f'nav{index}')
             button.setCursor(Qt.CursorShape.PointingHandCursor)
             button.clicked.connect(lambda checked=False, idx=index: self.select_page(idx))
-            side.addWidget(button)
+            capsule_layout.addWidget(button)
             self.navigation.append(button)
 
-        side.addStretch()
+        header_layout.addWidget(nav_capsule)
 
-        # Sidebar status card
-        status_box = QFrame()
-        status_box.setObjectName('sidebarStatusCard')
-        status_layout = QVBoxLayout(status_box)
-        status_layout.setContentsMargins(10, 8, 10, 8)
-        status_layout.setSpacing(4)
+        header_layout.addStretch(1)
+
+        # 3. Right Status & Quick Action Hub
+        right_hub = QHBoxLayout()
+        right_hub.setSpacing(10)
+
+        status_chip = QFrame()
+        status_chip.setObjectName('headerStatusChip')
+        chip_layout = QHBoxLayout(status_chip)
+        chip_layout.setContentsMargins(10, 4, 10, 4)
+        chip_layout.setSpacing(6)
 
         self.status = QLabel('●  等待应用')
-        self.status.setObjectName('sidebarStatusText')
-        self.status.setWordWrap(True)
-        status_layout.addWidget(self.status)
+        self.status.setStyleSheet('color: #2cb6ad; font-weight: 600; font-size: 11.5px;')
+        chip_layout.addWidget(self.status)
+        right_hub.addWidget(status_chip)
 
         version = (ROOT / 'VERSION').read_text(encoding='utf-8').strip() if (ROOT / 'VERSION').exists() else '开发版'
-        ver_lbl = QLabel(f'v{version} · Aurora')
-        ver_lbl.setObjectName('sidebarVersion')
-        status_layout.addWidget(ver_lbl)
-        side.addWidget(status_box)
+        ver_lbl = QLabel(f'v{version}')
+        ver_lbl.setObjectName('headerVersion')
+        right_hub.addWidget(ver_lbl)
 
-        horizontal.addWidget(sidebar)
+        header_layout.addLayout(right_hub)
+        root_layout.addWidget(top_header)
 
-        # Content area
+        # ======================================================================
+        # Content Workspace Area (Full Width Canvas)
+        # ======================================================================
         content = QWidget()
         content.setObjectName('content')
         self.content_widget = content
         layout = QVBoxLayout(content)
-        layout.setContentsMargins(32, 28, 32, 22)
+        layout.setContentsMargins(24, 18, 24, 18)
         layout.setSpacing(14)
 
-        # Header
-        header_box = QVBoxLayout()
-        header_box.setSpacing(4)
+        # Banner Info Card
+        banner = QFrame()
+        banner.setObjectName('bannerBar')
+        banner_layout = QHBoxLayout(banner)
+        banner_layout.setContentsMargins(16, 10, 16, 10)
+        banner_layout.setSpacing(12)
+
+        info_box = QVBoxLayout()
+        info_box.setSpacing(2)
         self.title = QLabel()
         self.title.setObjectName('pageTitle')
-        header_box.addWidget(self.title)
+        info_box.addWidget(self.title)
 
         self.subtitle = QLabel()
         self.subtitle.setObjectName('subtitle')
         self.subtitle.setWordWrap(True)
-        header_box.addWidget(self.subtitle)
-        layout.addLayout(header_box)
+        info_box.addWidget(self.subtitle)
+        banner_layout.addLayout(info_box, 1)
 
-        # Body (Stack + Adaptive Preview)
+        layout.addWidget(banner)
+
+        # Central Stage: Stacked Pages & Grand Preview Showcase
         body = QHBoxLayout()
-        body.setSpacing(20)
+        body.setSpacing(18)
 
         self.stack = QStackedWidget()
         self.pages = [
@@ -265,26 +289,28 @@ class MainWindow(QMainWindow):
         body.addWidget(self.stack, 3)
 
         self.preview = PreviewPanel(self._draft)
-        self.preview.setMinimumWidth(260)
-        self.preview.setMaximumWidth(330)
+        self.preview.setMinimumWidth(280)
+        self.preview.setMaximumWidth(360)
         body.addWidget(self.preview, 2)
         layout.addLayout(body, 1)
 
-        # Floating toast notification
+        # Floating Toast Notification
         self.toast = ToastWidget(content)
 
-        # Docked Bottom Control Bar
+        # ======================================================================
+        # Floating Bottom Control Island
+        # ======================================================================
         control_bar = QFrame()
         control_bar.setObjectName('controlBar')
         control_layout = QHBoxLayout(control_bar)
-        control_layout.setContentsMargins(16, 10, 16, 10)
+        control_layout.setContentsMargins(18, 8, 18, 8)
         control_layout.setSpacing(14)
 
-        self.draft_label = QLabel('当前配置')
-        self.draft_label.setStyleSheet('font-weight: 600; color: #1e293b;')
+        self.draft_label = QLabel('● 当前配置已同步')
+        self.draft_label.setStyleSheet('color: #2cb6ad; font-weight: 700;')
         control_layout.addWidget(self.draft_label)
 
-        self.feedback = QLabel('配置先在右侧预览，应用后启用系统光标。')
+        self.feedback = QLabel('所见即所得：配置在展台实时预览，应用后立即同步至 Windows 系统。')
         self.feedback.setObjectName('feedback')
         self.feedback.setWordWrap(True)
         control_layout.addWidget(self.feedback, 1)
@@ -301,7 +327,7 @@ class MainWindow(QMainWindow):
         control_layout.addWidget(self.apply_button)
 
         layout.addWidget(control_bar)
-        horizontal.addWidget(content, 1)
+        root_layout.addWidget(content, 1)
 
         self.select_page(0)
         self.sync()
@@ -350,19 +376,19 @@ class MainWindow(QMainWindow):
         dirty = self._draft != self.applied
         if dirty:
             self.draft_label.setText('● 有未应用的修改')
-            self.draft_label.setStyleSheet('color: #b45309; font-weight: 600;')
+            self.draft_label.setStyleSheet('color: #f59e0b; font-weight: 700;')
         else:
             self.draft_label.setText('● 当前配置已同步')
-            self.draft_label.setStyleSheet('color: #0d9488; font-weight: 600;')
+            self.draft_label.setStyleSheet('color: #2cb6ad; font-weight: 700;')
         self.discard.setEnabled(dirty and not self.busy)
         self.apply_button.setEnabled(not self.busy and not self.load_error)
 
     def select_page(self, index):
-        titles = ['光标外观', '左键动效', '光标测试', '应用设置']
+        titles = ['光标工坊 · 视觉定制', '动效实验室 · 触感微调', '全景沙盒 · 实操检验', '系统偏好 · 常驻自愈']
         descriptions = [
-            '极光与自适应圆角指针，在浅色与深色背景下都保持锐利清晰。',
-            '按下时轻快物理反馈，松开后自然丝滑回弹。',
-            '在此实时观察 Windows 系统光标效果，支持 17 种指针与真实操作体验。',
+            '极光与自适应圆角指针，在浅色与深色背景下均保持锐利通透与极致清晰。',
+            '左键按下时给予富有生命力的微物理倾侧/缩小，松开后自然优雅回正。',
+            '在此实时观察 Windows 系统原生光标效果，支持 17 种指针与真实环境检验。',
             '管理后台常驻服务、开机启动自愈与个性化配置备份。'
         ]
         self.title.setText(titles[index])
@@ -444,15 +470,15 @@ class MainWindow(QMainWindow):
             state = self.application.backend.snapshot()
             if state['running']:
                 self.status.setText('●  光标效果运行中')
-                self.status.setStyleSheet('color: #2cb6ad; font-weight: 600;')
+                self.status.setStyleSheet('color: #2cb6ad; font-weight: 600; font-size: 11.5px;')
             else:
                 self.status.setText('○  光标效果已暂停')
-                self.status.setStyleSheet('color: #94a3b8; font-weight: 500;')
+                self.status.setStyleSheet('color: #94a3b8; font-weight: 500; font-size: 11.5px;')
             if state.get('last_error'):
                 self.feedback.setText('后台错误：' + state['last_error'])
         except Exception:
             self.status.setText('状态读取失败')
-            self.status.setStyleSheet('color: #f43f5e; font-weight: 500;')
+            self.status.setStyleSheet('color: #f43f5e; font-weight: 500; font-size: 11.5px;')
 
     def reset_defaults(self):
         if self.load_error and QMessageBox.question(self, '重置配置', '现有配置无法读取。保留原文件副本并使用默认配置？') != QMessageBox.StandardButton.Yes:

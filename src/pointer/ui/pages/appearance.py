@@ -47,6 +47,7 @@ PRESETS = [
 
 
 class AppearancePage(QWidget):
+    """Grand cursor appearance workshop with live presets and custom dual-state palette."""
     def __init__(self, change):
         super().__init__()
         self.change, self.colors = change, {}
@@ -57,47 +58,49 @@ class AppearancePage(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(16)
 
-        # 1. Presets Card
-        preset_frame, preset_inner = card('精品配色预设', '内置 4 套精心校准的高质感配色方案，点击即可载入并自由微调。')
+        # 1. Presets Showcase Gallery
+        preset_frame, preset_inner = card('🎨 精品配色画廊', '内置 4 套经专业调校的高质感配色方案，点击即可载入并自由微调。')
         preset_grid = QGridLayout()
         preset_grid.setSpacing(10)
         for index, preset in enumerate(PRESETS):
             btn = QPushButton()
             btn.setObjectName('preset_' + preset['id'])
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn.setFixedHeight(54)
+            btn.setFixedHeight(58)
             btn.clicked.connect(lambda checked=False, p=preset: self.apply_preset(p))
 
             # Render dual swatches icon
-            pixmap = QPixmap(36, 20)
+            pixmap = QPixmap(38, 22)
             pixmap.fill(QColor('transparent'))
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
             # Light swatch circle
-            painter.setPen(QPen(QColor(preset['light_outline']), 1.5))
+            painter.setPen(QPen(QColor(preset['light_outline']), 1.6))
             painter.setBrush(QColor(preset['light_body']))
-            painter.drawEllipse(1, 1, 16, 16)
+            painter.drawEllipse(1, 2, 17, 17)
             # Dark swatch circle
-            painter.setPen(QPen(QColor(preset['dark_outline']), 1.5))
+            painter.setPen(QPen(QColor(preset['dark_outline']), 1.6))
             painter.setBrush(QColor(preset['dark_body']))
-            painter.drawEllipse(18, 1, 16, 16)
+            painter.drawEllipse(19, 2, 17, 17)
             painter.end()
 
             btn.setIcon(QIcon(pixmap))
-            btn.setIconSize(QSize(36, 20))
+            btn.setIconSize(QSize(38, 22))
             btn.setText(f"  {preset['name']}\n  {preset['desc']}")
             btn.setStyleSheet('''
                 QPushButton {
                     text-align: left;
-                    padding: 8px 12px;
-                    background: #f8fafc;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 9px;
+                    padding: 8px 14px;
+                    background: rgba(255, 255, 255, 0.04);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 10px;
                     font-size: 12px;
+                    color: #f1f5f9;
                 }
                 QPushButton:hover {
-                    background: #f0fdfa;
+                    background: rgba(44, 182, 173, 0.12);
                     border-color: #2cb6ad;
+                    color: #5eead4;
                 }
             ''')
             self.preset_buttons.append((btn, preset))
@@ -106,7 +109,7 @@ class AppearancePage(QWidget):
         layout.addWidget(preset_frame)
 
         # 2. Strategy & Fine-tune Colors
-        frame, inner = card('背景策略与自定义颜色', '自动适应鼠标所在底色的亮度，保留极致清晰的主体与外轮廓。')
+        frame, inner = card('🌓 背景适应策略与双模调色盘', '依据光标下方像素的亮度实时智能切换，始终保持高对比度与清晰锐利轮廓。')
 
         self.appearance = QComboBox()
         self.appearance.setObjectName('appearanceCombo')
@@ -121,16 +124,16 @@ class AppearancePage(QWidget):
 
         inner.addSpacing(6)
         colors_container = QHBoxLayout()
-        colors_container.setSpacing(14)
+        colors_container.setSpacing(12)
 
-        for theme, title, hint in [('light', '浅色背景状态', '用于浅底软件与网页'), ('dark', '深色背景状态', '用于深色主题与暗黑软件')]:
+        for theme, title, hint in [('light', '浅色背景状态', '浅底网页 / 白色文档'), ('dark', '深色背景状态', '暗黑系统 / 深色 IDE')]:
             col_box = QFrame()
-            col_box.setStyleSheet('QFrame { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; }')
+            col_box.setStyleSheet('QFrame { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 11px; padding: 10px; }')
             col_layout = QVBoxLayout(col_box)
             col_layout.setContentsMargins(10, 8, 10, 8)
             col_layout.setSpacing(8)
 
-            header_lbl = QLabel(f"<b>{title}</b>  <span style='color: #64748b; font-size: 11px;'>{hint}</span>")
+            header_lbl = QLabel(f"<b>{title}</b>  <span style='color: #64748b; font-size: 11px;'>({hint})</span>")
             col_layout.addWidget(header_lbl)
 
             row = QHBoxLayout()
@@ -150,11 +153,11 @@ class AppearancePage(QWidget):
         layout.addWidget(frame)
 
         # 3. Cursor Size
-        frame, inner = card('光标尺寸', '尺寸随 Windows 显示缩放自适应渲染，高分辨率屏保持锐利边缘。')
+        frame, inner = card('📐 光标系统渲染尺寸', '矢量几何重绘与高精度栅格化，在各类高分屏与缩放比下永不模糊失真。')
         self.size = QComboBox()
         self.size.setObjectName('sizeCombo')
         for size in (24, 32, 40, 48, 64):
-            label = f'{size} px' + ('   (标准默认)' if size == 32 else ('   (轻巧精巧)' if size == 24 else '   (大屏清晰)'))
+            label = f'{size} px' + ('   (标准推荐 · 平衡适中)' if size == 32 else ('   (轻巧精巧 · 紧凑小屏)' if size == 24 else '   (大屏清晰 · 高分显示)'))
             self.size.addItem(label, size)
         self.size.currentIndexChanged.connect(lambda: change(size=self.size.currentData()))
         inner.addWidget(self.size)
@@ -191,7 +194,7 @@ class AppearancePage(QWidget):
             swatch.fill(QColor('transparent'))
             painter = QPainter(swatch)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            painter.setPen(QColor('#94a3b8'))
+            painter.setPen(QPen(QColor('#94a3b8'), 1.2))
             painter.setBrush(QColor(color))
             painter.drawEllipse(1, 1, 15, 15)
             painter.end()
@@ -210,26 +213,29 @@ class AppearancePage(QWidget):
                 btn.setStyleSheet('''
                     QPushButton {
                         text-align: left;
-                        padding: 8px 12px;
-                        background: #f0fdfa;
+                        padding: 8px 14px;
+                        background: rgba(44, 182, 173, 0.18);
                         border: 2px solid #2cb6ad;
-                        border-radius: 9px;
+                        border-radius: 10px;
                         font-size: 12px;
-                        font-weight: 600;
+                        font-weight: 700;
+                        color: #ffffff;
                     }
                 ''')
             else:
                 btn.setStyleSheet('''
                     QPushButton {
                         text-align: left;
-                        padding: 8px 12px;
-                        background: #f8fafc;
-                        border: 1px solid #e2e8f0;
-                        border-radius: 9px;
+                        padding: 8px 14px;
+                        background: rgba(255, 255, 255, 0.04);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        border-radius: 10px;
                         font-size: 12px;
+                        color: #f1f5f9;
                     }
                     QPushButton:hover {
-                        background: #f0fdfa;
+                        background: rgba(44, 182, 173, 0.12);
                         border-color: #2cb6ad;
+                        color: #5eead4;
                     }
                 ''')

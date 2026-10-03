@@ -1,19 +1,20 @@
 import time
 from PySide6.QtCore import Qt, QTimer, QRectF
-from PySide6.QtGui import QImage, QPainter, QColor, QFont, QPen
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QComboBox, QPushButton
+from PySide6.QtGui import QImage, QPainter, QColor, QFont, QPen, QLinearGradient
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QFrame
 from pointer.cursor.resources import RenderRequest, render_cursor
 from pointer.cursor.motion import ClickMotion
 from .theme import card
 
 
 class PreviewSurface(QWidget):
+    """Interactive preview canvas with physics reactivity and multi-theme simulation."""
     def __init__(self, owner, theme):
         super().__init__()
         self.owner, self.theme = owner, theme
         self.hovered = False
         self.pressed = False
-        self.setMinimumHeight(165)
+        self.setMinimumHeight(170)
         self.setMouseTracking(True)
 
     def mousePressEvent(self, event):
@@ -47,47 +48,65 @@ class PreviewSurface(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        # Card container
         rect = self.rect()
-        card_rect = QRectF(rect.x() + 1, rect.y() + 1, rect.width() - 2, rect.height() - 2)
+        card_rect = QRectF(rect.x() + 1.5, rect.y() + 1.5, rect.width() - 3, rect.height() - 3)
 
         is_light = (self.theme == 'light')
-        bg_color = QColor('#f8fafc' if is_light else '#1e293b')
-        painter.setBrush(bg_color)
-
         is_down = bool(self.pressed or self.owner.down)
-        if is_down:
-            border_pen = QPen(QColor('#2cb6ad'), 2)
-        elif self.hovered:
-            border_pen = QPen(QColor('#0284c7' if is_light else '#38bdf8'), 1.5)
+
+        # Stage background with subtle gradient
+        if is_light:
+            grad = QLinearGradient(card_rect.topLeft(), card_rect.bottomRight())
+            grad.setColorAt(0.0, QColor('#ffffff'))
+            grad.setColorAt(1.0, QColor('#f1f5f9'))
+            painter.setBrush(grad)
         else:
-            border_pen = QPen(QColor('#e2e8f0' if is_light else '#334155'), 1)
+            grad = QLinearGradient(card_rect.topLeft(), card_rect.bottomRight())
+            grad.setColorAt(0.0, QColor('#0f172a'))
+            grad.setColorAt(1.0, QColor('#090d16'))
+            painter.setBrush(grad)
+
+        # Border styling with reactive glow
+        if is_down:
+            border_pen = QPen(QColor('#2cb6ad'), 2.2)
+        elif self.hovered:
+            border_pen = QPen(QColor('#38bdf8' if not is_light else '#0284c7'), 1.8)
+        else:
+            border_pen = QPen(QColor('#cbd5e1' if is_light else '#334155'), 1.2)
 
         painter.setPen(border_pen)
-        painter.drawRoundedRect(card_rect, 12, 12)
+        painter.drawRoundedRect(card_rect, 13, 13)
 
-        # Subtle badge at top-left
-        badge_rect = QRectF(card_rect.x() + 12, card_rect.y() + 12, 138, 22)
-        badge_bg = QColor(255, 255, 255, 200) if is_light else QColor(15, 23, 42, 200)
-        badge_border = QColor('#cbd5e1') if is_light else QColor('#475569')
+        # Badge pill at top-left
+        badge_rect = QRectF(card_rect.x() + 12, card_rect.y() + 12, 142, 22)
+        if is_down:
+            badge_bg = QColor(44, 182, 173, 40)
+            badge_border = QColor('#2cb6ad')
+            badge_text_color = QColor('#2cb6ad')
+            badge_text = '● 动效激发中'
+        else:
+            if is_light:
+                badge_bg = QColor(241, 245, 249, 230)
+                badge_border = QColor('#94a3b8')
+                badge_text_color = QColor('#475569')
+                badge_text = '浅色 · 点击测手感'
+            else:
+                badge_bg = QColor(30, 41, 59, 230)
+                badge_border = QColor('#475569')
+                badge_text_color = QColor('#94a3b8')
+                badge_text = '深色 · 点击测手感'
+
         painter.setBrush(badge_bg)
-        painter.setPen(QPen(badge_border, 0.8))
+        painter.setPen(QPen(badge_border, 0.9))
         painter.drawRoundedRect(badge_rect, 11, 11)
 
         badge_font = QFont('Segoe UI Variable Text', 9)
-        badge_font.setWeight(QFont.Weight.Medium)
+        badge_font.setWeight(QFont.Weight.DemiBold)
         painter.setFont(badge_font)
-
-        if is_down:
-            painter.setPen(QColor('#2cb6ad'))
-            badge_text = '● 动效激发中'
-        else:
-            painter.setPen(QColor('#64748b' if is_light else '#94a3b8'))
-            badge_text = '浅色 · 点击测手感' if is_light else '深色 · 点击测手感'
-
+        painter.setPen(badge_text_color)
         painter.drawText(badge_rect, Qt.AlignmentFlag.AlignCenter, badge_text)
 
-        # Render Cursor
+        # Render active cursor frame
         settings = self.owner.settings
         role = self.owner.role.currentData() or 'arrow'
         frame = self.owner.frame if role in ('arrow', 'hand') else self.owner.loading_frame if role in ('busy', 'working') else 0
@@ -111,6 +130,7 @@ class PreviewSurface(QWidget):
 
 
 class PreviewPanel(QWidget):
+    """High-fidelity dual-mode cursor showcase workbench with live physical feedback."""
     def __init__(self, settings):
         super().__init__()
         self.settings, self.frame, self.loading_frame = settings, 0, 0
@@ -119,9 +139,15 @@ class PreviewPanel(QWidget):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(14)
+        layout.setSpacing(12)
 
-        frame, inner = card('实时双态预览', '高精度实时渲染。直接点击卡片或按住下方按钮触发动效。')
+        frame, inner = card('✦ 双态实时展台', '超高清实时动态渲染。点击卡片或按住下方按钮测试微物理手感。')
+
+        # Selector Header with role
+        role_box = QHBoxLayout()
+        role_lbl = QLabel('展示类型：')
+        role_lbl.setStyleSheet('color: #94a3b8; font-weight: 600; font-size: 12px;')
+        role_box.addWidget(role_lbl)
 
         self.role = QComboBox()
         for label, role in [
@@ -133,14 +159,18 @@ class PreviewPanel(QWidget):
         ]:
             self.role.addItem(label, role)
         self.role.currentIndexChanged.connect(self.refresh)
-        inner.addWidget(self.role)
+        role_box.addWidget(self.role, 1)
+        inner.addLayout(role_box)
 
+        # Dual Surfaces (Daylight & Midnight)
         self.surfaces = [PreviewSurface(self, theme) for theme in ('light', 'dark')]
         for surface in self.surfaces:
             inner.addWidget(surface)
 
-        button = QPushButton('按住预览左键动效')
+        # Physics Trigger Button
+        button = QPushButton('⚡ 按住预览左键动效微物理')
         button.setObjectName('motionPreviewButton')
+        button.setCursor(Qt.CursorShape.PointingHandCursor)
         button.pressed.connect(lambda: self.set_down(True))
         button.released.connect(lambda: self.set_down(False))
         inner.addWidget(button)
