@@ -54,35 +54,35 @@ class PreviewSurface(QWidget):
         is_light = (self.theme == 'light')
         is_down = bool(self.pressed or self.owner.down)
 
-        # Stage background with subtle gradient
+        # Stage background with subtle Apple gradient
         if is_light:
             grad = QLinearGradient(card_rect.topLeft(), card_rect.bottomRight())
             grad.setColorAt(0.0, QColor('#ffffff'))
-            grad.setColorAt(1.0, QColor('#f1f5f9'))
+            grad.setColorAt(1.0, QColor('#f5f5f7'))
             painter.setBrush(grad)
         else:
             grad = QLinearGradient(card_rect.topLeft(), card_rect.bottomRight())
-            grad.setColorAt(0.0, QColor('#0f172a'))
-            grad.setColorAt(1.0, QColor('#090d16'))
+            grad.setColorAt(0.0, QColor('#202022'))
+            grad.setColorAt(1.0, QColor('#161618'))
             painter.setBrush(grad)
 
-        # Border styling with reactive glow
+        # Border styling with macOS reactive focus ring
         if is_down:
-            border_pen = QPen(QColor('#2cb6ad'), 2.2)
+            border_pen = QPen(QColor('#007aff'), 1.8)
         elif self.hovered:
-            border_pen = QPen(QColor('#38bdf8' if not is_light else '#0284c7'), 1.8)
+            border_pen = QPen(QColor(0, 122, 255, 140), 1.2)
         else:
-            border_pen = QPen(QColor('#cbd5e1' if is_light else '#334155'), 1.2)
+            border_pen = QPen(QColor(0, 0, 0, 22) if is_light else QColor(255, 255, 255, 22), 1.0)
 
         painter.setPen(border_pen)
-        painter.drawRoundedRect(card_rect, 13, 13)
+        painter.drawRoundedRect(card_rect, 12, 12)
 
         # Badge pill at top-left
         settings = self.owner.settings
         if is_down:
-            badge_bg = QColor(44, 182, 173, 40)
-            badge_border = QColor('#2cb6ad')
-            badge_text_color = QColor('#2cb6ad')
+            badge_bg = QColor(0, 122, 255, 30)
+            badge_border = QColor('#007aff')
+            badge_text_color = QColor('#0a84ff')
             badge_text = '● 动效激发中'
         else:
             if settings.appearance == 'adaptive':
@@ -93,13 +93,13 @@ class PreviewSurface(QWidget):
                 badge_text = '浅色 · 锁定深色标' if is_light else '深色 · 锁定方案'
 
             if is_light:
-                badge_bg = QColor(241, 245, 249, 230)
-                badge_border = QColor('#94a3b8')
-                badge_text_color = QColor('#475569')
+                badge_bg = QColor(255, 255, 255, 240)
+                badge_border = QColor(0, 0, 0, 28)
+                badge_text_color = QColor('#1d1d1f')
             else:
-                badge_bg = QColor(30, 41, 59, 230)
-                badge_border = QColor('#475569')
-                badge_text_color = QColor('#94a3b8')
+                badge_bg = QColor(44, 44, 46, 220)
+                badge_border = QColor(255, 255, 255, 28)
+                badge_text_color = QColor('#f5f5f7')
 
         badge_font = QFont('Segoe UI Variable Text', 9)
         badge_font.setWeight(QFont.Weight.DemiBold)
@@ -162,21 +162,21 @@ class PreviewPanel(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(12)
 
-        frame, inner = card('✦ 双态实时展台', '超高清实时动态渲染。点击卡片或按住下方按钮测试微物理手感。')
+        frame, inner = card('双态实时展台', '超高清实时动态渲染。点击卡片或按住下方按钮测试微物理手感。')
 
         # Selector Header with role
         role_box = QHBoxLayout()
         role_lbl = QLabel('展示类型：')
-        role_lbl.setStyleSheet('color: #94a3b8; font-weight: 600; font-size: 12px;')
+        role_lbl.setStyleSheet('color: #86868b; font-weight: 500; font-size: 12px;')
         role_box.addWidget(role_lbl)
 
         self.role = QComboBox()
         for label, role in [
-            ('🎯  普通箭头 (Arrow)', 'arrow'),
-            ('👆  链接手型 (Hand)', 'hand'),
-            ('📝  文本输入 (IBeam)', 'ibeam'),
-            ('⏳  等待加载 (Wait)', 'busy'),
-            ('⚙️  后台运行 (AppStarting)', 'working'),
+            ('标准箭头 (Arrow)', 'arrow'),
+            ('链接手型 (Hand)', 'hand'),
+            ('文本输入 (IBeam)', 'ibeam'),
+            ('等待加载 (Wait)', 'busy'),
+            ('后台运行 (AppStarting)', 'working'),
         ]:
             self.role.addItem(label, role)
         self.role.currentIndexChanged.connect(self.refresh)
@@ -189,7 +189,7 @@ class PreviewPanel(QWidget):
             inner.addWidget(surface)
 
         # Physics Trigger Button
-        button = QPushButton('⚡ 按住预览左键动效微物理')
+        button = QPushButton('按住测试左键动效微物理')
         button.setObjectName('motionPreviewButton')
         button.setCursor(Qt.CursorShape.PointingHandCursor)
         button.pressed.connect(lambda: self.set_down(True))

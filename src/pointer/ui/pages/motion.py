@@ -12,12 +12,12 @@ class MotionPage(QWidget):
         layout.setSpacing(16)
 
         # Mode card
-        frame, inner = card('⚡ 点击反馈动效微物理', '鼠标左键按下时给予富有生命力的微形变回弹，松开后自然优雅回正。')
+        frame, inner = card('点击反馈动效微物理', '鼠标左键按下时给予富有生命力的微形变回弹，松开后自然优雅回正。')
         self.mode = QComboBox()
         for text, mode in [
-            ('📐  整体倾斜 (Tilt · 拟物灵动，箭头受力自然向左下倾侧)', 'tilt'),
-            ('🎯  缩小回弹 (Shrink · 紧凑触感，按压微缩后轻快回弹)', 'shrink'),
-            ('🚫  关闭动效 (Off · 纯静态指针，保留纯净标准状态)', 'off'),
+            ('整体倾侧 (Tilt · 拟物灵动，箭头受力自然向左下倾侧)', 'tilt'),
+            ('缩小回弹 (Shrink · 紧凑触感，按压微缩后轻快回弹)', 'shrink'),
+            ('关闭动效 (Off · 纯静态指针，保留纯净标准状态)', 'off'),
         ]:
             self.mode.addItem(text, mode)
         self.mode.currentIndexChanged.connect(lambda: change(motion=self.mode.currentData()))
@@ -25,7 +25,7 @@ class MotionPage(QWidget):
         layout.addWidget(frame)
 
         # Rhythm & Parameters card
-        frame, inner = card('⏱ 物理手感与时间阻尼精调', '经真实操控手感验证的时间曲线与形变阻尼，按下敏捷利落，回弹自然丝滑。')
+        frame, inner = card('物理手感与时间阻尼精调', '经真实操控手感验证的时间曲线与形变阻尼，按下敏捷利落，回弹自然丝滑。')
         self.sliders = {}
 
         specs = [
@@ -45,24 +45,24 @@ class MotionPage(QWidget):
 
         for field, title, minimum, maximum, suffix, obj_name, hint in specs:
             row_box = QFrame()
-            row_box.setStyleSheet('QFrame { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 11px; padding: 10px 14px; }')
+            row_box.setStyleSheet('QFrame { background: rgba(255, 255, 255, 0.03); border: 0.5px solid rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 10px 14px; }')
             row_layout = QVBoxLayout(row_box)
             row_layout.setContentsMargins(8, 8, 8, 8)
             row_layout.setSpacing(6)
 
             header_row = QHBoxLayout()
             title_lbl = QLabel(f"<b>{title}</b>")
-            title_lbl.setStyleSheet('color: #f1f5f9; font-size: 13px;')
+            title_lbl.setStyleSheet('color: #f5f5f7; font-size: 13px; font-weight: 600;')
             header_row.addWidget(title_lbl)
             header_row.addStretch()
 
             value_lbl = QLabel()
-            value_lbl.setStyleSheet('color: #2cb6ad; font-weight: 700; font-size: 13px;')
+            value_lbl.setStyleSheet('color: #007aff; font-weight: 600; font-size: 13px;')
             header_row.addWidget(value_lbl)
             row_layout.addLayout(header_row)
 
             hint_lbl = QLabel(hint)
-            hint_lbl.setStyleSheet('color: #64748b; font-size: 11px;')
+            hint_lbl.setStyleSheet('color: #86868b; font-size: 11.5px;')
             row_layout.addWidget(hint_lbl)
 
             slider = QSlider(Qt.Orientation.Horizontal)
@@ -88,5 +88,5 @@ class MotionPage(QWidget):
             slider.blockSignals(False)
             val = str(getattr(settings, field)) + suffix
             label.setText(val if is_active else f"{val} (未启用)")
-            label.setStyleSheet('color: #2cb6ad; font-weight: 700; font-size: 13px;' if is_active else 'color: #64748b; font-weight: 500; font-size: 13px;')
+            label.setStyleSheet('color: #007aff; font-weight: 600; font-size: 13px;' if is_active else 'color: #86868b; font-weight: 500; font-size: 13px;')
             slider.setEnabled(is_active)
