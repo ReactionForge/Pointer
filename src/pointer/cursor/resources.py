@@ -41,12 +41,15 @@ def _base(role, pixels, animation_frame):
     return RENDERERS[role][0](pixels)
 
 
+_TONE_LUT = [max(0, min(255, round((v - 8) * 255 / 202))) for v in range(256)]
+
+
 def _color(image, settings, theme):
     body = getattr(settings, theme + '_body')
     outline = getattr(settings, theme + '_outline')
     colors = [tuple(int(color[i:i + 2], 16) for i in (1, 3, 5)) for color in (body, outline)]
-    tone = image.convert('L').point(lambda v: max(0, min(255, round((v - 8) * 255 / 202))))
-    channels = [tone.point(lambda v, n=n: round(colors[0][n] + (colors[1][n] - colors[0][n]) * v / 255)) for n in range(3)]
+    tone = image.convert('L').point(_TONE_LUT)
+    channels = [tone.point([round(colors[0][n] + (colors[1][n] - colors[0][n]) * v / 255) for v in range(256)]) for n in range(3)]
     return Image.merge('RGBA', (*channels, image.getchannel('A')))
 
 
@@ -175,7 +178,18 @@ def _valid_bundle(root, key):
         return False
 
 
-_RESOURCE_LOCK = threading.Lock()
+_RESOURCE_LOCKS = {}
+_LOCKS_GUARD = threading.Lock()
+_RESOURCE_LOCK = _LOCKS_GUARD
+
+
+def _resource_lock_for(key):
+    with _LOCKS_GUARD:
+        lock = _RESOURCE_LOCKS.get(key)
+        if lock is None:
+            lock = threading.Lock()
+            _RESOURCE_LOCKS[key] = lock
+        return lock
 
 
 def _generate_bundle(settings, root):
@@ -230,7 +244,7 @@ def prepare_resources(settings, cache_root):
             return ResourceBundle(key, target, canvas_size(settings), settings)
     except (OSError, ValueError, KeyError, TypeError):
         pass
-    with _RESOURCE_LOCK:
+    with _resource_lock_for(key):
         try:
             name = json.loads(index.read_text(encoding='utf-8'))['folder']
             target = (cache_root / name).resolve()

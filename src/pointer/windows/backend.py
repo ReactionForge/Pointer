@@ -93,9 +93,12 @@ class WindowsBackend:
             previous = Path(before['previous_root'])
             package_files(previous)
             environment = os.environ.copy()
-            environment['PYINSTALLER_RESET_ENVIRONMENT'] = '1'
+            startup_info = subprocess.STARTUPINFO()
+            startup_info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startup_info.wShowWindow = 0
             subprocess.Popen([str(previous/'Pointer.exe'),'--run'],cwd=previous,env=environment,
-                             creationflags=0x08000000,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                             creationflags=0x08000000,startupinfo=startup_info,
+                             stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 
     def restore_original(self):
         # Validate first: a damaged backup must not stop the working service.

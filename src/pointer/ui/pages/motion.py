@@ -60,6 +60,7 @@ class MotionPage(QWidget):
             slider.setObjectName(obj_name)
             slider.setMinimumWidth(160)
             slider.valueChanged.connect(lambda number, field=field: change(**{field: number}))
+            slider.sliderReleased.connect(lambda field=field, s=slider: change(_immediate=True, **{field: s.value()}))
             sw_layout.addWidget(slider, 1)
 
             value_lbl = QLabel()

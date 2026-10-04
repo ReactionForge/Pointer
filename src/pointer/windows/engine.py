@@ -286,7 +286,11 @@ def _run():
         if _scheme_name() != scheme_name:
             raise _SchemeChanged()
         _set_dpi_awareness()
-        profile = _read_profile()
+        profile = None
+        try:
+            profile = _read_profile()
+        except Exception:
+            profile = None
         settings = profile['settings'] if profile else {}
         appearance = settings.get('appearance', 'adaptive')
         click_mode = settings.get('motion', read_mode(CLICK_SETTINGS))

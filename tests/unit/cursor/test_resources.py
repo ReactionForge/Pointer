@@ -117,3 +117,17 @@ class ResourceTests(unittest.TestCase):
             self.assertEqual(len({b.root for b in bundles}), 1)
             self.assertEqual(len({b.key for b in bundles}), 1)
             self.assertTrue(bundles[0].paths('light')['Arrow'].exists())
+
+    def test_concurrent_prepare_resources_different_keys_use_independent_locks(self):
+        import concurrent.futures
+        s1 = CursorSettings(size=24, dark_body="#111111")
+        s2 = CursorSettings(size=24, dark_body="#222222")
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+                f1 = ex.submit(self.api.prepare_resources, s1, root)
+                f2 = ex.submit(self.api.prepare_resources, s2, root)
+                b1, b2 = f1.result(), f2.result()
+            self.assertNotEqual(b1.key, b2.key)
+            self.assertTrue(b1.paths('light')['Arrow'].exists())
+            self.assertTrue(b2.paths('light')['Arrow'].exists())

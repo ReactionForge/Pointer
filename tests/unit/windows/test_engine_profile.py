@@ -103,3 +103,29 @@ class EngineProfileTests(unittest.TestCase):
             path.write_text(json.dumps(value))
             with self.assertRaises(ValueError):
                 engine._read_profile(path)
+
+    def test_run_recovers_gracefully_when_read_profile_raises_permission_or_corrupt_error(self):
+        from pointer.cursor import motion
+        from pointer.cursor.theme import THEME_NAME, ROLE_IDS
+        normal = Mock(notes=[])
+        clicked = Mock(notes=[])
+        kernel = Mock()
+        kernel.WaitForSingleObject.side_effect = [258, 258, 0]
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(engine, 'KERNEL32', kernel))
+            user = stack.enter_context(patch.object(engine, 'USER32'))
+            user.GetAsyncKeyState.return_value = 0
+            stack.enter_context(patch.object(engine, '_scheme_name', return_value=THEME_NAME))
+            stack.enter_context(patch.object(engine, '_set_dpi_awareness'))
+            stack.enter_context(patch.object(engine, '_cursor_dpi', return_value=96))
+            stack.enter_context(patch.object(engine, '_read_profile', side_effect=PermissionError('Access Denied')))
+            stack.enter_context(patch.object(engine, '_initial_theme', return_value='light'))
+            stack.enter_context(patch.object(engine, '_atomic_json'))
+            cache = stack.enter_context(patch.object(engine, '_CursorCache', side_effect=[normal, clicked]))
+            moving = stack.enter_context(patch.object(motion, 'ClickMotion')).return_value
+            moving.update.return_value = 4
+            moving.presses = 1
+            ctypes.set_last_error(0)
+            engine._run()
+        self.assertEqual(cache.call_args_list[0].kwargs['size'], 32)
+        normal.apply.assert_any_call('light', ROLE_IDS, THEME_NAME)

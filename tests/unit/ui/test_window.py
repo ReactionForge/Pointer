@@ -80,10 +80,28 @@ class WindowTests(unittest.TestCase):
         window.discard_changes()
         window.close()
 
+    def test_discrete_setting_change_uses_short_prewarm_delay(self):
+        window, application = self.make_window()
+        window.change(light_body="#123456")
+        self.assertTrue(window._prewarm_timer.isActive())
+        self.assertLessEqual(window._prewarm_timer.interval(), 50)
+        window.discard_changes()
+        window.close()
+
+    def test_start_preset_prewarm_triggers_application_prewarm(self):
+        window, application = self.make_window()
+        window.start_preset_prewarm()
+        import time
+        deadline = time.monotonic() + 2
+        while time.monotonic() < deadline and application.prewarm.call_count == 0:
+            time.sleep(0.02)
+        self.assertGreater(application.prewarm.call_count, 0)
+        window.close()
+
     def test_scheme_operations_are_silent_by_default(self):
         import io
         from contextlib import redirect_stdout
-        from unittest.mock import patch
+        from unittest.mock import patch, Mock
         from pathlib import Path
         from pointer.windows import scheme
         f = io.StringIO()
@@ -92,7 +110,18 @@ class WindowTests(unittest.TestCase):
                  patch.object(scheme, 'reload_cursors'), \
                  patch.object(scheme, 'validate_backup', return_value={}), \
                  patch.object(scheme, 'restore_values'), \
+                 patch.object(scheme, 'save_backup'), \
+                 patch.object(scheme.winreg, 'CreateKeyEx'), \
+                 patch.object(scheme.winreg, 'OpenKey'), \
+                 patch.object(scheme.winreg, 'SetValueEx'), \
+                 patch.object(scheme.USER32, 'LoadImageW', return_value=1234), \
+                 patch.object(scheme.USER32, 'DestroyCursor'), \
                  patch.object(Path, 'is_file', return_value=True), \
+                 patch.object(Path, 'exists', return_value=False), \
                  patch.object(Path, 'read_text', return_value='{}'):
                 scheme.restore(Path('dummy.json'))
+                fake_cur = Mock()
+                fake_cur.is_file.return_value = True
+                fake_cur.read_bytes.return_value = b'\0' * 64
+                scheme.apply_paths({'Arrow': fake_cur}, backup_path=Path('dummy.json'))
         self.assertEqual(f.getvalue(), '')

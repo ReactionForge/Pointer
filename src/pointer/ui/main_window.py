@@ -353,9 +353,10 @@ class MainWindow(QMainWindow):
         self._prewarm_timer.timeout.connect(self._trigger_prewarm)
         self._schedule_prewarm()
 
-    def _schedule_prewarm(self):
+    def _schedule_prewarm(self, delay=None):
         if hasattr(self, '_prewarm_timer'):
-            self._prewarm_timer.start(250)
+            interval = 200 if delay is None else delay
+            self._prewarm_timer.start(interval)
 
     def _trigger_prewarm(self):
         if getattr(self, 'busy', False) or not hasattr(self, 'application') or not hasattr(self.application, 'prewarm'):
@@ -363,7 +364,6 @@ class MainWindow(QMainWindow):
         draft = self._draft
         if getattr(self, '_last_prewarmed_draft', None) == draft:
             return
-        self._last_prewarmed_draft = draft
         import threading
         thread = threading.Thread(target=self._run_prewarm, args=(draft,), daemon=True)
         thread.start()
@@ -371,8 +371,42 @@ class MainWindow(QMainWindow):
     def _run_prewarm(self, draft):
         try:
             self.application.prewarm(draft)
+            if self._draft == draft:
+                self._last_prewarmed_draft = draft
         except Exception:
             pass
+
+    def start_preset_prewarm(self):
+        import threading
+        thread = threading.Thread(target=self._run_preset_prewarm, daemon=True)
+        thread.start()
+
+    def _run_preset_prewarm(self):
+        if not hasattr(self, 'application') or not hasattr(self.application, 'prewarm'):
+            return
+        from pointer.ui.pages.appearance import PRESETS
+        try:
+            self.application.prewarm(self._draft)
+            if self._draft == self._draft:
+                self._last_prewarmed_draft = self._draft
+        except Exception:
+            pass
+        current_size = getattr(self._draft, 'size', 32)
+        for preset in PRESETS:
+            if getattr(self, 'busy', False):
+                return
+            try:
+                preset_settings = replace(
+                    self._draft,
+                    size=current_size,
+                    light_body=preset['light_body'],
+                    light_outline=preset['light_outline'],
+                    dark_body=preset['dark_body'],
+                    dark_outline=preset['dark_outline'],
+                )
+                self.application.prewarm(preset_settings)
+            except Exception:
+                pass
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -396,12 +430,14 @@ class MainWindow(QMainWindow):
     def request_apply(self):
         self.apply_draft()
 
-    def change(self, **fields):
+    def change(self, _immediate=False, **fields):
         if not hasattr(self, 'preview'):
             return
         self._draft = replace(self._draft, **fields)
         self.sync()
-        self._schedule_prewarm()
+        discrete_fields = {'light_body', 'light_outline', 'dark_body', 'dark_outline', 'appearance', 'motion', 'size'}
+        delay = 10 if (_immediate or any(k in discrete_fields for k in fields)) else 200
+        self._schedule_prewarm(delay=delay)
 
     def sync(self):
         for index in (0, 1, 3):
@@ -581,6 +617,7 @@ def launch(test_page=False):
     filter = NativeCursorFilter()
     app.installNativeEventFilter(filter)
     window = MainWindow(Application(DATA_ROOT, INSTALL_ROOT))
+    window.start_preset_prewarm()
     if test_page:
         window.select_page(2)
     existing_request = read_request()

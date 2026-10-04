@@ -6,11 +6,19 @@ from .arrow import render, SIZES, ANIMATION_FRAMES
 from .codec import riff_chunk, cursor_bytes
 ROOT = ASSET_ROOT / "reference"
 
+_ARROW_BASE_CACHE = {}
+
+
 def render_loading(size, frame, with_arrow=False):
     supersample = 8
     factor = size / 32 * supersample
     extent = size * supersample
-    image = render(extent, supersample=1) if with_arrow else Image.new("RGBA", (extent, extent))
+    if with_arrow:
+        if extent not in _ARROW_BASE_CACHE:
+            _ARROW_BASE_CACHE[extent] = render(extent, supersample=1)
+        image = _ARROW_BASE_CACHE[extent].copy()
+    else:
+        image = Image.new("RGBA", (extent, extent))
     painter = ImageDraw.Draw(image)
     center, radius, outer_width, inner_width = (
         ((25, 24), 4.5, 3.5, 1.5) if with_arrow else ((16, 16), 10, 5.5, 2.5)

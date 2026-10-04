@@ -34,3 +34,23 @@ class BackendTests(unittest.TestCase):
              patch.object(module.winreg, 'CreateKeyEx') as write:
             self.backend.restore(snapshot)
             write.assert_not_called()
+
+    def test_restore_relaunch_previous_root_runs_silently_with_sw_hide(self):
+        import pointer.windows.backend as module
+        snapshot = {'registry':{},'run':None,'startup_backup':None,'running':False,
+                    'previous_root':'C:/old_pointer'}
+        with patch.object(self.backend, 'stop'), patch.object(module.scheme, 'restore_values'), \
+             patch.object(module.scheme, 'reload_cursors'), patch.object(module, '_run_value', return_value=None), \
+             patch.object(module, 'package_files', create=True), \
+             patch('pointer.windows.installation.package_files'), \
+             patch.object(module.subprocess, 'Popen') as popen_mock:
+            self.backend.restore(snapshot)
+            popen_mock.assert_called_once()
+            kwargs = popen_mock.call_args.kwargs
+            self.assertEqual(kwargs['creationflags'], 0x08000000)
+            self.assertEqual(kwargs['stdin'], module.subprocess.DEVNULL)
+            self.assertEqual(kwargs['stdout'], module.subprocess.DEVNULL)
+            self.assertEqual(kwargs['stderr'], module.subprocess.DEVNULL)
+            startupinfo = kwargs.get('startupinfo')
+            self.assertIsNotNone(startupinfo)
+            self.assertEqual(startupinfo.wShowWindow, 0)
