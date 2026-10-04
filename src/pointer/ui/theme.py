@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
-from PySide6.QtGui import QFontDatabase
-from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout
+from PySide6.QtCore import Qt, QRectF
+from PySide6.QtGui import QFontDatabase, QPainter, QColor, QPen
+from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QCheckBox
 from pointer.paths import ROOT
 
 CHECK_ICON_PATH = (ROOT / 'assets' / 'check.png').resolve().as_posix()
@@ -372,13 +373,29 @@ QScrollBar:horizontal {
 }
 
 #feedback {
-    background-color: rgba(255, 255, 255, 0.04);
-    color: #86868b;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 8px;
-    padding: 7px 12px;
+    background: transparent;
+    border: none;
+    color: #98989d;
     font-size: 12px;
     font-weight: 400;
+    padding: 0 4px;
+}
+
+/* Inset Grouped List Styles */
+#settingsRow {
+    background: transparent;
+    border: none;
+}
+
+#rowTitle {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f5f5f7;
+}
+
+#rowSubtitle {
+    font-size: 11.5px;
+    color: #86868b;
 }
 
 /* Preset Cards */
@@ -411,8 +428,8 @@ def card(title, description=None):
     frame = QFrame()
     frame.setObjectName('card')
     layout = QVBoxLayout(frame)
-    layout.setContentsMargins(18, 16, 18, 16)
-    layout.setSpacing(10)
+    layout.setContentsMargins(16, 11, 16, 11)
+    layout.setSpacing(6)
     label = QLabel(title)
     label.setObjectName('sectionTitle')
     layout.addWidget(label)
@@ -422,4 +439,90 @@ def card(title, description=None):
         desc_label.setWordWrap(True)
         layout.addWidget(desc_label)
     return frame, layout
+
+
+class HairlineDivider(QFrame):
+    """Subtle horizontal separator between Inset Grouped items."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(1)
+        self.setStyleSheet('background-color: rgba(255, 255, 255, 0.06); border: none;')
+
+
+class SettingsRow(QFrame):
+    """macOS Inset Grouped List single row with title, description, and control widget."""
+    def __init__(self, title, subtitle=None, widget=None, parent=None):
+        super().__init__(parent)
+        self.setObjectName('settingsRow')
+        self.setStyleSheet('QFrame#settingsRow { background: transparent; border: none; }')
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(2, 4, 2, 4)
+        layout.setSpacing(14)
+
+        text_layout = QVBoxLayout()
+        text_layout.setSpacing(2)
+        title_lbl = QLabel(title)
+        title_lbl.setObjectName('rowTitle')
+        title_lbl.setStyleSheet('color: #f5f5f7; font-weight: 600; font-size: 13px;')
+        text_layout.addWidget(title_lbl)
+
+        if subtitle:
+            sub_lbl = QLabel(subtitle)
+            sub_lbl.setObjectName('rowSubtitle')
+            sub_lbl.setStyleSheet('color: #86868b; font-size: 11.5px;')
+            sub_lbl.setWordWrap(True)
+            text_layout.addWidget(sub_lbl)
+
+        layout.addLayout(text_layout, 1)
+
+        if widget:
+            layout.addWidget(widget, 0, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+
+
+class MacSwitch(QCheckBox):
+    """Authentic Apple macOS Sequoia Capsule Toggle Switch."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(38, 22)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def hitButton(self, pos):
+        return self.rect().contains(pos)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        checked = self.isChecked()
+        w = float(self.width())
+        h = float(self.height())
+        radius = h / 2.0
+
+        # Background track
+        if checked:
+            track_color = QColor('#34c759')  # Apple Green
+            border_color = QColor('#34c759')
+        else:
+            track_color = QColor(255, 255, 255, 38)
+            border_color = QColor(255, 255, 255, 28)
+
+        track_rect = QRectF(0.5, 0.5, w - 1.0, h - 1.0)
+        painter.setPen(QPen(border_color, 1.0))
+        painter.setBrush(track_color)
+        painter.drawRoundedRect(track_rect, radius, radius)
+
+        # White circle knob (thumb)
+        knob_dia = h - 4.0
+        knob_y = 2.0
+        knob_x = (w - knob_dia - 2.0) if checked else 2.0
+
+        # Subtle shadow under knob
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(0, 0, 0, 45))
+        painter.drawEllipse(QRectF(knob_x, knob_y + 1.0, knob_dia, knob_dia))
+
+        # Knob body
+        painter.setBrush(QColor('#ffffff'))
+        painter.drawEllipse(QRectF(knob_x, knob_y, knob_dia, knob_dia))
+        painter.end()
 

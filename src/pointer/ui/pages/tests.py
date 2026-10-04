@@ -45,11 +45,13 @@ class TestSurface(QFrame):
         text_color = '#f5f5f7' if dark else '#1d1d1f'
         self.label.setStyleSheet(f'color: {text_color}; background: transparent; font-weight: 600; font-size: 12px;')
         self.label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self.label.adjustSize()
+        sh = self.label.sizeHint()
+        self.label.resize(sh.width() + 48, max(24, sh.height()))
 
     def set_label_text(self, text):
         self.label.setText(text)
-        self.label.adjustSize()
+        sh = self.label.sizeHint()
+        self.label.resize(sh.width() + 48, max(24, sh.height()))
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:

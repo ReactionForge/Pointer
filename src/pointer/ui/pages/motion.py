@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QComboBox, QFrame
-from ..theme import card
+from ..theme import card, SettingsRow, HairlineDivider
 
 
 class MotionPage(QWidget):
@@ -9,22 +9,25 @@ class MotionPage(QWidget):
         super().__init__()
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(16)
+        layout.setSpacing(14)
 
-        # Mode card
+        # 1. Mode card
         frame, inner = card('点击反馈动效微物理', '鼠标左键按下时给予富有生命力的微形变回弹，松开后自然优雅回正。')
         self.mode = QComboBox()
+        self.mode.setMinimumWidth(260)
         for text, mode in [
-            ('整体倾侧 (Tilt · 拟物灵动，箭头受力自然向左下倾侧)', 'tilt'),
+            ('整体倾侧 (Tilt · 拟物灵动，受力自然微倾侧)', 'tilt'),
             ('缩小回弹 (Shrink · 紧凑触感，按压微缩后轻快回弹)', 'shrink'),
             ('关闭动效 (Off · 纯静态指针，保留纯净标准状态)', 'off'),
         ]:
             self.mode.addItem(text, mode)
         self.mode.currentIndexChanged.connect(lambda: change(motion=self.mode.currentData()))
-        inner.addWidget(self.mode)
+
+        row_mode = SettingsRow('交互反馈模式', '模拟真实触控反馈物理惯性与微形变特征', self.mode)
+        inner.addWidget(row_mode)
         layout.addWidget(frame)
 
-        # Rhythm & Parameters card
+        # 2. Rhythm & Parameters card
         frame, inner = card('物理手感与时间阻尼精调', '经真实操控手感验证的时间曲线与形变阻尼，按下敏捷利落，回弹自然丝滑。')
         self.sliders = {}
 
@@ -43,35 +46,30 @@ class MotionPage(QWidget):
             ),
         ]
 
-        for field, title, minimum, maximum, suffix, obj_name, hint in specs:
-            row_box = QFrame()
-            row_box.setStyleSheet('QFrame { background: rgba(255, 255, 255, 0.03); border: 0.5px solid rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 10px 14px; }')
-            row_layout = QVBoxLayout(row_box)
-            row_layout.setContentsMargins(8, 8, 8, 8)
-            row_layout.setSpacing(6)
+        for i, (field, title, minimum, maximum, suffix, obj_name, hint) in enumerate(specs):
+            if i > 0:
+                inner.addWidget(HairlineDivider())
 
-            header_row = QHBoxLayout()
-            title_lbl = QLabel(f"<b>{title}</b>")
-            title_lbl.setStyleSheet('color: #f5f5f7; font-size: 13px; font-weight: 600;')
-            header_row.addWidget(title_lbl)
-            header_row.addStretch()
-
-            value_lbl = QLabel()
-            value_lbl.setStyleSheet('color: #007aff; font-weight: 600; font-size: 13px;')
-            header_row.addWidget(value_lbl)
-            row_layout.addLayout(header_row)
-
-            hint_lbl = QLabel(hint)
-            hint_lbl.setStyleSheet('color: #86868b; font-size: 11.5px;')
-            row_layout.addWidget(hint_lbl)
+            slider_widget = QWidget()
+            sw_layout = QHBoxLayout(slider_widget)
+            sw_layout.setContentsMargins(0, 0, 0, 0)
+            sw_layout.setSpacing(12)
 
             slider = QSlider(Qt.Orientation.Horizontal)
             slider.setRange(minimum, maximum)
             slider.setObjectName(obj_name)
+            slider.setMinimumWidth(160)
             slider.valueChanged.connect(lambda number, field=field: change(**{field: number}))
-            row_layout.addWidget(slider)
+            sw_layout.addWidget(slider, 1)
 
-            inner.addWidget(row_box)
+            value_lbl = QLabel()
+            value_lbl.setStyleSheet('color: #007aff; font-weight: 600; font-size: 13px;')
+            value_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            value_lbl.setFixedWidth(64)
+            sw_layout.addWidget(value_lbl)
+
+            row = SettingsRow(title, hint, slider_widget)
+            inner.addWidget(row)
             self.sliders[field] = (slider, value_lbl, suffix)
 
         layout.addWidget(frame)

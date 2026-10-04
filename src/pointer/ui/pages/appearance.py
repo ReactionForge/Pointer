@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QColor, QIcon, QPixmap, QPainter, QPen
-from ..theme import card
+from ..theme import card, SettingsRow, HairlineDivider
 
 PRESETS = [
     {
@@ -56,7 +56,7 @@ class AppearancePage(QWidget):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(16)
+        layout.setSpacing(10)
 
         # 1. Presets Showcase Gallery
         preset_frame, preset_inner = card('精品配色方案', '内置 4 套经专业调校的高质感配色方案，点击即可载入并自由微调。')
@@ -66,7 +66,7 @@ class AppearancePage(QWidget):
             btn = QPushButton()
             btn.setObjectName('preset_' + preset['id'])
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn.setFixedHeight(56)
+            btn.setFixedHeight(48)
             btn.clicked.connect(lambda checked=False, p=preset: self.apply_preset(p))
 
             # Render dual swatches icon
@@ -90,11 +90,11 @@ class AppearancePage(QWidget):
             btn.setStyleSheet('''
                 QPushButton {
                     text-align: left;
-                    padding: 8px 14px;
+                    padding: 6px 12px;
                     background: rgba(255, 255, 255, 0.04);
                     border: 0.5px solid rgba(255, 255, 255, 0.09);
-                    border-radius: 10px;
-                    font-size: 12px;
+                    border-radius: 9px;
+                    font-size: 11.5px;
                     color: #f5f5f7;
                 }
                 QPushButton:hover {
@@ -108,11 +108,12 @@ class AppearancePage(QWidget):
         preset_inner.addLayout(preset_grid)
         layout.addWidget(preset_frame)
 
-        # 2. Strategy & Fine-tune Colors
-        frame, inner = card('背景自适应策略与双模配色', '依据光标下方像素的亮度实时智能切换，始终保持高对比度与清晰锐利轮廓。')
+        # 2. Strategy, Size & Fine-tune Colors
+        frame, inner = card('自适应策略与参数精调', '依据光标下方像素的亮度实时智能切换，兼具高分屏缩放与自定义双模调色。')
 
         self.appearance = QComboBox()
         self.appearance.setObjectName('appearanceCombo')
+        self.appearance.setMinimumWidth(250)
         for text, value in [
             ('自动适应背景 (推荐 · 依据底色明暗动态切换)', 'adaptive'),
             ('固定浅色背景方案 (锁定白底黑标)', 'light'),
@@ -120,22 +121,36 @@ class AppearancePage(QWidget):
         ]:
             self.appearance.addItem(text, value)
         self.appearance.currentIndexChanged.connect(lambda: change(appearance=self.appearance.currentData()))
-        inner.addWidget(self.appearance)
+        inner.addWidget(SettingsRow('明暗自适应策略', '依据底层窗口背景明暗动态自适应或强制锁定', self.appearance))
 
-        inner.addSpacing(6)
+        inner.addWidget(HairlineDivider())
+
+        self.size = QComboBox()
+        self.size.setObjectName('sizeCombo')
+        self.size.setMinimumWidth(250)
+        for size in (24, 32, 40, 48, 64):
+            label = f'{size} px' + ('   (标准推荐 · 平衡适中)' if size == 32 else ('   (紧凑小屏 · 100% 缩放)' if size == 24 else '   (大屏清晰 · 高分显示)'))
+            self.size.addItem(label, size)
+        self.size.currentIndexChanged.connect(lambda: change(size=self.size.currentData()))
+        inner.addWidget(SettingsRow('系统渲染尺寸', '矢量几何重绘，标准尺寸推荐 32px，支持 4K 缩放', self.size))
+
+        inner.addWidget(HairlineDivider())
+
         colors_container = QHBoxLayout()
-        colors_container.setSpacing(12)
+        colors_container.setSpacing(10)
 
         for theme, title, hint in [('light', '浅色背景状态', '浅底网页 / 白色文档'), ('dark', '深色背景状态', '暗黑系统 / 深色 IDE')]:
             col_box = QFrame()
-            col_box.setStyleSheet('QFrame { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 10px; }')
+            col_box.setStyleSheet('QFrame { background: rgba(255, 255, 255, 0.03); border: 0.5px solid rgba(255, 255, 255, 0.07); border-radius: 9px; padding: 6px 8px; }')
             col_layout = QVBoxLayout(col_box)
-            col_layout.setContentsMargins(10, 8, 10, 8)
-            col_layout.setSpacing(6)
+            col_layout.setContentsMargins(4, 4, 4, 4)
+            col_layout.setSpacing(5)
 
             header_lbl = QLabel(f"<b>{title}</b>  <span style='color: #86868b; font-size: 11px;'>({hint})</span>")
             col_layout.addWidget(header_lbl)
 
+            row = QHBoxLayout()
+            row.setSpacing(6)
             for part, name in [('body', '主体颜色'), ('outline', '边框轮廓')]:
                 field = f"{theme}_{part}"
                 button = QPushButton()
@@ -143,21 +158,11 @@ class AppearancePage(QWidget):
                 button.setCursor(Qt.CursorShape.PointingHandCursor)
                 button.clicked.connect(lambda checked=False, field=field: self.pick_color(field))
                 self.colors[field] = (button, name)
-                col_layout.addWidget(button)
+                row.addWidget(button)
+            col_layout.addLayout(row)
             colors_container.addWidget(col_box)
 
         inner.addLayout(colors_container)
-        layout.addWidget(frame)
-
-        # 3. Cursor Size
-        frame, inner = card('光标系统渲染尺寸', '矢量几何重绘与高精度栅格化，在各类高分屏与缩放比下永不模糊失真。')
-        self.size = QComboBox()
-        self.size.setObjectName('sizeCombo')
-        for size in (24, 32, 40, 48, 64):
-            label = f'{size} px' + ('   (标准推荐 · 平衡适中)' if size == 32 else ('   (紧凑小屏 · 100% 缩放)' if size == 24 else '   (大屏清晰 · 高分显示)'))
-            self.size.addItem(label, size)
-        self.size.currentIndexChanged.connect(lambda: change(size=self.size.currentData()))
-        inner.addWidget(self.size)
         layout.addWidget(frame)
 
         layout.addStretch()
@@ -212,7 +217,7 @@ class AppearancePage(QWidget):
                         text-align: left;
                         padding: 8px 14px;
                         background: rgba(0, 122, 255, 0.14);
-                        border: 2px solid #2cb6ad;
+                        border: 2px solid #007aff; /* 2px solid #2cb6ad */
                         border-radius: 10px;
                         font-size: 12px;
                         font-weight: 600;

@@ -57,13 +57,13 @@ class PreviewSurface(QWidget):
         # Stage background with subtle Apple gradient
         if is_light:
             grad = QLinearGradient(card_rect.topLeft(), card_rect.bottomRight())
-            grad.setColorAt(0.0, QColor('#ffffff'))
-            grad.setColorAt(1.0, QColor('#f5f5f7'))
+            grad.setColorAt(0.0, QColor('#fafafc'))
+            grad.setColorAt(1.0, QColor('#f0f0f4'))
             painter.setBrush(grad)
         else:
             grad = QLinearGradient(card_rect.topLeft(), card_rect.bottomRight())
-            grad.setColorAt(0.0, QColor('#202022'))
-            grad.setColorAt(1.0, QColor('#161618'))
+            grad.setColorAt(0.0, QColor('#242427'))
+            grad.setColorAt(1.0, QColor('#18181b'))
             painter.setBrush(grad)
 
         # Border styling with macOS reactive focus ring
