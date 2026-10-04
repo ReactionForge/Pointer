@@ -8,6 +8,8 @@ import uuid
 
 MAX_JSON_BYTES = 65536
 SIZES = (24, 32, 40, 48, 64)
+STYLES = ('sequoia', 'precision', 'falcon', 'pixel')
+MOTIONS = ('tilt', 'shrink', 'spring', 'pulse', 'trail', 'off')
 
 
 @dataclass(frozen=True)
@@ -24,6 +26,14 @@ class CursorSettings:
     press_ms: int = 60
     release_ms: int = 150
     startup: bool = False
+    style: str = 'sequoia'
+    aura_glow: bool = False
+    aura_color: str = '#007aff'
+    shake_to_find: bool = True
+    game_dnd: bool = True
+    tray_enabled: bool = True
+    auto_check_update: bool = True
+    skip_update_version: str = ''
 
     def __post_init__(self):
         bounds = {'schema_version': (1, 1), 'strength': (0, 100),
@@ -36,11 +46,16 @@ class CursorSettings:
             raise ValueError('光标大小必须是 24、32、40、48 或 64')
         if self.appearance not in ('adaptive', 'light', 'dark'):
             raise ValueError('无效的配色策略')
-        if self.motion not in ('tilt', 'shrink', 'off'):
+        if self.motion not in MOTIONS:
             raise ValueError('无效的左键动效')
-        if type(self.startup) is not bool:
-            raise ValueError('开机启动必须是布尔值')
-        for name in ('light_body', 'light_outline', 'dark_body', 'dark_outline'):
+        if self.style not in STYLES:
+            raise ValueError('无效的光标几何形态')
+        for flag in ('startup', 'aura_glow', 'shake_to_find', 'game_dnd', 'tray_enabled', 'auto_check_update'):
+            if type(getattr(self, flag)) is not bool:
+                raise ValueError(f'{flag} 必须是布尔值')
+        if not isinstance(self.skip_update_version, str):
+            raise ValueError('skip_update_version 必须是字符串')
+        for name in ('light_body', 'light_outline', 'dark_body', 'dark_outline', 'aura_color'):
             value = getattr(self, name)
             if not isinstance(value, str) or not re.fullmatch(r'#[0-9a-fA-F]{6}', value):
                 raise ValueError(f'{name} 必须是六位十六进制颜色')
@@ -61,11 +76,11 @@ class CursorSettings:
         return asdict(self)
 
 
-def _read_json(path):
+def _read_json(path, max_bytes=MAX_JSON_BYTES):
     with Path(path).open('rb') as source:
-        content = source.read(MAX_JSON_BYTES + 1)
-    if len(content) > MAX_JSON_BYTES:
-        raise ValueError('配置文件不能超过 64 KiB')
+        content = source.read(max_bytes + 1)
+    if len(content) > max_bytes:
+        raise ValueError(f'配置文件不能超过 {max_bytes // 1024} KiB')
     try:
         return json.loads(content.decode('utf-8-sig'))
     except (UnicodeError, ValueError) as error:
@@ -107,8 +122,43 @@ class SettingsStore:
         _write_json(self.path, value.to_dict())
 
     def import_file(self, path):
-        return CursorSettings.from_dict(_read_json(path))
+        raw = _read_json(path)
+        if isinstance(raw, dict) and raw.get('format') == 'pointertheme':
+            if 'settings' not in raw or not isinstance(raw['settings'], dict):
+                raise ValueError('主题包损坏：缺少 settings 配置')
+            return CursorSettings.from_dict(raw['settings'])
+        return CursorSettings.from_dict(raw)
 
     def export_file(self, path, settings):
         value = CursorSettings.from_dict(settings.to_dict())
         _write_json(path, value.to_dict())
+
+    def export_theme(self, path, settings, name="Pointer Theme", author="User", desc=""):
+        value = CursorSettings.from_dict(settings.to_dict())
+        import time
+        package = {
+            "format": "pointertheme",
+            "version": 1,
+            "metadata": {
+                "name": name,
+                "author": author,
+                "created": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "description": desc,
+            },
+            "settings": value.to_dict(),
+        }
+        _write_json(path, package)
+
+    def import_theme(self, path):
+        raw = _read_json(path, max_bytes=262144)
+        if not isinstance(raw, dict) or raw.get('format') != 'pointertheme':
+            # Allow fallback to plain settings JSON
+            if isinstance(raw, dict) and 'schema_version' in raw:
+                return CursorSettings.from_dict(raw), {"name": "Imported Theme", "author": "", "description": ""}
+            raise ValueError('无效的 Pointer 主题包格式')
+        settings_dict = raw.get('settings')
+        if not isinstance(settings_dict, dict):
+            raise ValueError('主题包缺少配置数据')
+        metadata = raw.get('metadata') if isinstance(raw.get('metadata'), dict) else {}
+        return CursorSettings.from_dict(settings_dict), metadata
+

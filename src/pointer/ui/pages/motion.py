@@ -18,6 +18,9 @@ class MotionPage(QWidget):
         for text, mode in [
             ('整体倾侧 (Tilt · 拟物灵动，受力自然微倾侧)', 'tilt'),
             ('缩小回弹 (Shrink · 紧凑触感，按压微缩后轻快回弹)', 'shrink'),
+            ('弹簧果冻回弹 (Spring Bounce · 二阶欠阻尼物理弹簧振子)', 'spring'),
+            ('点击冲击波 (Pulse Wave · 尖端能量扩散涟漪冲击波)', 'pulse'),
+            ('灵动微拖尾 (Velocity Trails · 速度感应空气动力微拖尾)', 'trail'),
             ('关闭动效 (Off · 纯静态指针，保留纯净标准状态)', 'off'),
         ]:
             self.mode.addItem(text, mode)

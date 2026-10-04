@@ -353,6 +353,19 @@ class MainWindow(QMainWindow):
         self._prewarm_timer.timeout.connect(self._trigger_prewarm)
         self._schedule_prewarm()
 
+        # System Tray Mini Island
+        self.tray_controller = None
+        if getattr(self.applied, 'tray_enabled', True):
+            try:
+                from .tray import TrayController
+                self.tray_controller = TrayController(self)
+            except Exception:
+                self.tray_controller = None
+
+        # Silent update check on startup
+        if getattr(self.applied, 'auto_check_update', True):
+            QTimer.singleShot(1500, self._check_update_silent_startup)
+
     def _schedule_prewarm(self, delay=None):
         if hasattr(self, '_prewarm_timer'):
             interval = 200 if delay is None else delay
@@ -452,6 +465,11 @@ class MainWindow(QMainWindow):
             self.draft_label.setStyleSheet('color: #34c759; font-weight: 600;')
         self.discard.setEnabled(dirty and not self.busy)
         self.apply_button.setEnabled(not self.busy and not self.load_error)
+        if getattr(self, 'tray_controller', None):
+            try:
+                self.tray_controller.update_menu()
+            except Exception:
+                pass
 
     def select_page(self, index):
         titles = ['光标外观 · 视觉方案', '点击动效 · 触感微调', '全景沙盒 · 实操检验', '系统偏好 · 常驻自愈']
@@ -588,6 +606,94 @@ class MainWindow(QMainWindow):
                 err_text = '导出失败：' + str(error)
                 self.feedback.setText(err_text)
                 self.toast.show_message(err_text, is_error=True)
+
+    def import_theme_package(self):
+        path, _ = QFileDialog.getOpenFileName(self, '导入主题包', '', 'Pointer 主题包 (*.pointertheme *.json);;所有文件 (*.*)')
+        if path:
+            try:
+                settings, meta = self.application.store.import_theme(path)
+                self._draft = settings
+                self.sync()
+                name = meta.get('name', '未命名主题')
+                msg = f'已载入主题包「{name}」，点击“应用配置”后生效。'
+                self.feedback.setText(msg)
+                self.toast.show_message(msg)
+            except Exception as error:
+                err_text = '主题包导入失败：' + str(error)
+                self.feedback.setText(err_text)
+                self.toast.show_message(err_text, is_error=True)
+
+    def export_theme_package(self):
+        path, _ = QFileDialog.getSaveFileName(self, '导出主题包', 'CustomTheme.pointertheme', 'Pointer 主题包 (*.pointertheme);;所有文件 (*.*)')
+        if path:
+            try:
+                self.application.store.export_theme(path, self._draft, name="Custom Theme", author="User", desc="由 Pointer Studio 导出的个性化主题")
+                self.feedback.setText('主题包已成功导出。')
+                self.toast.show_message('主题包已成功导出')
+            except Exception as error:
+                err_text = '主题包导出失败：' + str(error)
+                self.feedback.setText(err_text)
+                self.toast.show_message(err_text, is_error=True)
+
+    def current_version(self):
+        v_file = ROOT / 'VERSION'
+        return v_file.read_text(encoding='utf-8').strip() if v_file.exists() else '1.3.0-beta.1'
+
+    def _check_update_silent_startup(self):
+        import threading
+        def worker():
+            try:
+                from pointer.updater import check_for_updates
+                info = check_for_updates(self.current_version())
+                if info.get('available') and info.get('latest_version') != getattr(self.applied, 'skip_update_version', ''):
+                    QTimer.singleShot(0, lambda: self._show_update_dialog(info))
+            except Exception:
+                pass
+        threading.Thread(target=worker, daemon=True).start()
+
+    def check_updates_interactive(self):
+        pref_page = self.pages[3]
+        if hasattr(pref_page, 'update_status_lbl'):
+            pref_page.update_status_lbl.setText('正在检查更新…')
+            pref_page.update_status_lbl.setStyleSheet('color: #007aff; font-size: 12px;')
+        if hasattr(pref_page, 'check_update_btn'):
+            pref_page.check_update_btn.setEnabled(False)
+
+        import threading
+        def worker():
+            try:
+                from pointer.updater import check_for_updates
+                info = check_for_updates(self.current_version())
+                def on_done():
+                    if hasattr(pref_page, 'check_update_btn'):
+                        pref_page.check_update_btn.setEnabled(True)
+                    if info.get('available'):
+                        if hasattr(pref_page, 'update_status_lbl'):
+                            pref_page.update_status_lbl.setText(f"发现新版本 v{info.get('latest_version')}")
+                            pref_page.update_status_lbl.setStyleSheet('color: #34c759; font-size: 12px;')
+                        self._show_update_dialog(info)
+                    else:
+                        cur = self.current_version()
+                        if hasattr(pref_page, 'update_status_lbl'):
+                            pref_page.update_status_lbl.setText(f"当前已是最新版本 (v{cur})")
+                            pref_page.update_status_lbl.setStyleSheet('color: #34c759; font-size: 12px;')
+                        self.toast.show_message(f"当前已是最新版本 (v{cur})")
+                QTimer.singleShot(0, on_done)
+            except Exception as error:
+                def on_error():
+                    if hasattr(pref_page, 'check_update_btn'):
+                        pref_page.check_update_btn.setEnabled(True)
+                    if hasattr(pref_page, 'update_status_lbl'):
+                        pref_page.update_status_lbl.setText(f"检查失败：{error}")
+                        pref_page.update_status_lbl.setStyleSheet('color: #ff453a; font-size: 12px;')
+                    self.toast.show_message(f"检查更新失败：{error}", is_error=True)
+                QTimer.singleShot(0, on_error)
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _show_update_dialog(self, info):
+        from .update_dialog import UpdateDialog
+        dialog = UpdateDialog(info, self.application, self)
+        dialog.exec()
 
     def confirm_restore(self):
         if QMessageBox.question(self, '恢复原光标', '恢复 Windows 原光标并关闭 Pointer 开机启动？') == QMessageBox.StandardButton.Yes:

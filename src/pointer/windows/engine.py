@@ -254,6 +254,26 @@ def _cursor_dpi():
     return 96
 
 
+def _is_fullscreen_game():
+    try:
+        hwnd = USER32.GetForegroundWindow()
+        if not hwnd:
+            return False
+        rect = wintypes.RECT()
+        if not USER32.GetWindowRect(hwnd, ctypes.byref(rect)):
+            return False
+        sw, sh = USER32.GetSystemMetrics(0), USER32.GetSystemMetrics(1)
+        if rect.left <= 0 and rect.top <= 0 and rect.right >= sw and rect.bottom >= sh:
+            buf = ctypes.create_unicode_buffer(256)
+            USER32.GetClassNameW(hwnd, buf, 256)
+            cname = buf.value.lower()
+            if cname not in ('progman', 'workerw', 'shell_traywnd', 'cabinetwclass'):
+                return True
+    except Exception:
+        pass
+    return False
+
+
 def _run():
     ctypes.set_last_error(0)
     mutex = KERNEL32.CreateMutexW(None, True, MUTEX_NAME)
@@ -294,6 +314,13 @@ def _run():
         settings = profile['settings'] if profile else {}
         appearance = settings.get('appearance', 'adaptive')
         click_mode = settings.get('motion', read_mode(CLICK_SETTINGS))
+        shake_to_find = settings.get('shake_to_find', True)
+        game_dnd = settings.get('game_dnd', True)
+        in_game_dnd = False
+        shake_samples = []
+        shake_active = False
+        shake_until = 0.0
+
         normal_paths = profile['themes'] if profile else {theme: theme_paths(theme) for theme in ('light', 'dark')}
         pressed_paths = profile['frames'] if profile else {f'{theme}:{frame}': click_paths(theme, frame, click_mode)
                                                           for theme in ('light', 'dark') for frame in range(5)}
@@ -301,7 +328,7 @@ def _run():
         physical_size = round(logical_size * _cursor_dpi() / 96)
         cache = _CursorCache(normal_paths, size=physical_size)
         click_cache = _CursorCache(pressed_paths, size=physical_size)
-        motion = ClickMotion(settings.get('press_ms', 60), settings.get('release_ms', 150))
+        motion = ClickMotion(settings.get('press_ms', 60), settings.get('release_ms', 150), mode=click_mode)
         click_roles = {role: ROLE_IDS[role] for role in ("Arrow", "Hand")}
         applied_click = None
         initial_theme = appearance if appearance in ('light','dark') else (_initial_theme() or 'light')
@@ -316,12 +343,54 @@ def _run():
                 state["shutdown_reason"] = "stop_requested"
                 break
             now = time.monotonic()
+            if game_dnd and now >= next_background:
+                is_game = _is_fullscreen_game()
+                if is_game != in_game_dnd:
+                    in_game_dnd = is_game
+                    if in_game_dnd:
+                        from pointer.windows.scheme import reload_cursors
+                        reload_cursors()
+                    else:
+                        if state['theme']:
+                            cache.apply(state['theme'], ROLE_IDS, scheme_name)
+                        applied_click = None
+            if in_game_dnd:
+                time.sleep(BACKGROUND_PERIOD)
+                continue
+
+            if shake_to_find:
+                pt = POINT()
+                if USER32.GetCursorPos(ctypes.byref(pt)):
+                    shake_samples.append((pt.x, pt.y, now))
+                    while shake_samples and now - shake_samples[0][2] > 0.35:
+                        shake_samples.pop(0)
+                    if len(shake_samples) >= 6:
+                        dx_signs = []
+                        total_dist = 0
+                        for i in range(1, len(shake_samples)):
+                            dx = shake_samples[i][0] - shake_samples[i-1][0]
+                            dy = shake_samples[i][1] - shake_samples[i-1][1]
+                            total_dist += abs(dx) + abs(dy)
+                            if abs(dx) > 15:
+                                dx_signs.append(1 if dx > 0 else -1)
+                        reversals = sum(1 for i in range(1, len(dx_signs)) if dx_signs[i] != dx_signs[i-1])
+                        if reversals >= 3 and total_dist > 350:
+                            shake_until = now + 0.35
+                is_shaking = now < shake_until
+                if is_shaking != shake_active:
+                    shake_active = is_shaking
+                    mult = 2.5 if shake_active else 1.0
+                    target_sz = round(logical_size * mult * _cursor_dpi() / 96)
+                    if target_sz != physical_size:
+                        requested_size = target_sz
+
             # Button polling stays responsive; expensive pixel sampling stays at 20 Hz.
             if now >= next_background:
                 next_background = now + BACKGROUND_PERIOD
                 if _scheme_name() != scheme_name:
                     raise _SchemeChanged()
-                requested_size = round(logical_size * _cursor_dpi() / 96)
+                mult = 2.5 if shake_active else 1.0
+                requested_size = round(logical_size * mult * _cursor_dpi() / 96)
                 if requested_size != physical_size:
                     replacement = _CursorCache(normal_paths, size=requested_size)
                     try:

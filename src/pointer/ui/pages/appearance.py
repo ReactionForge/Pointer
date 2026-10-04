@@ -6,7 +6,7 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QColor, QIcon, QPixmap, QPainter, QPen
 from ..theme import card, SettingsRow, HairlineDivider
 
-PRESETS = [
+CORE_PRESETS = [
     {
         'id': 'classic',
         'name': '经典自适应黑白',
@@ -45,40 +45,75 @@ PRESETS = [
     },
 ]
 
+TRENDY_PRESETS = [
+    {
+        'id': 'cyber',
+        'name': '赛博霓虹 Cyber',
+        'desc': '赛博深紫与霓虹粉紫 · 极致炫彩',
+        'light_body': '#12092b',
+        'light_outline': '#ff007f',
+        'dark_body': '#00f0ff',
+        'dark_outline': '#7928ca',
+    },
+    {
+        'id': 'mist',
+        'name': '莫兰迪柔雾 Mist',
+        'desc': '莫兰迪雾灰与北欧冷蓝 · 低饱和雅致',
+        'light_body': '#3b4252',
+        'light_outline': '#88c0d0',
+        'dark_body': '#eceff4',
+        'dark_outline': '#4c566a',
+    },
+    {
+        'id': 'sakura',
+        'name': '樱花浅粉 Sakura',
+        'desc': '浅粉落樱与莓果暗红 · 温柔浪漫',
+        'light_body': '#3c1b28',
+        'light_outline': '#ff85a2',
+        'dark_body': '#fff0f5',
+        'dark_outline': '#f368e0',
+    },
+    {
+        'id': 'abyssal',
+        'name': '深海玄青 Abyssal',
+        'desc': '幽邃海渊与清冽深青 · 浩瀚神秘',
+        'light_body': '#071a2c',
+        'light_outline': '#00b4d8',
+        'dark_body': '#caf0f8',
+        'dark_outline': '#03045e',
+    },
+]
+
+PRESETS = CORE_PRESETS + TRENDY_PRESETS
+
 
 class AppearancePage(QWidget):
-    """Grand cursor appearance workshop with live presets and custom dual-state palette."""
+    """Grand cursor appearance workshop with live presets, styles, and custom dual-state palette."""
     def __init__(self, change):
         super().__init__()
         self.change, self.colors = change, {}
         self.settings = None
         self.preset_buttons = []
+        self.trendy_preset_buttons = []
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(10)
 
-        # 1. Presets Showcase Gallery
-        preset_frame, preset_inner = card('精品配色方案', '内置 4 套经专业调校的高质感配色方案，点击即可载入并自由微调。')
-        preset_grid = QGridLayout()
-        preset_grid.setSpacing(10)
-        for index, preset in enumerate(PRESETS):
+        def make_preset_button(preset):
             btn = QPushButton()
             btn.setObjectName('preset_' + preset['id'])
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setFixedHeight(48)
             btn.clicked.connect(lambda checked=False, p=preset: self.apply_preset(p))
 
-            # Render dual swatches icon
             pixmap = QPixmap(38, 22)
             pixmap.fill(QColor('transparent'))
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            # Light swatch circle
             painter.setPen(QPen(QColor(preset['light_outline']), 1.4))
             painter.setBrush(QColor(preset['light_body']))
             painter.drawEllipse(1, 2, 17, 17)
-            # Dark swatch circle
             painter.setPen(QPen(QColor(preset['dark_outline']), 1.4))
             painter.setBrush(QColor(preset['dark_body']))
             painter.drawEllipse(19, 2, 17, 17)
@@ -103,17 +138,53 @@ class AppearancePage(QWidget):
                     color: #ffffff;
                 }
             ''')
+            return btn
+
+        # 1. Presets Showcase Gallery: Core 4 Presets
+        preset_frame, preset_inner = card('经典调色方案', '内置 4 套经专业调校的高质感经典方案，高对比极简与暗金透亮。')
+        preset_grid = QGridLayout()
+        preset_grid.setSpacing(10)
+        for index, preset in enumerate(CORE_PRESETS):
+            btn = make_preset_button(preset)
             self.preset_buttons.append((btn, preset))
             preset_grid.addWidget(btn, index // 2, index % 2)
         preset_inner.addLayout(preset_grid)
         layout.addWidget(preset_frame)
 
-        # 2. Strategy, Size & Fine-tune Colors
-        frame, inner = card('自适应策略与参数精调', '依据光标下方像素的亮度实时智能切换，兼具高分屏缩放与自定义双模调色。')
+        # 2. Trendy Presets Showcase Gallery: 4 Trendy Presets
+        trendy_frame, trendy_inner = card('8 款潮流调色库 · 先锋视觉', '赛博朋克霓虹、北欧莫兰迪、浪漫粉樱与幽邃海渊，自由随心选用。')
+        trendy_grid = QGridLayout()
+        trendy_grid.setSpacing(10)
+        for index, preset in enumerate(TRENDY_PRESETS):
+            btn = make_preset_button(preset)
+            self.trendy_preset_buttons.append((btn, preset))
+            trendy_grid.addWidget(btn, index // 2, index % 2)
+        trendy_inner.addLayout(trendy_grid)
+        layout.addWidget(trendy_frame)
 
+        # 3. Strategy, Shape, Size & Fine-tune Colors
+        frame, inner = card('形态、微光与参数精调', '4 款几何形态发生器，依据背景亮度实时动态自适应，兼具呼吸微光与高分缩放。')
+
+        # Geometric Style
+        self.style = QComboBox()
+        self.style.setObjectName('styleCombo')
+        self.style.setMinimumWidth(260)
+        for label, val in [
+            ('经典圆角 (Sequoia Smooth · 经典圆润优雅)', 'sequoia'),
+            ('精准十字 (Precision Studio · 设计师极简十字微尖标)', 'precision'),
+            ('折角机甲 (Cyber Falcon · 凌厉切角机甲仿生线条)', 'falcon'),
+            ('复古像素 (Pixel HD · 高清等比阶梯像素复古标)', 'pixel'),
+        ]:
+            self.style.addItem(label, val)
+        self.style.currentIndexChanged.connect(lambda: change(style=self.style.currentData()))
+        inner.addWidget(SettingsRow('几何形态发生器', '选择主箭头及全局指针几何轮廓造型发生器', self.style))
+
+        inner.addWidget(HairlineDivider())
+
+        # Appearance Strategy
         self.appearance = QComboBox()
         self.appearance.setObjectName('appearanceCombo')
-        self.appearance.setMinimumWidth(250)
+        self.appearance.setMinimumWidth(260)
         for text, value in [
             ('自动适应背景 (推荐 · 依据底色明暗动态切换)', 'adaptive'),
             ('固定浅色背景方案 (锁定白底黑标)', 'light'),
@@ -125,9 +196,32 @@ class AppearancePage(QWidget):
 
         inner.addWidget(HairlineDivider())
 
+        # Aura Glow
+        from ..theme import MacSwitch
+        self.aura_glow = MacSwitch()
+        self.aura_glow.setObjectName('auraGlowSwitch')
+        self.aura_glow.toggled.connect(lambda val: change(aura_glow=val))
+
+        aura_container = QWidget()
+        aura_layout = QHBoxLayout(aura_container)
+        aura_layout.setContentsMargins(0, 0, 0, 0)
+        aura_layout.setSpacing(10)
+        aura_layout.addWidget(self.aura_glow)
+
+        self.aura_color_btn = QPushButton("光晕色")
+        self.aura_color_btn.setObjectName("auraColorBtn")
+        self.aura_color_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.aura_color_btn.clicked.connect(self.pick_aura_color)
+        aura_layout.addWidget(self.aura_color_btn)
+
+        inner.addWidget(SettingsRow('外轮廓自适应呼吸微光 (Aura Glow)', '在指针外缘生成柔和通透的微光呼吸光晕，大幅强化杂乱界面的视觉聚焦', aura_container))
+
+        inner.addWidget(HairlineDivider())
+
+        # Size
         self.size = QComboBox()
         self.size.setObjectName('sizeCombo')
-        self.size.setMinimumWidth(250)
+        self.size.setMinimumWidth(260)
         for size in (24, 32, 40, 48, 64):
             label = f'{size} px' + ('   (标准推荐 · 平衡适中)' if size == 32 else ('   (紧凑小屏 · 100% 缩放)' if size == 24 else '   (大屏清晰 · 高分显示)'))
             self.size.addItem(label, size)
@@ -181,12 +275,30 @@ class AppearancePage(QWidget):
         if color.isValid():
             self.change(**{field: color.name()})
 
+    def pick_aura_color(self):
+        current_val = getattr(self.settings, 'aura_color', '#007aff') if self.settings else '#007aff'
+        color = QColorDialog.getColor(QColor(current_val), self, '选择微光光晕颜色')
+        if color.isValid():
+            self.change(aura_color=color.name())
+
     def sync(self, settings):
         self.settings = settings
         for combo, value in [(self.appearance, settings.appearance), (self.size, settings.size)]:
             combo.blockSignals(True)
             combo.setCurrentIndex(combo.findData(value))
             combo.blockSignals(False)
+
+        if hasattr(self, 'style'):
+            self.style.blockSignals(True)
+            self.style.setCurrentIndex(self.style.findData(getattr(settings, 'style', 'sequoia')))
+            self.style.blockSignals(False)
+
+        if hasattr(self, 'aura_glow'):
+            self.aura_glow.blockSignals(True)
+            self.aura_glow.setChecked(getattr(settings, 'aura_glow', False))
+            self.aura_glow.blockSignals(False)
+            aura_c = getattr(settings, 'aura_color', '#007aff')
+            self.aura_color_btn.setText(f"微光色 {aura_c.upper()}")
 
         # Update fine-tune buttons
         for field, (button, name) in self.colors.items():
@@ -204,7 +316,8 @@ class AppearancePage(QWidget):
             button.setIconSize(QSize(18, 18))
 
         # Check if matches any preset
-        for btn, preset in self.preset_buttons:
+        all_buttons = self.preset_buttons + self.trendy_preset_buttons
+        for btn, preset in all_buttons:
             matches = (
                 settings.light_body.casefold() == preset['light_body'].casefold() and
                 settings.light_outline.casefold() == preset['light_outline'].casefold() and
@@ -250,3 +363,4 @@ class AppearancePage(QWidget):
                         background: rgba(255, 255, 255, 0.12);
                     }
                 ''')
+

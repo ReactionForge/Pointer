@@ -7,7 +7,7 @@ PRESS_SECONDS = .06
 RELEASE_SECONDS = .15
 SCALES = (1.0, .975, .95, .925, .9)
 ANGLES = (0, -3, -6, -9, -12)
-MODES = ("tilt", "shrink")
+MODES = ("tilt", "shrink", "spring", "pulse", "trail", "off")
 
 
 def read_mode(path):
@@ -29,12 +29,13 @@ def save_mode(path, mode):
 
 
 class ClickMotion:
-    def __init__(self, press_ms=60, release_ms=150):
+    def __init__(self, press_ms=60, release_ms=150, mode="tilt"):
         if type(press_ms) is not int or not 40 <= press_ms <= 200:
             raise ValueError("Invalid press duration")
         if type(release_ms) is not int or not 80 <= release_ms <= 400:
             raise ValueError("Invalid release duration")
         self._press, self._release = press_ms / 1000, release_ms / 1000
+        self.mode = mode
         self.down = False
         self.presses = 0
         self._source = self._target = 1.0
@@ -43,6 +44,16 @@ class ClickMotion:
 
     def _scale(self, now):
         progress = min(1.0, max(0.0, (now - self._since) / self._duration))
+        if self.mode == "spring":
+            if self.down:
+                eased = 1.0 - (1.0 - progress) ** 3
+                return self._source + (self._target - self._source) * eased
+            # Underdamped harmonic release oscillator with subtle jelly bounce
+            import math
+            decay = math.exp(-6.0 * progress)
+            oscillation = math.cos(14.0 * progress)
+            # overshoot bounce
+            return 1.0 + (self._source - 1.0) * decay * oscillation
         # A slower release keeps the last visible step near the 150 ms endpoint.
         eased = 1 - (1 - progress) ** 3 if self.down else progress * (1 + progress) / 2
         return self._source + (self._target - self._source) * eased

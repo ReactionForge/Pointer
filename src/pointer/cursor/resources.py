@@ -33,11 +33,14 @@ class RenderRequest:
 
 
 @lru_cache(maxsize=2048)
-def _base(role, pixels, animation_frame):
+def _base(role, pixels, animation_frame, style='sequoia'):
     if role in ('busy', 'working'):
         return render_loading(pixels, animation_frame, role == 'working')
     if role not in RENDERERS:
         raise ValueError(f'Unknown cursor role: {role}')
+    if role == 'arrow':
+        from .art.arrow import render
+        return render(pixels, style=style)
     return RENDERERS[role][0](pixels)
 
 
@@ -50,7 +53,24 @@ def _color(image, settings, theme):
     colors = [tuple(int(color[i:i + 2], 16) for i in (1, 3, 5)) for color in (body, outline)]
     tone = image.convert('L').point(_TONE_LUT)
     channels = [tone.point([round(colors[0][n] + (colors[1][n] - colors[0][n]) * v / 255) for v in range(256)]) for n in range(3)]
-    return Image.merge('RGBA', (*channels, image.getchannel('A')))
+    colored = Image.merge('RGBA', (*channels, image.getchannel('A')))
+    if getattr(settings, 'aura_glow', False):
+        from PIL import ImageFilter
+        aura_hex = getattr(settings, 'aura_color', '')
+        if not aura_hex or len(aura_hex) != 7:
+            aura_hex = outline
+        glow_rgb = tuple(int(aura_hex[i:i+2], 16) for i in (1, 3, 5))
+        mask = colored.getchannel('A')
+        blur_rad = max(1.5, image.width / 24)
+        glow_alpha = mask.filter(ImageFilter.GaussianBlur(radius=blur_rad))
+        glow_alpha = glow_alpha.point(lambda v: min(150, round(v * 0.65)))
+        glow_layer = Image.new('RGBA', colored.size, (*glow_rgb, 0))
+        glow_layer.putalpha(glow_alpha)
+        base = Image.new('RGBA', colored.size, (0, 0, 0, 0))
+        base.alpha_composite(glow_layer)
+        base.alpha_composite(colored)
+        return base
+    return colored
 
 
 def canvas_size(settings, dpi=96):
@@ -67,16 +87,62 @@ def render_cursor(request):
         raise ValueError('Invalid animation frame')
     pixels = round(settings.size * request.dpi / 96)
     padding = round((math.ceil(settings.size * .4) + 2) * request.dpi / 96)
-    image = _color(_base(role, pixels, request.frame if role in ('busy', 'working') else 0), settings, theme)
+    style = getattr(settings, 'style', 'sequoia')
+    image = _color(_base(role, pixels, request.frame if role in ('busy', 'working') else 0, style=style), settings, theme)
     canvas = Image.new('RGBA', (pixels + 2 * padding, pixels + 2 * padding))
     canvas.paste(image, (padding, padding))
     hotspot = ((3, 3) if role == 'working' else (16, 16)) if role in ('busy', 'working') else RENDERERS[role][1]
     hotspot = tuple(round(v * pixels / 32) + padding for v in hotspot)
     if role in ('arrow', 'hand') and request.frame and settings.motion != 'off' and settings.strength:
         amount = request.frame / 4 * settings.strength / 50
-        scale = 1 - .1 * amount if settings.motion == 'shrink' else 1
-        angle = math.radians((-6 if role == 'arrow' else -12) * amount) if settings.motion == 'tilt' else 0
-        pivot = (20, 16) if role == 'arrow' and settings.motion == 'tilt' else RENDERERS[role][1]
+        motion_mode = settings.motion
+        if motion_mode == 'shrink':
+            scale = 1 - .1 * amount
+            angle = 0
+            pivot = RENDERERS[role][1]
+        elif motion_mode == 'spring':
+            # Underdamped harmonic bounce: frame 1 down, 2 deep, 3 overshoot rebound, 4 settle
+            spring_scales = (1.0, 0.96, 0.90, 1.04, 1.00)
+            target_scale = spring_scales[request.frame]
+            scale = 1.0 + (target_scale - 1.0) * (settings.strength / 50)
+            angle = math.radians(-3 * amount) if role == 'arrow' else 0
+            pivot = (20, 16) if role == 'arrow' else RENDERERS[role][1]
+        elif motion_mode == 'pulse':
+            scale = 1.0
+            angle = 0
+            pivot = RENDERERS[role][1]
+            from PIL import ImageDraw
+            pulse_draw = ImageDraw.Draw(canvas)
+            hx, hy = hotspot
+            radius = round(amount * 10 * pixels / 32)
+            if radius > 1:
+                outline_color = getattr(settings, theme + '_outline')
+                rgb = tuple(int(outline_color[i:i+2], 16) for i in (1, 3, 5))
+                alpha = max(0, round(180 * (1 - amount)))
+                pulse_draw.ellipse(
+                    (hx - radius, hy - radius, hx + radius, hy + radius),
+                    outline=(*rgb, alpha),
+                    width=max(1, round(1.5 * request.dpi / 96))
+                )
+        elif motion_mode == 'trail':
+            scale = 1.0
+            angle = math.radians(-2 * amount)
+            pivot = RENDERERS[role][1]
+            from PIL import ImageDraw
+            trail_draw = ImageDraw.Draw(canvas)
+            offset = round(amount * 4 * pixels / 32)
+            body_color = getattr(settings, theme + '_body')
+            rgb = tuple(int(body_color[i:i+2], 16) for i in (1, 3, 5))
+            trail_draw.polygon(
+                [(hotspot[0] + offset, hotspot[1] + offset),
+                 (hotspot[0] + offset + 2, hotspot[1] + offset + 5),
+                 (hotspot[0] + offset + 5, hotspot[1] + offset + 2)],
+                fill=(*rgb, round(100 * amount))
+            )
+        else:  # tilt
+            scale = 1
+            angle = math.radians((-6 if role == 'arrow' else -12) * amount)
+            pivot = (20, 16) if role == 'arrow' and settings.motion == 'tilt' else RENDERERS[role][1]
         x, y = (v * pixels / 32 + padding for v in pivot)
         c, s = math.cos(angle) / scale, math.sin(angle) / scale
         transform = (c, s, x - c*x - s*y, -s, c, y + s*x - c*y)
@@ -156,8 +222,8 @@ class ResourceBundle:
 
 def _render_key(settings):
     value = settings.to_dict()
-    for name in ('startup', 'press_ms', 'release_ms', 'appearance'):
-        value.pop(name)
+    for name in ('startup', 'press_ms', 'release_ms', 'appearance', 'shake_to_find', 'game_dnd', 'tray_enabled', 'auto_check_update', 'skip_update_version'):
+        value.pop(name, None)
     value['render_version'] = RENDER_VERSION
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
@@ -230,8 +296,8 @@ def _generate_bundle(settings, root):
 
 def prepare_resources(settings, cache_root):
     defaults = CursorSettings()
-    geometry = ('size', 'strength', 'light_body', 'light_outline', 'dark_body', 'dark_outline')
-    if all(getattr(settings, name) == getattr(defaults, name) for name in geometry):
+    geometry = ('size', 'strength', 'light_body', 'light_outline', 'dark_body', 'dark_outline', 'style', 'aura_glow', 'aura_color')
+    if all(getattr(settings, name) == getattr(defaults, name) for name in geometry) and settings.motion in ('tilt', 'shrink', 'off'):
         return ResourceBundle('builtin', ASSET_ROOT / 'adaptive', 32, settings, True)
     cache_root = Path(cache_root).resolve()
     cache_root.mkdir(parents=True, exist_ok=True)

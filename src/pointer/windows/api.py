@@ -58,6 +58,9 @@ _signature(GDI32, "CreateDIBSection", [wintypes.HDC, ctypes.c_void_p, wintypes.U
 _signature(GDI32, "SelectObject", [wintypes.HDC, wintypes.HANDLE], wintypes.HANDLE)
 _signature(GDI32, "DeleteObject", [wintypes.HANDLE], wintypes.BOOL)
 _signature(GDI32, "DeleteDC", [wintypes.HDC], wintypes.BOOL)
+_signature(USER32, "GetForegroundWindow", [], wintypes.HWND)
+_signature(USER32, "GetWindowRect", [wintypes.HWND, ctypes.POINTER(wintypes.RECT)], wintypes.BOOL)
+_signature(USER32, "GetClassNameW", [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int], ctypes.c_int)
 _signature(GDI32, "GdiFlush", [], wintypes.BOOL)
 
 

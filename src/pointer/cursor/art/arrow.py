@@ -23,15 +23,32 @@ def quadratic(start, control, end, steps=24):
     ]
 
 
-def arrow_contour(press=0):
-    contour = quadratic((6, 3), (1.5, 1.8), (3.1, 6.1))
-    contour += [(11.1, 26)]
-    contour += quadratic((11.1, 26), (12.4, 29.6), (14, 26))
-    contour += [(17.2, 18.4)]
-    contour += quadratic((17.2, 18.4), (17.8, 16.8), (19.3, 16.2))
-    contour += [(26.2, 13.7)]
-    contour += quadratic((26.2, 13.7), (29.8, 11.8), (26.4, 10.5))
-    contour += [(6, 3)]
+def arrow_contour(press=0, style='sequoia'):
+    if style == 'precision':
+        contour = [
+            (3.0, 3.0), (3.0, 25.0), (8.2, 19.8), (13.6, 26.6),
+            (16.4, 24.2), (11.0, 17.4), (19.2, 17.4), (3.0, 3.0)
+        ]
+    elif style == 'falcon':
+        contour = [
+            (3.0, 3.0), (26.0, 12.0), (19.8, 15.2), (23.8, 23.2),
+            (19.2, 25.0), (15.4, 17.0), (10.2, 25.6), (3.0, 3.0)
+        ]
+    elif style == 'pixel':
+        contour = [
+            (3.0, 3.0), (3.0, 23.0), (7.8, 18.2), (12.2, 26.2),
+            (15.2, 24.8), (10.8, 16.8), (18.2, 16.8), (3.0, 3.0)
+        ]
+    else:  # sequoia (default)
+        contour = quadratic((6, 3), (1.5, 1.8), (3.1, 6.1))
+        contour += [(11.1, 26)]
+        contour += quadratic((11.1, 26), (12.4, 29.6), (14, 26))
+        contour += [(17.2, 18.4)]
+        contour += quadratic((17.2, 18.4), (17.8, 16.8), (19.3, 16.2))
+        contour += [(26.2, 13.7)]
+        contour += quadratic((26.2, 13.7), (29.8, 11.8), (26.4, 10.5))
+        contour += [(6, 3)]
+
     if not press:
         return contour
     # A lower pivot makes the top travel further while both lower tips follow.
@@ -42,16 +59,23 @@ def arrow_contour(press=0):
              pivot_y + s * (x - pivot_x) + c * (y - pivot_y)) for x, y in contour]
 
 
-def render(size, supersample=8, press=0):
+def render(size, supersample=8, press=0, style='sequoia'):
     scale = size / 32
     factor = scale * supersample
-    contour = arrow_contour(press)
+    contour = arrow_contour(press, style=style)
     points = [(round(x * factor), round(y * factor)) for x, y in contour]
     extent = size * supersample
     arrow = Image.new("RGBA", (extent, extent))
     painter = ImageDraw.Draw(arrow)
     painter.polygon(points, fill=(8, 8, 8, 255))
-    painter.line(points, fill=(208, 210, 213, 255), width=round(3 * factor), joint="curve")
+    line_width = round((2.2 if style == 'precision' else (2.6 if style == 'pixel' else 3)) * factor)
+    painter.line(points, fill=(208, 210, 213, 255), width=line_width, joint="curve" if style == 'sequoia' else "miter")
+    if style == 'precision':
+        # Delicate calibrated crosshair needle mark at inner center
+        ch_len = round(2.5 * factor)
+        cx, cy = round(10.5 * factor), round(14.5 * factor)
+        painter.line([(cx - ch_len, cy), (cx + ch_len, cy)], fill=(208, 210, 213, 200), width=round(0.8 * factor))
+        painter.line([(cx, cy - ch_len), (cx, cy + ch_len)], fill=(208, 210, 213, 200), width=round(0.8 * factor))
     return arrow.resize((size, size), Image.Resampling.LANCZOS)
 
 

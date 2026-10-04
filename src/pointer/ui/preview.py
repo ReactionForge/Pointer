@@ -126,7 +126,8 @@ class PreviewSurface(QWidget):
 
         cache_key = (
             settings.size, settings.motion, settings.strength, role, effective_theme, frame,
-            getattr(settings, effective_theme + '_body'), getattr(settings, effective_theme + '_outline')
+            getattr(settings, effective_theme + '_body'), getattr(settings, effective_theme + '_outline'),
+            getattr(settings, 'style', 'sequoia'), getattr(settings, 'aura_glow', False), getattr(settings, 'aura_color', '')
         )
         pixmap = self.owner.get_cached_pixmap(cache_key)
         if pixmap is None:
@@ -239,7 +240,7 @@ class PreviewPanel(QWidget):
         self.settings = settings
         self._pixmap_cache.clear()
         was_down = self.down
-        self.motion = ClickMotion(settings.press_ms, settings.release_ms)
+        self.motion = ClickMotion(settings.press_ms, settings.release_ms, mode=settings.motion)
         if was_down:
             self.motion.down = True
             self.motion._target = 0.9  # SCALES[-1]
