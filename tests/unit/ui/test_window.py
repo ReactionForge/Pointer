@@ -69,3 +69,30 @@ class WindowTests(unittest.TestCase):
         window.discard_changes()
         self.assertEqual(window.draft().strength, 50)
         window.close()
+
+    def test_draft_change_schedules_prewarm_without_calling_apply(self):
+        window, application = self.make_window()
+        window.change(strength=75)
+        self.assertTrue(window._prewarm_timer.isActive())
+        window._trigger_prewarm()
+        application.prewarm.assert_called_once()
+        application.apply.assert_not_called()
+        window.discard_changes()
+        window.close()
+
+    def test_scheme_operations_are_silent_by_default(self):
+        import io
+        from contextlib import redirect_stdout
+        from unittest.mock import patch
+        from pathlib import Path
+        from pointer.windows import scheme
+        f = io.StringIO()
+        with redirect_stdout(f):
+            with patch.object(scheme, 'read_values', return_value={}), \
+                 patch.object(scheme, 'reload_cursors'), \
+                 patch.object(scheme, 'validate_backup', return_value={}), \
+                 patch.object(scheme, 'restore_values'), \
+                 patch.object(Path, 'is_file', return_value=True), \
+                 patch.object(Path, 'read_text', return_value='{}'):
+                scheme.restore(Path('dummy.json'))
+        self.assertEqual(f.getvalue(), '')

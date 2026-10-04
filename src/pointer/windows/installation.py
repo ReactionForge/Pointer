@@ -161,8 +161,12 @@ def _shortcuts():
                          f"$pointerShortcut.WorkingDirectory = {literal(INSTALL_ROOT.resolve())}",
                          "$pointerShortcut.Save()"])
     encoded = base64.b64encode("\n".join(commands).encode("utf-16-le")).decode("ascii")
+    startup_info = subprocess.STARTUPINFO()
+    startup_info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startup_info.wShowWindow = 0
     subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded],
-                   check=True, creationflags=0x08000000, capture_output=True)
+                   check=True, creationflags=0x08000000, startupinfo=startup_info,
+                   stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def remove_obsolete_files(previous_files, current_files, directory):
@@ -189,8 +193,13 @@ def remove_obsolete_files(previous_files, current_files, directory):
 def _execute(executable, arguments, report):
     environment = os.environ.copy()
     environment['PYINSTALLER_RESET_ENVIRONMENT'] = '1'
+    startup_info = subprocess.STARTUPINFO()
+    startup_info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startup_info.wShowWindow = 0
     completed = subprocess.run([str(executable), *arguments, '--quiet', '--report', str(report)],
-                               env=environment,creationflags=0x08000000,timeout=180)
+                               env=environment, creationflags=0x08000000, startupinfo=startup_info,
+                               stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                               timeout=180)
     result = json.loads(report.read_text(encoding='utf-8')) if report.exists() else {}
     if completed.returncode or result.get('exit_code') != 0:
         raise RuntimeError(result.get('error','安装程序未成功完成操作'))

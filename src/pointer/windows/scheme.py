@@ -124,17 +124,17 @@ def reload_cursors():
         raise ctypes.WinError(ctypes.get_last_error())
 
 
-def apply(adaptive=False, dual=False):
+def apply(adaptive=False, dual=False, verbose=False):
     if dual:
         from pointer.cursor.theme import theme_paths
         cursors = theme_paths("light")
     else:
         cursors = ADAPTIVE_CURSORS if adaptive else CURSORS
     scheme_name = ADAPTIVE_SCHEME_NAME if adaptive or dual else SCHEME_NAME
-    return apply_paths(cursors, scheme_name=scheme_name)
+    return apply_paths(cursors, scheme_name=scheme_name, verbose=verbose)
 
 
-def apply_paths(cursors, backup_path=None, scheme_name=ADAPTIVE_SCHEME_NAME, canvas_size=32):
+def apply_paths(cursors, backup_path=None, scheme_name=ADAPTIVE_SCHEME_NAME, canvas_size=32, verbose=False):
     backup_path = BACKUP if backup_path is None else Path(backup_path)
     for path in cursors.values():
         if not path.is_file():
@@ -168,18 +168,20 @@ def apply_paths(cursors, backup_path=None, scheme_name=ADAPTIVE_SCHEME_NAME, can
         restore_values(immediate_backup)
         reload_cursors()
         raise
-    for role, path in cursors.items():
-        print(f"Applied {role}: {path}")
-    print(f"Original settings saved: {BACKUP}")
+    if verbose:
+        for role, path in cursors.items():
+            print(f"Applied {role}: {path}")
+        print(f"Original settings saved: {BACKUP}")
 
 
-def restore(path=None):
+def restore(path=None, verbose=False):
     path = BACKUP if path is None else Path(path)
     if not path.is_file():
         raise FileNotFoundError(path)
     restore_values(validate_backup(json.loads(path.read_text(encoding="utf-8"))))
     reload_cursors()
-    print("Original cursor settings restored.")
+    if verbose:
+        print("Original cursor settings restored.")
 
 
 if __name__ == "__main__":
@@ -187,9 +189,9 @@ if __name__ == "__main__":
     stop_directory(ROOT)
     if "--restore" in sys.argv:
         disable_startup()
-        restore()
+        restore(verbose=True)
     elif "--dual" in sys.argv:
-        apply(dual=True)
+        apply(dual=True, verbose=True)
         try:
             enable_startup()
             start()
@@ -199,4 +201,4 @@ if __name__ == "__main__":
             raise
     else:
         disable_startup()
-        apply(adaptive="--adaptive" in sys.argv)
+        apply(adaptive="--adaptive" in sys.argv, verbose=True)

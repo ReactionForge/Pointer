@@ -105,3 +105,10 @@ class ApplicationTests(unittest.TestCase):
                     self.app.apply(CursorSettings())
                 self.assertEqual(self.app.store.path.read_bytes(),damaged)
                 self.backend.stop.assert_not_called()
+
+    def test_prewarm_generates_and_caches_bundle_without_starting_or_stopping_service(self):
+        bundle = self.app.prewarm(self.old)
+        self.assertIsNotNone(bundle)
+        self.backend.start.assert_not_called()
+        self.backend.stop.assert_not_called()
+        self.backend.apply.assert_not_called()

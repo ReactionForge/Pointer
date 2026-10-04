@@ -121,6 +121,9 @@ def main(argv=None):
     parser.add_argument('--settings-file', type=Path)
     parser.add_argument('--purge-settings', action='store_true')
     args = parser.parse_args(argv)
+    if args.quiet:
+        sys.stdout = io.StringIO()
+        sys.stderr = io.StringIO()
     if args.run:
         switcher._run()
         return 0

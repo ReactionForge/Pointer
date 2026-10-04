@@ -26,6 +26,13 @@ class Application:
     def snapshot(self):
         return {**self.backend.snapshot(), 'settings': self.settings().to_dict(), 'last_error': None}
 
+    def prewarm(self, settings=None):
+        if settings is None:
+            settings = self.settings()
+        else:
+            settings = CursorSettings.from_dict(settings.to_dict())
+        return prepare_resources(settings, self.data_root / 'cursor-cache')
+
     def apply(self, settings):
         settings = CursorSettings.from_dict(settings.to_dict())
         # A supplied draft cannot silently replace a damaged persisted file.

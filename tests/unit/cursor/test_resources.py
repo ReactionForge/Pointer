@@ -105,3 +105,15 @@ class ResourceTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "regenerate"):
                     self.api.prepare_resources(settings, root)
             self.assertTrue((damaged / "MANIFEST.json").exists())
+
+    def test_concurrent_prepare_resources_returns_valid_shared_bundle(self):
+        import concurrent.futures
+        settings = CursorSettings(size=24, dark_body="#123456")
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as ex:
+                futures = [ex.submit(self.api.prepare_resources, settings, root) for _ in range(4)]
+                bundles = [f.result() for f in futures]
+            self.assertEqual(len({b.root for b in bundles}), 1)
+            self.assertEqual(len({b.key for b in bundles}), 1)
+            self.assertTrue(bundles[0].paths('light')['Arrow'].exists())

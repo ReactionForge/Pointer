@@ -134,3 +134,31 @@ class InstallationTests(unittest.TestCase):
                     installation.deploy_package(source,target)
             self.assertEqual((target/'Pointer.exe').read_bytes(),b'old')
             installation.package_files(target)
+
+    def test_execute_and_shortcuts_run_silently_without_console_window(self):
+        with tempfile.TemporaryDirectory() as folder:
+            report = Path(folder) / 'report.json'
+            report.write_text(json.dumps({'exit_code': 0}))
+            with patch.object(installation.subprocess, 'run', return_value=Mock(returncode=0)) as run_mock:
+                installation._execute(Path(folder) / 'Pointer.exe', ['--apply'], report)
+                run_mock.assert_called_once()
+                kwargs = run_mock.call_args.kwargs
+                self.assertEqual(kwargs['creationflags'], 0x08000000)
+                self.assertEqual(kwargs['stdin'], installation.subprocess.DEVNULL)
+                self.assertEqual(kwargs['stdout'], installation.subprocess.DEVNULL)
+                self.assertEqual(kwargs['stderr'], installation.subprocess.DEVNULL)
+                startupinfo = kwargs.get('startupinfo')
+                self.assertIsNotNone(startupinfo)
+                self.assertEqual(startupinfo.wShowWindow, 0)
+
+            with patch.object(installation.subprocess, 'run', return_value=Mock(returncode=0)) as run_mock:
+                installation._shortcuts()
+                run_mock.assert_called_once()
+                kwargs = run_mock.call_args.kwargs
+                self.assertEqual(kwargs['creationflags'], 0x08000000)
+                self.assertEqual(kwargs['stdin'], installation.subprocess.DEVNULL)
+                self.assertEqual(kwargs['stdout'], installation.subprocess.DEVNULL)
+                self.assertEqual(kwargs['stderr'], installation.subprocess.DEVNULL)
+                startupinfo = kwargs.get('startupinfo')
+                self.assertIsNotNone(startupinfo)
+                self.assertEqual(startupinfo.wShowWindow, 0)

@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import struct
 import tempfile
+import threading
 import uuid
 
 from PIL import Image
@@ -31,7 +32,7 @@ class RenderRequest:
     dpi: int = 96
 
 
-@lru_cache(maxsize=32)
+@lru_cache(maxsize=2048)
 def _base(role, pixels, animation_frame):
     if role in ('busy', 'working'):
         return render_loading(pixels, animation_frame, role == 'working')
@@ -174,24 +175,43 @@ def _valid_bundle(root, key):
         return False
 
 
+_RESOURCE_LOCK = threading.Lock()
+
+
 def _generate_bundle(settings, root):
     def frames(role, theme, frame):
         return [render_cursor(RenderRequest(settings, role, theme, frame, dpi)) for dpi in DPI_VARIANTS]
+
     for theme in ('light', 'dark'):
         destination = root / theme
-        destination.mkdir(parents=True)
-        for role, filename in FILENAMES.items():
-            kind = filename.split('.')[0]
-            if filename.endswith('.ani'):
-                content = encode_ani([encode_cur([render_cursor(RenderRequest(settings, kind, theme, f, 768))]) for f in range(24)])
-            else:
-                content = encode_cur(frames(kind, theme, 0))
-            (destination / ('adaptive-' + filename)).write_bytes(content)
-        if settings.motion != 'off':
-            for role in ('arrow', 'hand'):
-                for frame in range(1, 5):
-                    (destination / f'{role}-{frame}.cur').write_bytes(encode_cur(frames(role, theme, frame)))
-    _base.cache_clear()
+        destination.mkdir(parents=True, exist_ok=True)
+
+    def generate_static(item):
+        theme, role, filename = item
+        kind = filename.split('.')[0]
+        if filename.endswith('.ani'):
+            content = encode_ani([encode_cur([render_cursor(RenderRequest(settings, kind, theme, f, 768))]) for f in range(24)])
+        else:
+            content = encode_cur(frames(kind, theme, 0))
+        return (root / theme / ('adaptive-' + filename), content)
+
+    def generate_motion(item):
+        theme, role, frame = item
+        return (root / theme / f'{role}-{frame}.cur', encode_cur(frames(role, theme, frame)))
+
+    items = [(theme, role, filename) for theme in ('light', 'dark') for role, filename in FILENAMES.items()]
+    motion_items = []
+    if settings.motion != 'off':
+        motion_items = [(theme, role, frame) for theme in ('light', 'dark') for role in ('arrow', 'hand') for frame in range(1, 5)]
+
+    from concurrent.futures import ThreadPoolExecutor
+    workers = min(8, (os.cpu_count() or 4) * 2)
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        for path, content in executor.map(generate_static, items):
+            path.write_bytes(content)
+        if motion_items:
+            for path, content in executor.map(generate_motion, motion_items):
+                path.write_bytes(content)
 
 
 def prepare_resources(settings, cache_root):
@@ -210,16 +230,24 @@ def prepare_resources(settings, cache_root):
             return ResourceBundle(key, target, canvas_size(settings), settings)
     except (OSError, ValueError, KeyError, TypeError):
         pass
-    target = cache_root / (key + '-' + uuid.uuid4().hex[:8])
-    with tempfile.TemporaryDirectory(prefix='.building-', dir=cache_root) as temporary:
-        working = Path(temporary).resolve()
-        assert working.is_relative_to(cache_root)
-        _generate_bundle(settings, working)
-        files = {path.relative_to(working).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
-                 for path in working.rglob('*') if path.is_file()}
-        _write_json(working / 'MANIFEST.json', {'key': key, 'files': files})
-        if not _valid_bundle(working, key):
-            raise ValueError('生成的光标资源校验失败')
-        os.replace(working, target)
-    _write_json(index, {'folder': target.name})
-    return ResourceBundle(key, target, canvas_size(settings), settings)
+    with _RESOURCE_LOCK:
+        try:
+            name = json.loads(index.read_text(encoding='utf-8'))['folder']
+            target = (cache_root / name).resolve()
+            if target.is_relative_to(cache_root) and _valid_bundle(target, key):
+                return ResourceBundle(key, target, canvas_size(settings), settings)
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+        target = cache_root / (key + '-' + uuid.uuid4().hex[:8])
+        with tempfile.TemporaryDirectory(prefix='.building-', dir=cache_root) as temporary:
+            working = Path(temporary).resolve()
+            assert working.is_relative_to(cache_root)
+            _generate_bundle(settings, working)
+            files = {path.relative_to(working).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+                     for path in working.rglob('*') if path.is_file()}
+            _write_json(working / 'MANIFEST.json', {'key': key, 'files': files})
+            if not _valid_bundle(working, key):
+                raise ValueError('生成的光标资源校验失败')
+            os.replace(working, target)
+        _write_json(index, {'folder': target.name})
+        return ResourceBundle(key, target, canvas_size(settings), settings)

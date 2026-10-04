@@ -346,6 +346,34 @@ class MainWindow(QMainWindow):
         self.status_timer.start()
         self.refresh_status()
 
+        self._last_prewarmed_draft = None
+        self._prewarm_timer = QTimer(self)
+        self._prewarm_timer.setSingleShot(True)
+        self._prewarm_timer.setInterval(250)
+        self._prewarm_timer.timeout.connect(self._trigger_prewarm)
+        self._schedule_prewarm()
+
+    def _schedule_prewarm(self):
+        if hasattr(self, '_prewarm_timer'):
+            self._prewarm_timer.start(250)
+
+    def _trigger_prewarm(self):
+        if getattr(self, 'busy', False) or not hasattr(self, 'application') or not hasattr(self.application, 'prewarm'):
+            return
+        draft = self._draft
+        if getattr(self, '_last_prewarmed_draft', None) == draft:
+            return
+        self._last_prewarmed_draft = draft
+        import threading
+        thread = threading.Thread(target=self._run_prewarm, args=(draft,), daemon=True)
+        thread.start()
+
+    def _run_prewarm(self, draft):
+        try:
+            self.application.prewarm(draft)
+        except Exception:
+            pass
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
         if hasattr(self, 'toast') and hasattr(self, 'content_widget'):
@@ -363,6 +391,7 @@ class MainWindow(QMainWindow):
     def set_draft(self, settings):
         self._draft = CursorSettings.from_dict(settings.to_dict())
         self.sync()
+        self._schedule_prewarm()
 
     def request_apply(self):
         self.apply_draft()
@@ -372,6 +401,7 @@ class MainWindow(QMainWindow):
             return
         self._draft = replace(self._draft, **fields)
         self.sync()
+        self._schedule_prewarm()
 
     def sync(self):
         for index in (0, 1, 3):
@@ -409,6 +439,7 @@ class MainWindow(QMainWindow):
         self._draft = self.applied
         self.sync()
         self.toast.show_message('已放弃未应用的草稿修改')
+        self._schedule_prewarm()
 
     def apply_draft(self):
         desired = self._draft
