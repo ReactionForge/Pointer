@@ -5,6 +5,7 @@ __pycache__/
 venv/
 .build-env/
 .local/
+.impeccable/
 build/
 dist/
 *.spec
