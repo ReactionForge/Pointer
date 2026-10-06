@@ -1,6 +1,6 @@
 # Pointer UI design direction
 
-Status: third visual round on 2026-10-06. The user acknowledged a substantial improvement in round two, then requested more life, creativity and novelty, especially in layout. Retain the Apple material world and refine workspace structure. No composition has been approved for implementation yet.
+Status: B / Cursor family composition approved by the user on 2026-10-06: “B · 光标家族 可以，在此基础上继续更新迭代美感与设计”. Preserve B's topology and continue aesthetic refinement. No return to composition selection. UI redesign implementation has not begun; the loading-ring renderer and ANI resources were repaired following the user's separate artifact feedback.
 
 ## Visual world — Liquid Focus
 
@@ -56,12 +56,16 @@ The default cursor contrast is separate from interface colors: light background 
 - The workspace responds to intention: role selection focuses the chosen specimen; a comparison divider follows dragging immediately; an inspector changes its controls in place. Main navigation, apply action and keyboard anchors remain stable. No automatic orbit, idle breathing, magnetic cursor or drifting controls.
 - Asymmetric composition carries focus without implying unequal contrast importance. Every preview labels its background, draft status and scale. Scene content supports the task; it does not claim that a draft has been applied to Windows.
 
-## Third-round layout probes
+## Approved composition and refinement
 
-All three preserve Liquid Focus materials, semantic palette, type and product truth. They vary structure and interaction framing rather than adding a new identity.
+The user selected B from the third round. Its approved base is docs/images/apple-v3-b.png; A and C remain exploratory references, not implementation choices. Refine this composition without replacing its material world or reorganizing its primary regions.
 
 - A — Living canvas / 流动舞台: expansive asymmetric light/dark stage, draggable comparison boundary, compact horizontal instrument shelf and a stable top action. No tall inspector or sidebar.
 - B — Cursor family / 光标家族: one dominant selected role and smaller related role specimens in a shallow fan, with a compact contextual inspector and common style controls. Ordered selection remains available with keyboard navigation.
 - C — Scene atelier / 情境工作台: a large image interaction scene balanced by compact text and click scenes, a stable task dock and an expandable contextual shelf. Real preview content creates rhythm; each scene remains clearly marked as a draft.
 
-Third-round layouts use apple-v3-*.png. Round-two images remain a material reference and are not approved. Both rounds are mockups, not screenshots of implemented software. Human approval state remains in .impeccable/mocks/; public proposal context lives in docs/design/.
+Refinement targets: normalize optical weight of the supporting role glyphs; preserve a dominant selected role; clarify preview background selection separately from system adaptation; use a real-size specimen alongside the configured size; reduce redundant borders in the shared appearance shelf; preserve stable navigation and apply anchors in light and dark states.
+
+The preview mode defaults to comparison when both light and dark specimens are visible. System adaptation remains a separate automatic/light/dark control. Selecting a role changes the preview only, while appearance settings stay shared. Keep all existing shapes, palettes, motion, startup, recovery and testing functions available.
+
+Approved direction is distinct from finished software. Images remain design artifacts; human approval scope lives in .impeccable/mocks/ and the public layout provenance. Refined screenshots use apple-family-v4-*.png and do not imply that animation or Windows cursor behavior has been implemented or verified.
