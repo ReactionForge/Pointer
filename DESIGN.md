@@ -1,58 +1,65 @@
 # Pointer UI design direction
 
-Status: Apple software family direction confirmed by the user on 2026-10-06. The screen compositions and interaction changes below are proposals pending visual review.
+Status: revised visual proposal on 2026-10-06. The user rejected the first flat, grouped-settings concepts as too similar to the existing application. Apple software family remains confirmed; the revised compositions require visual review before product implementation.
 
-## Visual world
+## Visual world — Liquid Focus
 
-Use an Apple-inspired desktop utility language: quiet neutral surfaces, grouped settings, precise typography, restrained depth, and immediate feedback. Keep the actual Windows title bar and platform interactions. Pointer remains the brand; do not add Apple logos, false macOS window controls, or marketing claims.
+Translate Apple's material hierarchy and interaction precision into a Windows cursor workspace. The preview occupies the main canvas; navigation and contextual controls form a separate functional layer. Keep Pointer's identity, Windows window behavior, and the existing rounded black-and-white cursor geometry.
 
-The subject is the cursor. Its actual geometry and black/white contrast should be the visual focus. Expression lives in the preview, alignment, and control craft rather than ornamental backgrounds.
+The signature is an expansive dual-background cursor stage with a lightweight translucent functional layer around it. Glass belongs to navigation, compact toolbars and transient controls. The stage, form content and readable labels use opaque or sufficiently tinted surfaces. No wallpaper imitation, ornamental glass cards, cursor glow or Apple branding is needed.
 
-## Type and spacing
+Apple references: [Materials](https://developer.apple.com/design/human-interface-guidelines/materials), [Liquid Glass](https://developer.apple.com/documentation/technologyoverviews/liquid-glass), [Motion](https://developer.apple.com/design/human-interface-guidelines/motion), and the [official macOS interface examples](https://www.apple.com/newsroom/2025/06/macos-tahoe-26-makes-the-mac-more-capable-productive-and-intelligent-than-ever/). These establish reference principles; Pointer's workspace and timings below are our proposed adaptation.
 
-- UI: Windows-installed Segoe UI Variable / Segoe UI and Microsoft YaHei UI. Do not package proprietary Apple fonts.
-- Normal labels: 14 logical px; supporting text: 13 logical px; section labels: 15 px semibold; page titles: 25 px semibold. Use actual Qt font metrics and scale for Windows DPI and font settings.
-- Base rhythm: 4, 8, 12, 16, 24, 32. Grouped panels have 16 px inner spacing, 12 px corner radius, and one subtle boundary treatment. Main content gutters: 24 px.
-- Numeric values use tabular figures when supported; labels remain in the normal UI family.
+## Layer hierarchy
 
-## Proposed semantic colors
+1. Content: a clean pearl or graphite canvas, large cursor specimens, real setting labels and scene content. The cursor remains a flat accurate specimen rather than a decorative 3D object.
+2. Functional surface: a floating sidebar or toolbar with a translucent softly tinted fill, an optically aligned icon family, a fine light edge and a soft directional shadow. It separates navigation from content without fogging text.
+3. Transient surface: a contextual popover or apply feedback anchored to its trigger. One elevated interaction at a time; avoid glass nested inside glass.
+
+On Windows use Qt-drawn internal surfaces and a restrained optional native backdrop behind navigation. Materials must remain coherent with an opaque fallback, reduced transparency, or unsupported compositing. Do not promise Apple's proprietary rendering on Windows or use a static screenshot as the running interface.
+
+## Type, geometry and density
+
+- Windows-installed Segoe UI Variable / Segoe UI and Microsoft YaHei UI fallback. Do not bundle SF Pro.
+- Title 28 logical px, section 16 semibold, control labels 14, supporting text 13. Values use tabular figures and explicit units.
+- Spacing rhythm: 4 / 8 / 12 / 16 / 24 / 32. Related controls are close; task groups have generous separation. Refine optical alignment.
+- Content radius 20–24; floating rails 20; preview stage 24; control groups 12; pill shapes for compact tools only. Nested curves are concentric with radius reduced by inset.
+- Minimum comfortable target 32 logical px; prominent actions 36–40. Independent visible keyboard focus. Thin dividers and grouped rows replace repeated outlined cards.
+
+## Semantic palette
 
 | Role | Light | Dark |
 | --- | --- | --- |
-| Window | #F5F5F7 | #1C1C1E |
-| Sidebar | #ECECEF | #252527 |
-| Panel | #FFFFFF | #2C2C2E |
-| Elevated panel | #FFFFFF | #363638 |
-| Primary text | #1D1D1F | #F5F5F7 |
-| Secondary text | #626268 | #B0B0B7 |
-| Hairline | #DEDEE3 | #48484C |
-| Selection | #E6F0FF | #203957 |
-| Primary action fill | #0066CC | #0066CC |
-| Selection text / focus | #0066CC | #76BBFF |
-| Success text | #16703C | #70D997 |
-| Warning text | #875200 | #FFD083 |
-| Error text | #B42318 | #FF9B92 |
+| Canvas | #F6F6F8 | #191A1E |
+| Content surface | #FFFFFF | #25262B |
+| Functional opaque fallback | #EBECF0 | #303137 |
+| Functional highlight | #FFFFFF | #686A73 |
+| Primary text | #202126 | #F5F5F7 |
+| Supporting text | #5D5F68 | #B2B5C0 |
+| Divider | #DBDDE3 | #494B55 |
+| Selected control | #E7EFFB | #294469 |
+| Accent / primary action | #0064D8 | #0064D8 |
+| Focus | #0064D8 | #8DBBFF |
+| Success | #16683D | #86DEAF |
+| Error | #B42318 | #FFADA7 |
 
-Use the accent for selected controls, keyboard focus, and primary actions. Cursor glow remains controlled by the user's cursor configuration and is not implied by the interface's accent color.
+The default cursor contrast is separate from interface colors: light background black body/white outline; dark background white body/black outline; glow off. Preserve existing custom palettes and optional glow controls under advanced settings.
 
-## Component character
+## Interaction language
 
-Use one icon family with consistent 1.5–1.75 px strokes. Use semantic Qt buttons, checkboxes, sliders, spinboxes, and combo boxes, with accessible names and visible focus states. Styling must cover hover, press, selected, disabled, busy, and error states in both themes.
+- Mouse selections update data and previews immediately. A subtle selected capsule may catch up over 140–180 ms; page content does not wait or fly in.
+- Buttons compress to 0.98 on mouse press over 80 ms and return over 140 ms without shifting layout or the hit target. Keyboard actions give immediate feedback.
+- Sliders track input directly; the value stays visible and a temporary value bubble can follow the thumb. No spring on the value or artificial cursor lag.
+- Popovers grow from their trigger from 0.98 to 1 with restrained opacity over 160 ms. Anchors and opening directions remain stable at window edges.
+- Apply keeps its width and location while changing from action to progress to result. Report success only after the real operation finishes. Errors persist with retry; drafts survive.
+- UI motion stays independent of system cursor motion. Interruptions retarget from the current value; focus loss resets transient press state. Reduced motion and transparency have deliberate fallbacks.
 
-Prefer concise grouped rows to nested cards. Advanced color and optional glow controls remain reachable through disclosure. A selected cursor style or preset exposes a check and a border, not color alone.
+## Revised composition probes
 
-## Motion grammar
+All three use the same Liquid Focus world, product features and cursor contrast. They vary workspace structure.
 
-Pointer's cursor animation is an existing configurable feature and stays independent of interface motion. Proposed UI timings: press feedback 100–140 ms, toggle transition 140–180 ms, transient feedback fade 160–200 ms. Keyboard navigation is immediate. No page entrance choreography. Retarget interrupted feedback from its current state. Reduced interface motion uses immediate state changes and restrained opacity feedback.
+- A — Focus workspace: translucent left navigation, generous central preview stage, slim contextual inspector on the right. Recommended for preview persistence and stable apply action.
+- B — Gallery workspace: floating top navigation, wide comparison stage, shape specimens and horizontal inspector. More visual discovery, fewer controls visible at once.
+- C — Compact studio: narrow navigation rail, left inspector, full-height preview canvas on the right. More immersive comparison with a denser settings column.
 
-## Composition alternatives
-
-1. **A — 分栏设置**: left navigation, grouped settings in the center, persistent draft preview on the right, and a stable bottom action bar. Proposed recommendation for the desktop app.
-2. **B — 预览工作区**: top navigation, a large dual-background preview leading the screen, and a compact inspector below. Stronger visual focus, with less configuration visible at once.
-3. **C — 紧凑设置**: left navigation, inline dual-background preview, and grouped settings across the full content column. Favorable for narrower windows, with less preview persistence while scrolling.
-
-The user pinned Apple software family style, so the concept seed's alternate material worlds cannot replace it. They contribute only task-relevant discipline: tonal contrast, stable grids, clear selection, and persistent change state. The seven considered sources span editorial spacing, product-photo staging, specimen grids, photographic contact sheets, software identity, typographic hierarchy, and measured motion. The selected third source (specimen-grid precision) is translated into the existing native desktop controls and exact cursor previews; its exposed construction grid is omitted because it has no task purpose.
-
-## Review artifacts
-
-Visual concepts live under docs/images/. Their status is a proposal, not a screenshot of completed software. The design philosophy is in docs/design/apple-visual-philosophy.md. Detailed scope and interaction proposals are in docs/design/apple-ui-redesign.md. Final screen composition will be recorded after the user reviews the images.
+The first-round images are superseded. New proposals use apple-v2-*.png. They are design mockups, not screenshots of implemented software. Generation prompts and human approval state remain in .impeccable/mocks/; public proposal context lives in docs/design/.
