@@ -24,17 +24,20 @@ def render_loading(size, frame, with_arrow=False):
         ((25, 24), 4.5, 3.5, 1.5) if with_arrow else ((16, 16), 10, 5.5, 2.5)
     )
     angle = frame * 360 / ANIMATION_FRAMES
-    points = [
-        (
-            (center[0] + radius * math.cos(math.radians(angle + offset))) * factor,
-            (center[1] + radius * math.sin(math.radians(angle + offset))) * factor,
-        )
-        for offset in range(271)
-    ]
+    directions = [(math.cos(math.radians(angle + offset)),
+                   math.sin(math.radians(angle + offset))) for offset in range(271)]
     for width, color in ((outer_width, (208, 210, 213, 255)), (inner_width, (8, 8, 8, 255))):
-        painter.line(points, fill=color, width=round(width * factor), joint="curve")
+        # Fill a single annular contour. Thick short line segments leave radial
+        # seams at their joins, which become visible in previews and at high DPI.
+        points = [((center[0] + distance * dx) * factor,
+                   (center[1] + distance * dy) * factor)
+                  for distance, vectors in ((radius + width / 2, directions),
+                                            (radius - width / 2, reversed(directions)))
+                  for dx, dy in vectors]
+        painter.polygon(points, fill=color)
         cap_radius = width * factor / 2
-        for x, y in (points[0], points[-1]):
+        for dx, dy in (directions[0], directions[-1]):
+            x, y = (center[0] + radius * dx) * factor, (center[1] + radius * dy) * factor
             painter.ellipse((x - cap_radius, y - cap_radius, x + cap_radius, y + cap_radius), fill=color)
     return image.resize((size, size), Image.Resampling.LANCZOS)
 
@@ -63,4 +66,3 @@ def loading_preview():
         frames.append(preview.convert("RGB"))
     frames[0].save(PREVIEW_ROOT / "cursor-preview-loading.png")
     frames[0].save(PREVIEW_ROOT / "cursor-preview-loading.gif", save_all=True, append_images=frames[1:], duration=50, loop=0, disposal=2)
-

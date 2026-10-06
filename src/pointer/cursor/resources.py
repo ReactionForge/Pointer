@@ -20,7 +20,7 @@ from .art.codec import dib, riff_chunk
 from pointer.paths import ASSET_ROOT
 
 DPI_VARIANTS = (96, 144, 192, 288, 384, 768)
-RENDER_VERSION = 2
+RENDER_VERSION = 3
 
 
 @dataclass(frozen=True)
