@@ -1,12 +1,12 @@
 # Pointer UI design direction
 
-Status: revised visual proposal on 2026-10-06. The user rejected the first flat, grouped-settings concepts as too similar to the existing application. Apple software family remains confirmed; the revised compositions require visual review before product implementation.
+Status: third visual round on 2026-10-06. The user acknowledged a substantial improvement in round two, then requested more life, creativity and novelty, especially in layout. Retain the Apple material world and refine workspace structure. No composition has been approved for implementation yet.
 
 ## Visual world — Liquid Focus
 
 Translate Apple's material hierarchy and interaction precision into a Windows cursor workspace. The preview occupies the main canvas; navigation and contextual controls form a separate functional layer. Keep Pointer's identity, Windows window behavior, and the existing rounded black-and-white cursor geometry.
 
-The signature is an expansive dual-background cursor stage with a lightweight translucent functional layer around it. Glass belongs to navigation, compact toolbars and transient controls. The stage, form content and readable labels use opaque or sufficiently tinted surfaces. No wallpaper imitation, ornamental glass cards, cursor glow or Apple branding is needed.
+The signature is a responsive cursor workspace: the selected role, comparison background and relevant controls relate directly, instead of occupying three equally weighted fixed columns. Contrast comes from a dominant specimen, smaller supporting roles, real scene content and deliberate asymmetric space. Glass belongs to navigation, compact toolbars and transient controls. Content and readable labels retain stable surfaces. No ornamental glass, cursor glow or Apple branding is needed.
 
 Apple references: [Materials](https://developer.apple.com/design/human-interface-guidelines/materials), [Liquid Glass](https://developer.apple.com/documentation/technologyoverviews/liquid-glass), [Motion](https://developer.apple.com/design/human-interface-guidelines/motion), and the [official macOS interface examples](https://www.apple.com/newsroom/2025/06/macos-tahoe-26-makes-the-mac-more-capable-productive-and-intelligent-than-ever/). These establish reference principles; Pointer's workspace and timings below are our proposed adaptation.
 
@@ -53,13 +53,15 @@ The default cursor contrast is separate from interface colors: light background 
 - Popovers grow from their trigger from 0.98 to 1 with restrained opacity over 160 ms. Anchors and opening directions remain stable at window edges.
 - Apply keeps its width and location while changing from action to progress to result. Report success only after the real operation finishes. Errors persist with retry; drafts survive.
 - UI motion stays independent of system cursor motion. Interruptions retarget from the current value; focus loss resets transient press state. Reduced motion and transparency have deliberate fallbacks.
+- The workspace responds to intention: role selection focuses the chosen specimen; a comparison divider follows dragging immediately; an inspector changes its controls in place. Main navigation, apply action and keyboard anchors remain stable. No automatic orbit, idle breathing, magnetic cursor or drifting controls.
+- Asymmetric composition carries focus without implying unequal contrast importance. Every preview labels its background, draft status and scale. Scene content supports the task; it does not claim that a draft has been applied to Windows.
 
-## Revised composition probes
+## Third-round layout probes
 
-All three use the same Liquid Focus world, product features and cursor contrast. They vary workspace structure.
+All three preserve Liquid Focus materials, semantic palette, type and product truth. They vary structure and interaction framing rather than adding a new identity.
 
-- A — Focus workspace: translucent left navigation, generous central preview stage, slim contextual inspector on the right. Recommended for preview persistence and stable apply action.
-- B — Gallery workspace: floating top navigation, wide comparison stage, shape specimens and horizontal inspector. More visual discovery, fewer controls visible at once.
-- C — Compact studio: narrow navigation rail, left inspector, full-height preview canvas on the right. More immersive comparison with a denser settings column.
+- A — Living canvas / 流动舞台: expansive asymmetric light/dark stage, draggable comparison boundary, compact horizontal instrument shelf and a stable top action. No tall inspector or sidebar.
+- B — Cursor family / 光标家族: one dominant selected role and smaller related role specimens in a shallow fan, with a compact contextual inspector and common style controls. Ordered selection remains available with keyboard navigation.
+- C — Scene atelier / 情境工作台: a large image interaction scene balanced by compact text and click scenes, a stable task dock and an expandable contextual shelf. Real preview content creates rhythm; each scene remains clearly marked as a draft.
 
-The first-round images are superseded. New proposals use apple-v2-*.png. They are design mockups, not screenshots of implemented software. Generation prompts and human approval state remain in .impeccable/mocks/; public proposal context lives in docs/design/.
+Third-round layouts use apple-v3-*.png. Round-two images remain a material reference and are not approved. Both rounds are mockups, not screenshots of implemented software. Human approval state remains in .impeccable/mocks/; public proposal context lives in docs/design/.
