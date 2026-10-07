@@ -1,6 +1,6 @@
 Pointer 桌面 APP 使用说明
 
-桌面预览版下载：https://github.com/ReactionForge/Pointer/releases/tag/v1.3.0-beta.5
+桌面预览版下载：https://github.com/ReactionForge/Pointer/releases/tag/v1.3.0-beta.6
 
 安装 EXE，或完整解压 ZIP 后双击 Pointer.exe。
 Windows 10/11 x64，无需 Python、管理员权限或联网。

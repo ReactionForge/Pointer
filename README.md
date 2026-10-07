@@ -2,11 +2,11 @@
 
 Windows 圆角光标桌面 APP。浅色背景黑色主体、白色边框；深色背景白色主体、黑色边框。覆盖 17 种系统光标，保留加载动画，无蓝光。
 
-**DEV 桌面预览版：1.3.0-beta.5**。开发修改只推送 DEV，稳定版仍为 v1.1.1。
+**DEV 桌面预览版：1.3.0-beta.6**。开发修改只推送 DEV，稳定版仍为 v1.1.1。
 
-[下载安装 EXE](https://github.com/ReactionForge/Pointer/releases/download/v1.3.0-beta.5/Pointer-v1.3.0-beta.5-setup-x64.exe) · [下载便携 ZIP](https://github.com/ReactionForge/Pointer/releases/download/v1.3.0-beta.5/Pointer-v1.3.0-beta.5-windows-x64.zip) · [预览版与校验文件](https://github.com/ReactionForge/Pointer/releases/tag/v1.3.0-beta.5)
+[下载安装 EXE](https://github.com/ReactionForge/Pointer/releases/download/v1.3.0-beta.6/Pointer-v1.3.0-beta.6-setup-x64.exe) · [下载便携 ZIP](https://github.com/ReactionForge/Pointer/releases/download/v1.3.0-beta.6/Pointer-v1.3.0-beta.6-windows-x64.zip) · [预览版与校验文件](https://github.com/ReactionForge/Pointer/releases/tag/v1.3.0-beta.6)
 
-动效、侧栏和灰度支持精确数值输入及默认参数重置。底部操作条显示外观保存与光标应用状态；显式应用会启动光标效果。最新实施和验收范围见 [beta.4 验收记录](docs/releases/1.3.0-beta.5.md)。
+动效、侧栏和灰度支持精确数值输入及默认参数重置。底部操作条显示外观保存与光标应用状态；显式应用会启动光标效果。最新实施和验收范围见 [beta.6 验收记录](docs/releases/1.3.0-beta.6.md)。
 
 ![beta.1 光标外观界面留档](docs/images/desktop-app.png)
 

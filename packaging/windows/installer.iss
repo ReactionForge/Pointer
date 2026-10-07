@@ -1,5 +1,5 @@
 #ifndef AppVersion
-  #define AppVersion "1.3.0-beta.5"
+  #define AppVersion "1.3.0-beta.6"
 #endif
 
 [Setup]
@@ -49,7 +49,7 @@ Filename: "{app}\Pointer.exe"; Description: "Open Pointer settings"; Flags: nowa
 [Code]
 var PayloadDeployed: Boolean;
 
-procedure NotifyChangedIcon(EventID: LONG; Flags: UINT; Item1: String; Item2: LONG_PTR);
+procedure NotifyChangedIcon(EventID: Integer; Flags: Cardinal; Item1: String; Item2: Integer);
   external 'SHChangeNotify@shell32.dll stdcall setuponly';
 
 procedure RefreshPointerIcons;
