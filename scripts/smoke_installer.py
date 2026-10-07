@@ -137,10 +137,12 @@ def verify_shortcuts(target):
     icon = normalized(str(target / 'pointer.ico'))
     for row in rows:
         if normalized(row['target']) != executable:
-            raise AssertionError('Shortcut targets a different installation: ' + row['path'])
+            raise AssertionError('Shortcut targets a different installation: ' + json.dumps({
+                'shortcut': row['path'], 'actual': row['target'], 'expected': executable}, ensure_ascii=True))
         location, separator, index = row['icon'].rpartition(',')
         if not separator or index.strip() != '0' or normalized(location) != icon:
-            raise AssertionError('Shortcut does not use the installed pointer.ico,0: ' + row['path'])
+            raise AssertionError('Shortcut does not use the installed pointer.ico,0: ' + json.dumps({
+                'shortcut': row['path'], 'actual': row['icon'], 'expected': icon + ',0'}, ensure_ascii=True))
     for row in rows:
         verify_shell_icon(Path(row['path']))
     return rows
@@ -151,11 +153,15 @@ def main():
     installer=ROOT/'dist'/f'Pointer-v{version}-setup-x64.exe'
     with tempfile.TemporaryDirectory(prefix='Pointer 安装包 验证 ') as folder:
         root=Path(folder);target=root/'Pointer 自定义安装';data=root/'data'
+        reports=ROOT/'.local/reports';reports.mkdir(parents=True,exist_ok=True)
         def install():
             completed=subprocess.run([str(installer),'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-',
                                        '/TASKS=desktopicon',
                                        '/DIR='+str(target),'/LOG='+str(root/'install.log')],
                                       creationflags=0x08000000,timeout=180)
+            # Preserve the real installer log even when a following check fails.
+            if (root/'install.log').is_file():
+                shutil.copy2(root/'install.log',reports/'installer-smoke.log')
             if completed.returncode:
                 raise RuntimeError('Installer failed: '+str(completed.returncode))
             rows = verify_shortcuts(target)
