@@ -69,6 +69,9 @@ class ApplicationTests(unittest.TestCase):
     def test_isolated_prewarm_sends_validated_draft_and_explicit_paths(self):
         import json
         desired = replace(self.old, light_body='#123456')
+        # Exercise equivalent directory aliases even when TEMP has no short-name alias.
+        self.app.data_root = self.app.data_root / '..' / self.app.data_root.name
+        self.app.install_root = self.app.install_root / '..' / self.app.install_root.name
         requests = []
         def run(command, **kwargs):
             requests.append((command, kwargs))
@@ -85,8 +88,8 @@ class ApplicationTests(unittest.TestCase):
         self.backend.start.assert_not_called()
         command, kwargs = requests[0]
         self.assertIn('--prepare-cursors', command)
-        self.assertEqual(Path(command[command.index('--data-dir') + 1]), self.app.data_root)
-        self.assertEqual(Path(command[command.index('--install-dir') + 1]), self.app.install_root)
+        self.assertEqual(Path(command[command.index('--data-dir') + 1]).resolve(), self.app.data_root.resolve())
+        self.assertEqual(Path(command[command.index('--install-dir') + 1]).resolve(), self.app.install_root.resolve())
         self.assertGreater(kwargs['timeout'], 0)
         self.assertFalse(list(self.app.data_root.glob('.prewarm-*')))
 

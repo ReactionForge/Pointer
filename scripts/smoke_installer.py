@@ -131,10 +131,10 @@ def verify_shortcuts(target):
         raise AssertionError('Missing desktop or Start Menu Pointer shortcut')
 
     def normalized(path):
-        return ntpath.normcase(ntpath.normpath(path.strip().strip('"')))
+        return ntpath.normcase(ntpath.normpath(str(Path(path.strip().strip('"')).resolve())))
 
-    executable = normalized(str((target / 'Pointer.exe').resolve()))
-    icon = normalized(str((target / 'pointer.ico').resolve()))
+    executable = normalized(str(target / 'Pointer.exe'))
+    icon = normalized(str(target / 'pointer.ico'))
     for row in rows:
         if normalized(row['target']) != executable:
             raise AssertionError('Shortcut targets a different installation: ' + row['path'])

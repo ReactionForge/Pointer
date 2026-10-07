@@ -2,6 +2,7 @@
 import base64
 import ctypes
 import json
+import ntpath
 from pathlib import Path
 import subprocess
 import tempfile
@@ -85,6 +86,30 @@ class InstallerSmokeTests(unittest.TestCase):
                 self.assertEqual(smoke.verify_shortcuts(target), records)
             self.assertEqual(extract.call_args_list,
                              [unittest.mock.call(Path(row['path'])) for row in records])
+
+    def test_short_and_long_path_aliases_compare_by_their_resolved_files(self):
+        short = Path('C:/Users/RUNNER~1/AppData/Local/Temp/Pointer 临时安装')
+        long = Path('C:/Users/runneradmin/AppData/Local/Temp/Pointer 临时安装')
+        aliases = {ntpath.normcase(str(root / name)): long / name
+                   for root in (short, long) for name in ('Pointer.exe', 'pointer.ico')}
+
+        def canonical(path, *args, **kwargs):
+            # Deterministic 8.3 expansion, independent of host volume settings.
+            return aliases[ntpath.normcase(str(path))]
+
+        for target, linked in [(short, long), (long, short)]:
+            with self.subTest(target=target, linked=linked):
+                rows = self.records(linked)
+                rows[0]['target'] = '"' + rows[0]['target'].upper() + '"'
+                rows[0]['icon'] = '"' + str(linked / 'pointer.ico') + '",0'
+                rows[1]['target'] = str(target / 'Pointer.exe')
+                rows[1]['icon'] = str(target / 'pointer.ico') + ',0'
+                with patch.object(Path, 'is_file', return_value=True), \
+                     patch.object(Path, 'resolve', autospec=True, side_effect=canonical), \
+                     patch.object(smoke, 'read_shortcuts', return_value=rows), \
+                     patch.object(smoke, 'verify_shell_icon') as extract:
+                    self.assertEqual(smoke.verify_shortcuts(target), rows)
+                self.assertEqual(extract.call_count, 2)
 
     def test_stale_target_wrong_icon_or_missing_shortcut_fails_before_extraction(self):
         self.require_verifier()
