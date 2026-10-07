@@ -212,7 +212,8 @@ class PreviewPanel(QWidget):
 
     def put_cached_pixmap(self, key, pixmap):
         if len(self._pixmap_cache) > 120:
-            self._pixmap_cache.clear()
+            # Evict the oldest frame instead of discarding the active animation.
+            self._pixmap_cache.pop(next(iter(self._pixmap_cache)))
         self._pixmap_cache[key] = pixmap
 
     def set_down(self, down):
@@ -239,10 +240,13 @@ class PreviewPanel(QWidget):
             self.refresh()
 
     def set_settings(self, settings):
+        if settings == self.settings:
+            return
         self.settings = settings
-        self._pixmap_cache.clear()
         was_down = self.down
         self.motion = ClickMotion(settings.press_ms, settings.release_ms, mode=settings.motion)
+        if not was_down:
+            self.frame = 0
         if was_down:
             self.motion.down = True
             self.motion._target = 0.9  # SCALES[-1]

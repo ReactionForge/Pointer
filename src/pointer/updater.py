@@ -1,5 +1,6 @@
 """In-App Auto-Update System with SemVer checking, GitHub Releases, and silent installer upgrade."""
 import hashlib
+from http.client import HTTPResponse
 import json
 import os
 from pathlib import Path
@@ -7,6 +8,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.request
 import urllib.error
 
@@ -23,6 +25,12 @@ class DownloadError(UpdateError):
     """Raised when downloading installer fails."""
 
 
+SEMVER_PATTERN = re.compile(r'^(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:-([0-9a-zA-Z.-]+))?(?:\+[0-9a-zA-Z.-]+)?$')
+MAX_RELEASE_PAGES = 3
+RELEASES_PER_PAGE = 30
+MAX_RELEASE_METADATA_BYTES = 1024 * 1024
+
+
 def parse_semver(v_str):
     """Parse semantic version string into comparable tuple: (major, minor, patch, is_prerelease, prerelease_parts).
 
@@ -31,8 +39,7 @@ def parse_semver(v_str):
     if not isinstance(v_str, str):
         return (0, 0, 0, 0, ())
     v = v_str.strip().lstrip('v').lstrip('V')
-    pattern = r'^(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:-([0-9a-zA-Z.-]+))?$'
-    match = re.match(pattern, v)
+    match = SEMVER_PATTERN.fullmatch(v)
     if not match:
         return (0, 0, 0, 0, ())
     major = int(match.group(1))
@@ -43,7 +50,8 @@ def parse_semver(v_str):
         # Pre-release version has lower precedence than normal version
         parts = []
         for p in prerelease_str.split('.'):
-            parts.append(int(p) if p.isdigit() else p.lower())
+            # Numeric identifiers sort before text and compare numerically.
+            parts.append((0, int(p)) if p.isdigit() else (1, p))
         return (major, minor, patch, 0, tuple(parts))
     # Normal release has higher precedence
     return (major, minor, patch, 1, ())
@@ -64,41 +72,83 @@ def is_update_available(latest_str, current_str):
     return compare_semver(latest_str, current_str) > 0
 
 
-def check_for_updates(current_version, repo="ReactionForge/Pointer", timeout=8):
-    """Check GitHub Releases API for the latest version.
+def _read_release_metadata(response, deadline):
+    if isinstance(response, HTTPResponse):
+        chunks, size = [], 0
+        while size <= MAX_RELEASE_METADATA_BYTES:
+            if time.monotonic() >= deadline:
+                raise TimeoutError('检查更新超时')
+            chunk = response.read1(min(65536, MAX_RELEASE_METADATA_BYTES + 1 - size))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            size += len(chunk)
+        raw_data = b''.join(chunks)
+    else:
+        raw_data = response.read(MAX_RELEASE_METADATA_BYTES + 1)
+    if len(raw_data) > MAX_RELEASE_METADATA_BYTES:
+        raise UpdateError('更新服务响应过大，请稍后重试')
+    return json.loads(raw_data.decode('utf-8'))
 
-    Returns dict with update metadata and asset URLs.
+
+def check_for_updates(current_version, repo="ReactionForge/Pointer", timeout=8, *, channel=None):
+    """Select the highest eligible release within three pages and a time budget.
+
+    A prerelease version follows prereleases and stable releases. A stable
+    version follows stable releases. The returned metadata dict is unchanged.
     """
-    url = f"https://api.github.com/repos/{repo}/releases/latest"
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": f"Pointer-AutoUpdater/{current_version}",
-            "Accept": "application/vnd.github.v3+json",
-        }
-    )
+    channel = channel or ('prerelease' if parse_semver(current_version)[4] else 'stable')
+    if channel not in ('stable', 'prerelease'):
+        raise UpdateError('无效的更新通道')
+    if not isinstance(timeout, (int, float)) or not 0 < timeout <= 30:
+        raise UpdateError('无效的更新检查超时')
+    deadline = time.monotonic() + timeout
+    selected = None
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as response:
-            raw_data = response.read()
-            data = json.loads(raw_data.decode("utf-8"))
+        for page in range(1, MAX_RELEASE_PAGES + 1):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError('检查更新超时')
+            url = f'https://api.github.com/repos/{repo}/releases?per_page={RELEASES_PER_PAGE}&page={page}'
+            req = urllib.request.Request(url, headers={
+                'User-Agent': f'Pointer-AutoUpdater/{current_version}',
+                'Accept': 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28',
+            })
+            with urllib.request.urlopen(req, timeout=remaining) as response:
+                releases = _read_release_metadata(response, deadline)
+            if time.monotonic() >= deadline:
+                raise TimeoutError('检查更新超时')
+            if not isinstance(releases, list) or any(not isinstance(item, dict) for item in releases):
+                raise UpdateError('更新服务返回了无效发布列表')
+            for candidate in releases:
+                tag = candidate.get('tag_name', '')
+                if candidate.get('draft') or not isinstance(tag, str) or not SEMVER_PATTERN.fullmatch(tag.lstrip('vV')):
+                    continue
+                if channel == 'stable' and (candidate.get('prerelease') or parse_semver(tag)[4]):
+                    continue
+                if selected is None or compare_semver(tag, selected['tag_name']) > 0:
+                    selected = candidate
+            if len(releases) < RELEASES_PER_PAGE:
+                break
     except (urllib.error.URLError, TimeoutError, OSError, ValueError) as error:
         raise UpdateError(f"检查更新失败：{error}") from error
 
+    data = selected or {'tag_name': current_version}
     tag_name = data.get("tag_name", "")
     latest_version = tag_name.lstrip('v').lstrip('V')
     available = is_update_available(latest_version, current_version)
 
     # Locate Windows installer asset (.exe)
     assets = data.get("assets", [])
+    if not isinstance(assets, list) or any(not isinstance(asset, dict) or not isinstance(asset.get('name'), str) for asset in assets):
+        raise UpdateError('更新服务返回了无效安装包列表')
     installer_asset = None
-    sha256_asset = None
 
     for asset in assets:
         name = asset.get("name", "").lower()
         if name.endswith(".exe") and ("setup" in name or "installer" in name or "pointer" in name):
             installer_asset = asset
-        elif name.endswith(".sha256") or "sha256" in name:
-            sha256_asset = asset
 
     if not installer_asset and assets:
         for asset in assets:
@@ -110,12 +160,29 @@ def check_for_updates(current_version, repo="ReactionForge/Pointer", timeout=8):
     asset_name = installer_asset.get("name") if installer_asset else None
     asset_size = installer_asset.get("size", 0) if installer_asset else 0
 
-    # Look for expected SHA256 in release body or sha256 asset
+    # Prefer the selected installer's GitHub digest, then a filename-specific hash.
     expected_sha256 = None
     body_text = data.get("body", "") or ""
-    hash_match = re.search(r'\b([0-9a-fA-F]{64})\b', body_text)
-    if hash_match:
-        expected_sha256 = hash_match.group(1).lower()
+    if not isinstance(body_text, str):
+        raise UpdateError('更新服务返回了无效更新说明')
+    digest = installer_asset.get('digest') if installer_asset else None
+    if isinstance(digest, str):
+        match = re.fullmatch(r'sha256:([0-9a-fA-F]{64})', digest, re.IGNORECASE)
+        if match:
+            expected_sha256 = match.group(1).lower()
+    if expected_sha256 is None and asset_name:
+        for line in body_text.splitlines():
+            match = re.search(r'\b([0-9a-fA-F]{64})\b', line)
+            if asset_name in line and match:
+                expected_sha256 = match.group(1).lower()
+                break
+    if expected_sha256 is None:
+        hashes = re.findall(r'\b([0-9a-fA-F]{64})\b', body_text)
+        named_checksum = any(re.search(r'\b[0-9a-fA-F]{64}\b', line) and
+                             re.search(r'\.(?:zip|exe)\b', line, re.IGNORECASE)
+                             for line in body_text.splitlines())
+        if len(hashes) == 1 and not named_checksum:
+            expected_sha256 = hashes[0].lower()
 
     return {
         "available": available,
@@ -123,7 +190,7 @@ def check_for_updates(current_version, repo="ReactionForge/Pointer", timeout=8):
         "latest_version": latest_version,
         "tag_name": tag_name,
         "release_name": data.get("name") or tag_name,
-        "published_at": data.get("published_at", "")[:10],
+        "published_at": (data.get("published_at") or "")[:10],
         "release_notes": body_text,
         "download_url": download_url,
         "asset_name": asset_name,
@@ -184,10 +251,7 @@ def trigger_silent_upgrade(installer_path, application=None):
         raise FileNotFoundError(f"升级安装包不存在：{installer}")
 
     if application is not None:
-        try:
-            application.prepare_upgrade()
-        except Exception:
-            pass
+        application.prepare_upgrade()
 
     # Launch Inno Setup installer silently
     # /VERYSILENT /SUPPRESSMSGBOXES /NORESTART

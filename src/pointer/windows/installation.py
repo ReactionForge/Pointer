@@ -159,6 +159,7 @@ def _shortcuts():
                          f"$pointerShortcut.TargetPath = {literal(executable)}",
                          f"$pointerShortcut.Arguments = {literal(arguments)}",
                          f"$pointerShortcut.WorkingDirectory = {literal(INSTALL_ROOT.resolve())}",
+                         f"$pointerShortcut.IconLocation = {literal(str(INSTALL_ROOT.resolve() / 'pointer.ico') + ',0')}",
                          "$pointerShortcut.Save()"])
     encoded = base64.b64encode("\n".join(commands).encode("utf-16-le")).decode("ascii")
     startup_info = subprocess.STARTUPINFO()

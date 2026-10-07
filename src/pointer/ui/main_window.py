@@ -2,12 +2,13 @@
 from dataclasses import replace
 import json
 import sys
-from PySide6.QtCore import Qt, QThread, QTimer, Slot, QPropertyAnimation, QEasingCurve, QEvent, QSize
+import threading
+from PySide6.QtCore import Qt, QThread, QTimer, Slot, Signal, QPropertyAnimation, QEasingCurve, QEvent, QSize
 from PySide6.QtGui import QFont, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QFrame, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QStackedWidget, QScrollArea, QFileDialog, QMessageBox,
-    QGraphicsOpacityEffect, QStyle
+    QGraphicsOpacityEffect, QStyle, QSizePolicy
 )
 from pointer.cursor.settings import CursorSettings, _write_json
 from pointer.paths import DATA_ROOT, INSTALL_ROOT, ROOT
@@ -124,6 +125,8 @@ class ToastWidget(QFrame):
 
 class MainWindow(QMainWindow):
     """Revolutionary Modern Studio Window with Integrated Header & Floating Capsule Navigation."""
+    prewarm_finished = Signal()
+
     def __init__(self, application):
         super().__init__()
         initialize_fonts()
@@ -153,7 +156,9 @@ class MainWindow(QMainWindow):
                 self.icon_path = candidate
                 break
         if self.icon_path:
-            self.setWindowIcon(QIcon(str(self.icon_path)))
+            icon = QIcon(str(self.icon_path))
+            self.setWindowIcon(icon)
+            QApplication.instance().setWindowIcon(icon)
 
         self.resize(1180, 800)
         self.setMinimumSize(880, 620)
@@ -382,9 +387,14 @@ class MainWindow(QMainWindow):
         self.refresh_status()
 
         self._last_prewarmed_draft = None
+        self._prewarm_running = False
+        self._prewarm_attempted_draft = None
+        self._prewarm_closing = False
+        self._prewarm_lock = threading.Lock()
+        self.prewarm_finished.connect(self._prewarm_done)
         self._prewarm_timer = QTimer(self)
         self._prewarm_timer.setSingleShot(True)
-        self._prewarm_timer.setInterval(250)
+        self._prewarm_timer.setInterval(1000)
         self._prewarm_timer.timeout.connect(self._trigger_prewarm)
         self._schedule_prewarm()
 
@@ -403,7 +413,7 @@ class MainWindow(QMainWindow):
 
     def _schedule_prewarm(self, delay=None):
         if hasattr(self, '_prewarm_timer'):
-            interval = 200 if delay is None else delay
+            interval = 1000 if delay is None else delay
             self._prewarm_timer.start(interval)
 
     def _trigger_prewarm(self):
@@ -412,50 +422,41 @@ class MainWindow(QMainWindow):
         draft = self._draft
         if getattr(self, '_last_prewarmed_draft', None) == draft:
             return
-        import threading
+        with self._prewarm_lock:
+            if self._prewarm_running or self._prewarm_closing:
+                return
+            self._prewarm_running = True
+            self._prewarm_attempted_draft = draft
         thread = threading.Thread(target=self._run_prewarm, args=(draft,), daemon=True)
         thread.start()
 
     def _run_prewarm(self, draft):
         try:
-            self.application.prewarm(draft)
+            if getattr(type(self.application), 'prewarm_isolated', None) is not None:
+                self.application.prewarm_isolated(draft)
+            else:
+                self.application.prewarm(draft)
             if self._draft == draft:
                 self._last_prewarmed_draft = draft
         except Exception:
             pass
+        finally:
+            with self._prewarm_lock:
+                self._prewarm_running = False
+            try:
+                self.prewarm_finished.emit()
+            except RuntimeError:
+                pass  # The settings window may have been destroyed meanwhile.
+
+    @Slot()
+    def _prewarm_done(self):
+        if not self._prewarm_closing and self._draft != self._prewarm_attempted_draft:
+            self._schedule_prewarm()
 
     def start_preset_prewarm(self):
-        import threading
-        thread = threading.Thread(target=self._run_preset_prewarm, daemon=True)
-        thread.start()
-
-    def _run_preset_prewarm(self):
-        if not hasattr(self, 'application') or not hasattr(self.application, 'prewarm'):
-            return
-        from pointer.ui.pages.appearance import WORKSPACE_PRESETS
-        draft = self._draft
-        try:
-            self.application.prewarm(draft)
-            if self._draft == draft:
-                self._last_prewarmed_draft = draft
-        except Exception:
-            pass
-        current_size = getattr(draft, 'size', 32)
-        for preset in WORKSPACE_PRESETS:
-            if getattr(self, 'busy', False) or self._draft != draft:
-                return
-            try:
-                preset_settings = replace(
-                    draft,
-                    size=current_size,
-                    light_body=preset['light_body'],
-                    light_outline=preset['light_outline'],
-                    dark_body=preset['dark_body'],
-                    dark_outline=preset['dark_outline'],
-                )
-                self.application.prewarm(preset_settings)
-            except Exception:
-                pass
+        # Build only the latest draft after input settles; speculative palettes
+        # competed with previews and multiplied the resource renderer threads.
+        self._schedule_prewarm()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -486,9 +487,7 @@ class MainWindow(QMainWindow):
             return
         self._draft = replace(self._draft, **fields)
         self.sync()
-        discrete_fields = {'light_body', 'light_outline', 'dark_body', 'dark_outline', 'appearance', 'motion', 'size'}
-        delay = 10 if (_immediate or any(k in discrete_fields for k in fields)) else 200
-        self._schedule_prewarm(delay=delay)
+        self._schedule_prewarm()
 
     def sync(self):
         self.pages[0].setEnabled(not self.busy)
@@ -575,7 +574,7 @@ class MainWindow(QMainWindow):
         if self.busy or self._draft == self.applied or self.pages[0].invalid_fields:
             return
         desired = self._draft
-        self.run_operation(lambda: self.application.apply(desired, preserve_runtime=True), '配置已成功应用至 Windows 系统', replace_draft=True)
+        self.run_operation(lambda: self.application.apply(desired), '配置已应用，光标效果已启动', replace_draft=True)
 
     def run_operation(self, operation, success, replace_draft=False):
         if self.busy:
@@ -644,13 +643,22 @@ class MainWindow(QMainWindow):
         if self.busy:
             return
         try:
-            state = self.application.backend.snapshot()
-            if state['running']:
-                self.status.setText('●  光标效果运行中')
-                self.status.setStyleSheet('color: ' + ('#b2b5c0' if self.ui_dark else '#5d5f68') + '; font-weight: 600; font-size: 12px;')
+            state = self.application.runtime_status()
+            if state.get('last_error'):
+                message = '光标后台异常'
+            elif state.get('starting'):
+                message = '光标效果启动中'
+            elif state.get('effects_paused') and state.get('pause_reason') == 'fullscreen':
+                message = '全屏免打扰 · 暂停动效'
+            elif state.get('running'):
+                message = '光标效果运行中'
             else:
-                self.status.setText('○  光标效果已暂停')
-                self.status.setStyleSheet('color: ' + theme_colors(self.ui_dark)['muted'] + '; font-weight: 500; font-size: 12px;')
+                message = '光标效果已暂停 · 可在设置中恢复'
+            self.status.setText(message)
+            colors = theme_colors(self.ui_dark)
+            style = 'color: ' + colors['muted'] + '; font-weight: 500; font-size: 12px;'
+            if self.status.styleSheet() != style:
+                self.status.setStyleSheet(style)
             if state.get('last_error'):
                 self.feedback.setText('后台错误：' + state['last_error'])
         except Exception:
@@ -666,9 +674,12 @@ class MainWindow(QMainWindow):
             if path.exists():
                 path.replace(path.with_name(f'settings.invalid-{time.time_ns()}.json'))
             self.load_error = None
-        self._draft = replace(CursorSettings(), startup=self.applied.startup)
+        self._draft = replace(CursorSettings(), **{name: getattr(self._draft, name) for name in
+            ('startup', 'tray_enabled', 'auto_check_update', 'skip_update_version')})
         self.sync()
-        self.toast.show_message('已恢复默认配置')
+        self.feedback.setText('默认参数已载入草稿，点击“应用更改”后生效。')
+        self.toast.show_message('默认参数已载入草稿')
+        self._schedule_prewarm()
 
     def import_settings(self):
         path, _ = QFileDialog.getOpenFileName(self, '导入配置', '', 'JSON (*.json)')
@@ -728,60 +739,79 @@ class MainWindow(QMainWindow):
         return v_file.read_text(encoding='utf-8').strip() if v_file.exists() else '1.3.0-beta.1'
 
     def _check_update_silent_startup(self):
-        import threading
-        def worker():
-            try:
-                from pointer.updater import check_for_updates
-                info = check_for_updates(self.current_version())
-                if info.get('available') and info.get('latest_version') != getattr(self.applied, 'skip_update_version', ''):
-                    QTimer.singleShot(0, lambda: self._show_update_dialog(info))
-            except Exception:
-                pass
-        threading.Thread(target=worker, daemon=True).start()
+        if self.isVisible():
+            self._update_checker().start(self.current_version())
+
+    def _update_checker(self):
+        if not hasattr(self, '_update_check'):
+            from .update_dialog import UpdateCheck
+            self._update_check = UpdateCheck(self)
+            self._update_check.completed.connect(self._update_check_completed)
+            self._update_check.cancelled.connect(self._update_check_cancelled)
+            label = self.pages[3].update_status_lbl
+            label.setTextFormat(Qt.TextFormat.PlainText)
+            label.setWordWrap(True)
+            label.setMinimumWidth(120)
+            label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        return self._update_check
 
     def check_updates_interactive(self):
+        if not self.isVisible():
+            return
         pref_page = self.pages[3]
         if hasattr(pref_page, 'update_status_lbl'):
             pref_page.update_status_lbl.setText('正在检查更新…')
+            pref_page.update_status_lbl.setToolTip('')
             pref_page.update_status_lbl.setStyleSheet('color: #007aff; font-size: 12px;')
         if hasattr(pref_page, 'check_update_btn'):
             pref_page.check_update_btn.setEnabled(False)
 
-        import threading
-        def worker():
-            try:
-                from pointer.updater import check_for_updates
-                info = check_for_updates(self.current_version())
-                def on_done():
-                    if hasattr(pref_page, 'check_update_btn'):
-                        pref_page.check_update_btn.setEnabled(True)
-                    if info.get('available'):
-                        if hasattr(pref_page, 'update_status_lbl'):
-                            pref_page.update_status_lbl.setText(f"发现新版本 v{info.get('latest_version')}")
-                            pref_page.update_status_lbl.setStyleSheet('color: #34c759; font-size: 12px;')
-                        self._show_update_dialog(info)
-                    else:
-                        cur = self.current_version()
-                        if hasattr(pref_page, 'update_status_lbl'):
-                            pref_page.update_status_lbl.setText(f"当前已是最新版本 (v{cur})")
-                            pref_page.update_status_lbl.setStyleSheet('color: #34c759; font-size: 12px;')
-                        self.toast.show_message(f"当前已是最新版本 (v{cur})")
-                QTimer.singleShot(0, on_done)
-            except Exception as error:
-                def on_error():
-                    if hasattr(pref_page, 'check_update_btn'):
-                        pref_page.check_update_btn.setEnabled(True)
-                    if hasattr(pref_page, 'update_status_lbl'):
-                        pref_page.update_status_lbl.setText(f"检查失败：{error}")
-                        pref_page.update_status_lbl.setStyleSheet('color: #ff453a; font-size: 12px;')
-                    self.toast.show_message(f"检查更新失败：{error}", is_error=True)
-                QTimer.singleShot(0, on_error)
-        threading.Thread(target=worker, daemon=True).start()
+        self._update_checker().start(self.current_version(), interactive=True)
+
+    @Slot(bool)
+    def _update_check_cancelled(self, interactive):
+        if interactive:
+            pref_page = self.pages[3]
+            pref_page.check_update_btn.setEnabled(True)
+            pref_page.update_status_lbl.setText('检查已取消。')
+            pref_page.update_status_lbl.setStyleSheet('font-size: 12px;')
+
+    @Slot(object, str, bool)
+    def _update_check_completed(self, info, error, interactive):
+        if interactive:
+            pref_page = self.pages[3]
+            pref_page.check_update_btn.setEnabled(True)
+        if not self.isVisible():
+            return
+        if error:
+            if interactive:
+                label = pref_page.update_status_lbl
+                message = f'检查失败：{error}'
+                label.setStyleSheet('color: #ff453a; font-size: 12px;')
+                label.setToolTip(message)
+                label.setText(label.fontMetrics().elidedText(message, Qt.TextElideMode.ElideRight,
+                                                            max(120, min(480, label.width() - 8))))
+                self.toast.show_message('检查更新失败，请查看版本区的说明。', is_error=True)
+            return
+        if info.get('available'):
+            if interactive:
+                pref_page.update_status_lbl.setText(f"发现新版本 v{info.get('latest_version')}")
+                pref_page.update_status_lbl.setStyleSheet('color: #34c759; font-size: 12px;')
+            if interactive or info.get('latest_version') != getattr(self.applied, 'skip_update_version', ''):
+                self._show_update_dialog(info)
+        elif interactive:
+            message = f'当前已是最新版本 (v{self.current_version()})'
+            pref_page.update_status_lbl.setText(message)
+            pref_page.update_status_lbl.setStyleSheet('color: #34c759; font-size: 12px;')
+            self.toast.show_message(message)
 
     def _show_update_dialog(self, info):
+        if not self.isVisible() or QApplication.activeModalWidget() is not None:
+            return
         from .update_dialog import UpdateDialog
         dialog = UpdateDialog(info, self.application, self)
         dialog.exec()
+        dialog.deleteLater()
 
     def confirm_restore(self):
         if ask_confirmation(self, '恢复原光标', '恢复 Windows 原光标并关闭 Pointer 开机启动？', '恢复原光标', '取消') == QMessageBox.StandardButton.Yes:
@@ -795,6 +825,8 @@ class MainWindow(QMainWindow):
         if self._draft != self.applied and ask_confirmation(self, '未应用的修改', '放弃未应用的修改并关闭窗口？', '放弃修改', '继续编辑') != QMessageBox.StandardButton.Yes:
             event.ignore()
             return
+        self._prewarm_closing = True
+        self._prewarm_timer.stop()
         event.accept()
 
 

@@ -1,12 +1,14 @@
 """Cursor family workspace; observation state never enters CursorSettings."""
 from dataclasses import replace
 import re
+import time
 
 from PySide6.QtCore import Qt, QTimer, QSize, QRectF, QEvent, Signal
-from PySide6.QtGui import QImage, QPixmap, QIcon, QPainter, QColor, QPen, QPainterPath
+from PySide6.QtGui import QImage, QPixmap, QIcon, QPainter, QColor, QPen, QPainterPath, QFont
 from PySide6.QtWidgets import (
     QWidget, QFrame, QLabel, QPushButton, QComboBox, QVBoxLayout,
     QHBoxLayout, QGridLayout, QButtonGroup, QToolButton, QLineEdit, QLayout,
+    QStylePainter, QStyleOptionToolButton, QStyle,
 )
 from pointer.cursor.resources import RenderRequest, render_cursor, DPI_VARIANTS
 from pointer.cursor.motion import ClickMotion
@@ -358,9 +360,28 @@ class FamilyPreviewPanel(PreviewPanel):
             self.refresh()
 
     def tick(self):
-        if getattr(self.window(), 'reduce_motion', False):
+        if not self.isVisible() or getattr(self.window(), 'reduce_motion', False):
+            self.timer.stop()
             return
         super().tick()
+        self._sync_animation_timer()
+
+    def _sync_animation_timer(self):
+        if not hasattr(self, 'timer'):
+            return
+        loading = self.role.currentData() in ('busy', 'working')
+        transitioning = self.settings.motion != 'off' and (self.down != self.motion.down or
+            time.monotonic() < self.motion._since + self.motion._duration)
+        active = self.isVisible() and not getattr(self.window(), 'reduce_motion', False) and (loading or transitioning)
+        self.timer.start() if active else self.timer.stop()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._sync_animation_timer()
+
+    def hideEvent(self, event):
+        self.timer.stop()
+        super().hideEvent(event)
 
     def update_background(self):
         mode = self.background.currentData()
@@ -392,6 +413,28 @@ class FamilyPreviewPanel(PreviewPanel):
             self._role_icon_key = icon_key
         for kind, button in self.role_buttons.items():
             button.setChecked(kind == role)
+        self._sync_animation_timer()
+
+
+class FamilyShapeButton(QToolButton):
+    """Give each specimen a stable caption line independent of icon bounds."""
+    def paintEvent(self, event):
+        option = QStyleOptionToolButton()
+        self.initStyleOption(option)
+        option.icon = QIcon()
+        option.text = ''
+        painter = QStylePainter(self)
+        painter.drawComplexControl(QStyle.ComplexControl.CC_ToolButton, option)
+        size = self.iconSize()
+        self.icon().paint(painter, (self.width()-size.width())//2, 6, size.width(), size.height())
+        font = QFont('Microsoft YaHei UI')
+        font.setPixelSize(14)
+        font.setWeight(QFont.Weight.Medium if self.isChecked() else QFont.Weight.Normal)
+        painter.setFont(font)
+        colors = widget_colors(self)
+        painter.setPen(QColor(colors['text'] if self.isEnabled() else colors['disabled_text']))
+        painter.drawText(self.rect().adjusted(4, size.height()+10, -4, -6),
+                         Qt.AlignmentFlag.AlignCenter, self.text())
 
 
 class FamilyAppearancePage(AppearancePage):
@@ -420,7 +463,7 @@ class FamilyAppearancePage(AppearancePage):
         self.shape_group = QButtonGroup(self)
         for index, (label, style) in enumerate([('圆润', 'sequoia'), ('细笔', 'quill'), ('切面', 'facet'),
                                               ('长矛', 'lance'), ('滴形', 'droplet'), ('直角', 'rectilinear')]):
-            button = QToolButton()
+            button = FamilyShapeButton()
             button.setText(label)
             button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
             button.setCheckable(True)
@@ -735,10 +778,14 @@ class FamilyAppearancePage(AppearancePage):
         self.aura_glow.blockSignals(True)
         self.aura_glow.setChecked(settings.aura_glow)
         self.aura_glow.blockSignals(False)
-        for theme, label in self.color_previews.items():
-            pixmap = cursor_pixmap(replace(settings, size=32), 'arrow', theme).scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-            label.setPixmap(pixmap)
-            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        color_key = (settings.style, settings.light_body, settings.light_outline, settings.dark_body,
+                     settings.dark_outline, settings.aura_glow, settings.aura_color)
+        if color_key != getattr(self, '_color_preview_key', None):
+            for theme, label in self.color_previews.items():
+                pixmap = cursor_pixmap(replace(settings, size=32), 'arrow', theme).scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                label.setPixmap(pixmap)
+                label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self._color_preview_key = color_key
 
 
 def workspace_style(dark=False):

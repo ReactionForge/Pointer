@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import zipfile
@@ -31,6 +32,50 @@ def parse_version(version):
     if max(numeric)>65535:
         raise ValueError('Windows version components exceed 65535')
     return numeric, version
+
+
+def verify_executable_icon(executable, icon_path):
+    """Reject releases whose default PE icon omits the accepted artwork."""
+    import pefile  # Already supplied by the builder's PyInstaller dependency.
+    source = Path(icon_path).read_bytes()
+    reserved, kind, count = struct.unpack_from('<HHH', source)
+    if reserved or kind != 1 or not count or len(source) < 6 + 16 * count:
+        raise ValueError('Invalid release ICO directory')
+    expected = {}
+    for index in range(count):
+        width, height, _, _, _, _, size, offset = struct.unpack_from('<BBBBHHII', source, 6 + 16 * index)
+        if offset < 6 + 16 * count or offset + size > len(source):
+            raise ValueError('Invalid release ICO image')
+        expected[(width or 256, height or 256)] = hashlib.sha256(source[offset:offset + size]).digest()
+    required = {(n, n) for n in (16, 24, 32, 48, 64, 128, 256)}
+    if set(expected) != required:
+        raise ValueError('Release ICO must include all seven shell and high-DPI sizes')
+    pe = pefile.PE(str(executable))
+    try:
+        icons, group = {}, None
+        resources = getattr(pe, 'DIRECTORY_ENTRY_RESOURCE', None)
+        for entry in resources.entries if resources else ():
+            if entry.id not in (3, 14):
+                continue
+            for resource in entry.directory.entries:
+                data = resource.directory.entries[0].data.struct
+                body = pe.get_data(data.OffsetToData, data.Size)
+                if entry.id == 3:
+                    icons[resource.id] = hashlib.sha256(body).digest()
+                elif group is None:
+                    group = body
+        actual = {}
+        if group and len(group) >= 6:
+            group_count = struct.unpack_from('<H', group, 4)[0]
+            if len(group) == 6 + 14 * group_count:
+                for index in range(group_count):
+                    width, height, _, _, _, _, _, identity = struct.unpack_from('<BBBBHHIH', group, 6 + 14 * index)
+                    actual[(width or 256, height or 256)] = icons.get(identity)
+        if actual != expected:
+            raise ValueError('Default executable icon does not contain the accepted artwork at every size')
+    finally:
+        pe.close()
+    return sorted(width for width, _ in expected)
 
 
 def build_release(version, compiler=None, skip_installer=False, output_root=None):
@@ -69,6 +114,7 @@ def build_release(version, compiler=None, skip_installer=False, output_root=None
                     "--paths", str(ROOT / "src"),
                     str(ROOT / "packaging" / "windows" / "entrypoint.py")], cwd=ROOT, check=True,env=clean_build_environment())
     output = dist_dir / "Pointer"
+    verify_executable_icon(output / 'Pointer.exe', ROOT / 'packaging/windows/pointer.ico')
     # Compile on the builder; downloaded clients never require csc or sources.
     from pointer.windows.composition_host import prepare_helper, BUNDLED_HELPER
     helper = prepare_helper(build_dir / 'composition-cache')

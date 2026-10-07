@@ -216,6 +216,8 @@ class RedesignTests(unittest.TestCase):
 
     def test_preview_loading_animation_throttled_to_native_speed(self):
         import time
+        self.window.show()
+        QT_APP.processEvents()
         panel = self.window.preview
         panel.setVisible(True)
         # Select busy role

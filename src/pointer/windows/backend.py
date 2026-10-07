@@ -40,13 +40,16 @@ class WindowsBackend:
         backup_path = self.data_root / startup.STARTUP_BACKUP.name
         previous = self.previous_installation()
         previous_running = bool(previous and engine.running_directory(previous,previous.parent/'data'))
-        return {'registry': {'cursor_values': scheme.read_values(scheme.KEY_PATH),
+        return {**self.runtime_status(), 'registry': {'cursor_values': scheme.read_values(scheme.KEY_PATH),
                              'scheme_name': scheme.ADAPTIVE_SCHEME_NAME,
                              'previous_named_scheme': schemes.get(scheme.ADAPTIVE_SCHEME_NAME)},
                 'run': _run_value(), 'running': engine.running_directory(self.engine_root,self.data_root),
                 'previous_root': str(previous) if previous_running else None,
                 'startup_enabled': self.startup_enabled(),
                 'startup_backup': backup_path.read_text(encoding='utf-8') if backup_path.exists() else None}
+
+    def runtime_status(self):
+        return engine.status_directory(self.engine_root, self.data_root)
 
     def stop(self):
         previous = self.previous_installation()

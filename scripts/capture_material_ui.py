@@ -48,6 +48,7 @@ def main():
     backend = Mock()
     backend.settings.return_value = CursorSettings(tray_enabled=False, auto_check_update=False)
     backend.backend.snapshot.return_value = {'running': False, 'startup_enabled': False}
+    backend.runtime_status.return_value = {'running': False}
     for name in ('apply', 'pause', 'resume', 'restore', 'set_startup'):
         getattr(backend, name).side_effect = RuntimeError('Isolated reference preview blocks system actions')
     window = SafeMaterialWindow(backend, sidebar_store=SidebarStore(ROOT/'.local/material-v3/sidebar.json') if args.show else None,

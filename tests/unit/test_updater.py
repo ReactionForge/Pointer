@@ -51,7 +51,7 @@ class UpdaterTests(unittest.TestCase):
             ],
         }
         mock_resp = MagicMock()
-        mock_resp.read.return_value = json.dumps(fake_response).encode("utf-8")
+        mock_resp.read.return_value = json.dumps([fake_response]).encode("utf-8")
         mock_resp.__enter__.return_value = mock_resp
 
         with patch("urllib.request.urlopen", return_value=mock_resp):

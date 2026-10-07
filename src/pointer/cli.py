@@ -93,6 +93,17 @@ def restore_theme():
     return _application().restore()
 
 
+def prepare_cursors(settings_file, data_root):
+    """Internal worker: no settings migration, registry access, or cursor service."""
+    from pointer.cursor.settings import CursorSettings, _read_json
+    from pointer.cursor.resources import prepare_resources
+    if settings_file is None:
+        raise ValueError('Resource preparation requires a settings file')
+    settings = CursorSettings.from_dict(_read_json(settings_file))
+    bundle = prepare_resources(settings, Path(data_root)/'cursor-cache')
+    return {'ready':True, 'key':bundle.key, 'size':bundle.size}
+
+
 def dispatch(action):
     """Downloaded control buttons always operate on the installed helper."""
     if action in ('gui', 'test_page'):
@@ -120,7 +131,7 @@ def main(argv=None):
         sys.stderr = io.StringIO()
     parser = argparse.ArgumentParser(description="Pointer cursor installer")
     group = parser.add_mutually_exclusive_group()
-    for action in ("install", "apply", "stop", "restore", "reference", "run", "diagnose", "test-page", "tilt", "shrink", 'gui', 'prepare-upgrade', 'uninstall'):
+    for action in ("install", "apply", "stop", "restore", "reference", "run", "diagnose", "test-page", "tilt", "shrink", 'gui', 'prepare-upgrade', 'prepare-cursors', 'uninstall'):
         group.add_argument("--" + action, action="store_true")
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--report", type=Path)
@@ -136,7 +147,7 @@ def main(argv=None):
     if args.run:
         switcher._run()
         return 0
-    action = next((name for name in ("install", "apply", "stop", "restore", "reference", "diagnose", "test_page", "tilt", "shrink", 'gui', 'prepare_upgrade', 'uninstall')
+    action = next((name for name in ("install", "apply", "stop", "restore", "reference", "diagnose", "test_page", "tilt", "shrink", 'gui', 'prepare_upgrade', 'prepare_cursors', 'uninstall')
                    if getattr(args, name)), "gui")
     if action in ('gui', 'test_page'):
         from pointer.ui.main_window import launch
@@ -149,8 +160,11 @@ def main(argv=None):
     messages.update(tilt="已启用倾斜动效：按下时箭头整体向左下倾斜、下方轻微跟随，小手向左倾斜，松开回正。",
                     shrink="已启用缩小回弹：按下缩小约 10%，松开恢复。")
     messages.update(prepare_upgrade='已为升级做好准备。', uninstall='原光标已恢复，可以卸载。')
+    messages['prepare_cursors'] = '光标资源准备完成。'
     try:
-        if action == 'apply' and (args.settings_file or args.preserve_runtime):
+        if action == 'prepare_cursors':
+            result.update(prepare_cursors(args.settings_file, args.data_dir or DATA_ROOT))
+        elif action == 'apply' and (args.settings_file or args.preserve_runtime):
             settings = _application().store.import_file(args.settings_file) if args.settings_file else None
             result.update(apply_theme(settings, preserve_runtime=args.preserve_runtime))
         elif action == 'uninstall':
@@ -162,7 +176,7 @@ def main(argv=None):
         result.update(exit_code=1, error=f"{type(error).__name__}: {error}")
     report = args.report or DATA_ROOT / "last-operation.json"
     switcher._atomic_json(report, result)
-    if not args.quiet and action != "test_page":
+    if not args.quiet and action not in ("test_page", 'prepare_cursors'):
         message = result.get("error", messages[action])
         ctypes.windll.user32.MessageBoxW(None, message, "Pointer", 0x10 if result["exit_code"] else 0x40)
     print(json.dumps(result, ensure_ascii=False))

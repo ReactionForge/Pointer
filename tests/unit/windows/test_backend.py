@@ -26,6 +26,17 @@ class BackendTests(unittest.TestCase):
              patch.object(module.startup, '_startup_command', return_value='Pointer.exe --run'):
             self.assertFalse(self.backend.startup_enabled())
 
+    def test_runtime_status_checks_only_owned_engine_identity(self):
+        import pointer.windows.backend as module
+        status = {'running': False, 'last_error': 'cursor load failed'}
+        with patch.object(module.engine, 'status_directory', return_value=status, create=True) as read, \
+             patch.object(module.scheme, 'read_values') as registry, \
+             patch.object(self.backend, 'previous_installation') as previous:
+            self.assertEqual(self.backend.runtime_status(), status)
+        read.assert_called_once_with(self.backend.engine_root, self.backend.data_root)
+        registry.assert_not_called()
+        previous.assert_not_called()
+
     def test_unchanged_run_is_not_written_during_rollback(self):
         import pointer.windows.backend as module
         snapshot = {'registry':{},'run':None,'startup_backup':None,'running':False}

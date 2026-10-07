@@ -490,39 +490,78 @@ class MaterialWindow(DualWindow):
     def set_sidebar_transparent(self, enabled):
         self.sidebar_appearance = replace(self.sidebar_appearance, enabled=bool(enabled))
         self.sidebar_transparent = self._effective_transparency()
-        self._apply_reference_theme()
-        self.sidebar_controls.sync()
+        self._refresh_sidebar_preview()
 
     def set_sidebar_transparency(self, value):
         key = 'dark_alpha' if self.ui_dark else 'light_alpha'
         self.sidebar_appearance = replace(self.sidebar_appearance, **{key: 255 - value})
-        self._apply_reference_theme()
-        self.sidebar_controls.sync()
+        self._refresh_sidebar_preview()
 
     def cancel_sidebar_settings(self):
         self.sidebar_appearance = self.sidebar_saved
         self.sidebar_transparent = self._effective_transparency()
-        self._apply_reference_theme()
-        self.sidebar_controls.sync()
+        self._refresh_sidebar_preview()
 
     def set_sidebar_blur(self, value):
         self.sidebar_appearance = replace(self.sidebar_appearance, blur=int(value))
         self.sidebar_transparent = self._effective_transparency()
-        self._apply_reference_theme()
+        self._refresh_sidebar_preview()
+
+    def _refresh_sidebar_preview(self):
+        # Opacity and Gaussian radius change the material, not the widget theme.
+        self.material_shell.update()
+        self._sync_sidebar_backdrop()
         self.sidebar_controls.sync()
+        self._sync_material_actions()
+
+    def _sync_material_actions(self):
+        cursor_dirty = self._draft != self.applied
+        appearance_dirty = self.sidebar_dirty
+        if appearance_dirty:
+            self.draft_label.setText('外观待保存 · 光标待应用' if cursor_dirty else '外观待保存')
+            self.apply_button.setText('保存并应用' if cursor_dirty else '保存外观')
+        else:
+            self.draft_label.setText('光标待应用' if cursor_dirty else '无待应用更改')
+            self.apply_button.setText('应用更改')
+        if self.busy:
+            self.apply_button.setText('处理中…')
+        pending = cursor_dirty or appearance_dirty
+        color = ('#ffcf81' if self.ui_dark else '#9a4b00') if pending else approved_colors(self.ui_dark)['muted']
+        style = f'color: {color}; font-weight: 600;'
+        if self.draft_label.styleSheet() != style:
+            self.draft_label.setStyleSheet(style)
+        self.discard.setEnabled((cursor_dirty or appearance_dirty) and not self.busy)
+        self.apply_button.setEnabled((cursor_dirty or (appearance_dirty and self.sidebar_store is not None))
+            and not self.busy and not self.load_error and not self.pages[0].invalid_fields)
+        self.discard.setAccessibleName('取消未保存的外观和未应用的光标修改')
+
+    def discard_changes(self):
+        if self._material_ready:
+            self.cancel_sidebar_settings()
+        super().discard_changes()
+
+    def apply_draft(self):
+        if self.busy or self.load_error or self.pages[0].invalid_fields:
+            return
+        if self.sidebar_dirty and not self.save_sidebar_settings():
+            return
+        super().apply_draft()
 
     def save_sidebar_settings(self):
         if self.sidebar_store is None:
             self.sidebar_controls.status.setText('此捕获窗口不保存外观，请使用安全预览入口。')
-            return
+            return False
         try:
             self.sidebar_store.save(self.sidebar_appearance)
         except OSError as error:
             self.sidebar_controls.status.setText(f'外观保存失败：{error}。可重试或取消预览。')
-            return
+            self.feedback.setText(f'外观保存失败：{error}。可重试或取消。')
+            return False
         self.sidebar_saved = self.sidebar_appearance
-        self.sidebar_controls.sync()
-        self.sidebar_controls.status.setText('侧栏外观已保存，重启预览后恢复。')
+        self.sync()
+        self.sidebar_controls.status.setText('侧栏外观已保存，下次启动恢复。')
+        self.feedback.setText('侧栏外观已保存')
+        return True
 
     def closeEvent(self, event):
         if self.busy:
@@ -534,6 +573,8 @@ class MaterialWindow(DualWindow):
                 event.ignore()
                 return
             event.accept()
+            self._prewarm_closing = True
+            self._prewarm_timer.stop()
             self._close_sidebar_backdrop()
             return
         super().closeEvent(event)
@@ -545,7 +586,7 @@ class MaterialWindow(DualWindow):
             self.material_policy = transparency_policy()
         self.sidebar_transparent = self._effective_transparency()
         self.sidebar_controls.sync()
-        self._apply_reference_theme()
+        self._refresh_sidebar_preview()
 
     def nativeEvent(self, event_type, message):
         if self._material_ready and sys.platform == 'win32' and not self._policy_override:
@@ -561,6 +602,7 @@ class MaterialWindow(DualWindow):
     def sync(self):
         super().sync()
         if self._material_ready:
+            self._sync_material_actions()
             self._fit_observation_height()
             self.sidebar_controls.sync()
 
@@ -707,7 +749,7 @@ class MaterialWindow(DualWindow):
         super().showEvent(event)
         if self._material_ready:
             self.material_active=self.isActiveWindow()
-            self._apply_reference_theme()
+            self._refresh_sidebar_preview()
             QTimer.singleShot(0, self._start_sidebar_backdrop)
 
     def hideEvent(self, event):
@@ -726,7 +768,11 @@ class MaterialWindow(DualWindow):
             self.material_active = event.type() == QEvent.Type.WindowActivate
             if self.material_active:
                 self.refresh_material_policy()
-            self._apply_reference_theme()
+            self._refresh_sidebar_preview()
+            for button in self.title_bar.buttons.values():
+                button.update()
         if self._material_ready and event.type() == QEvent.Type.WindowStateChange:
-            self._apply_reference_theme()
+            self._refresh_sidebar_preview()
+            for button in self.title_bar.buttons.values():
+                button.update()
         return super().event(event)

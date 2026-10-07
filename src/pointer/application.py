@@ -1,7 +1,11 @@
 """Coordinate preferences, prepared resources and reversible Windows operations."""
 from dataclasses import replace
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
+import tempfile
 import threading
 
 from .cursor.settings import CursorSettings, SettingsStore, _write_json
@@ -24,7 +28,11 @@ class Application:
                                startup_enabled=self.backend.startup_enabled())
 
     def snapshot(self):
-        return {**self.backend.snapshot(), 'settings': self.settings().to_dict(), 'last_error': None}
+        return {**self.backend.snapshot(), 'settings': self.settings().to_dict()}
+
+    def runtime_status(self):
+        """Poll the helper without loading settings or collecting rollback data."""
+        return self.backend.runtime_status()
 
     def prewarm(self, settings=None):
         if settings is None:
@@ -32,6 +40,36 @@ class Application:
         else:
             settings = CursorSettings.from_dict(settings.to_dict())
         return prepare_resources(settings, self.data_root / 'cursor-cache')
+
+    def prewarm_isolated(self, settings, *, timeout=90):
+        """Keep speculative resource generation and its GIL work outside the GUI."""
+        from .paths import FROZEN, ROOT
+        from .cursor.settings import _read_json
+        from .windows.prewarm_process import run_hidden
+        settings = CursorSettings.from_dict(settings.to_dict())
+        self.data_root.mkdir(parents=True, exist_ok=True)
+        environment = os.environ.copy()
+        if FROZEN:
+            command = [sys.executable]
+            environment['PYINSTALLER_RESET_ENVIRONMENT'] = '1'
+        else:
+            command = [sys.executable, '-m', 'pointer']
+            environment['PYTHONPATH'] = os.pathsep.join(filter(None, (str(ROOT/'src'), environment.get('PYTHONPATH'))))
+        with tempfile.TemporaryDirectory(prefix='.prewarm-', dir=self.data_root) as folder:
+            request, report = Path(folder)/'draft.json', Path(folder)/'report.json'
+            _write_json(request, settings.to_dict())
+            command += ['--prepare-cursors', '--settings-file', str(request),
+                        '--data-dir', str(self.data_root.resolve()),
+                        '--install-dir', str(self.install_root.resolve()),
+                        '--report', str(report), '--quiet']
+            try:
+                code = run_hidden(command, cwd=ROOT, env=environment, timeout=timeout)
+            except subprocess.TimeoutExpired as error:
+                raise TimeoutError('Cursor resource preparation timed out') from error
+            result = _read_json(report) if report.is_file() else {}
+            if code or result.get('exit_code') != 0 or result.get('ready') is not True:
+                raise RuntimeError(result.get('error') or 'Cursor resources were not prepared')
+            return result
 
     def apply(self, settings, *, preserve_runtime=False):
         settings = CursorSettings.from_dict(settings.to_dict())

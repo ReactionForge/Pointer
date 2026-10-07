@@ -44,6 +44,62 @@ class ApplicationTests(unittest.TestCase):
         self.assertTrue(self.app.profile_path.exists())
         self.backend.set_startup.assert_not_called()
 
+    def test_default_apply_starts_paused_service_and_preserves_original_backup(self):
+        self.backend.snapshot.return_value = {'running': False, 'startup_enabled': True}
+        backup = self.app.store.root / 'original-cursor-settings.json'
+        backup.write_bytes(b'original backup bytes')
+        result = self.app.apply(replace(self.old, motion='tilt'))
+        self.assertTrue(result['running'])
+        self.backend.start.assert_called_once()
+        self.backend.set_startup.assert_not_called()
+        self.assertEqual(backup.read_bytes(), b'original backup bytes')
+
+    def test_snapshot_preserves_background_error(self):
+        self.backend.snapshot.return_value = {'running': False, 'last_error': 'cursor load failed'}
+        self.assertEqual(self.app.snapshot()['last_error'], 'cursor load failed')
+
+    def test_runtime_status_does_not_load_preferences_or_transaction_snapshot(self):
+        status = {'running': False, 'starting': False, 'last_error': 'cursor load failed'}
+        self.backend.runtime_status.return_value = status
+        with patch.object(self.app, 'settings') as settings:
+            self.assertEqual(self.app.runtime_status(), status)
+        settings.assert_not_called()
+        self.backend.snapshot.assert_not_called()
+
+    def test_isolated_prewarm_sends_validated_draft_and_explicit_paths(self):
+        import json
+        desired = replace(self.old, light_body='#123456')
+        requests = []
+        def run(command, **kwargs):
+            requests.append((command, kwargs))
+            request = Path(command[command.index('--settings-file') + 1])
+            report = Path(command[command.index('--report') + 1])
+            self.assertEqual(json.loads(request.read_text(encoding='utf-8')), desired.to_dict())
+            report.write_text(json.dumps({'exit_code':0, 'ready':True, 'key':'test', 'size':32}), encoding='utf-8')
+            return 0
+        with patch('pointer.windows.prewarm_process.run_hidden', side_effect=run), \
+             patch.object(self.app, 'settings') as load:
+            self.assertTrue(self.app.prewarm_isolated(desired)['ready'])
+        load.assert_not_called()
+        self.backend.apply.assert_not_called()
+        self.backend.start.assert_not_called()
+        command, kwargs = requests[0]
+        self.assertIn('--prepare-cursors', command)
+        self.assertEqual(Path(command[command.index('--data-dir') + 1]), self.app.data_root)
+        self.assertEqual(Path(command[command.index('--install-dir') + 1]), self.app.install_root)
+        self.assertGreater(kwargs['timeout'], 0)
+        self.assertFalse(list(self.app.data_root.glob('.prewarm-*')))
+
+    def test_isolated_prewarm_propagates_child_failure_and_cleans_request(self):
+        def run(command, **kwargs):
+            report = Path(command[command.index('--report') + 1])
+            report.write_text('{"exit_code":1,"error":"resource encoding failed"}', encoding='utf-8')
+            return 1
+        with patch('pointer.windows.prewarm_process.run_hidden', side_effect=run):
+            with self.assertRaisesRegex(RuntimeError, 'resource encoding failed'):
+                self.app.prewarm_isolated(self.old)
+        self.assertFalse(list(self.app.data_root.glob('.prewarm-*')))
+
     def test_gui_apply_preserves_paused_runtime_and_original_backup(self):
         self.backend.snapshot.return_value = {'running': False, 'startup_enabled': True}
         backup = self.app.store.root / 'original-cursor-settings.json'

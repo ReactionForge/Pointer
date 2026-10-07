@@ -63,6 +63,118 @@ class EngineProfileTests(unittest.TestCase):
              patch.object(engine,'_read_status',side_effect=status):
             self.assertTrue(engine.start()['running'])
 
+    def test_failed_launcher_does_not_report_another_launch_error(self):
+        process = Mock()
+        process.poll.return_value = 1
+        old = {'running': False, 'launch_token': 'previous', 'last_error': 'old permission error'}
+        with patch.object(engine, '_running', return_value=False), \
+             patch.object(engine.subprocess, 'Popen', return_value=process), \
+             patch.object(engine, '_read_status', return_value=old):
+            with self.assertRaisesRegex(RuntimeError, 'exited before becoming ready'):
+                engine.start()
+
+    def test_failed_launcher_reports_its_own_native_error(self):
+        process, environment = Mock(), {}
+        process.poll.return_value = 1
+        def launch(*args, **kwargs):
+            environment.update(kwargs['env'])
+            return process
+        def status():
+            return {'running':False, 'launch_token':environment['POINTER_LAUNCH_TOKEN'],
+                    'last_error':'PermissionError: current cursor file'}
+        with patch.object(engine, '_running', return_value=False), \
+             patch.object(engine.subprocess, 'Popen', side_effect=launch), \
+             patch.object(engine, '_read_status', side_effect=status):
+            with self.assertRaisesRegex(RuntimeError, 'PermissionError: current cursor file'):
+                engine.start()
+
+    def test_runtime_status_does_not_claim_dead_helper_is_running(self):
+        with patch.object(engine, 'running_directory', return_value=False), \
+             patch.object(engine, '_read_status', return_value={'running': True, 'click_presses': 7}):
+            status = engine.status_directory(engine.ROOT, engine.DATA_ROOT)
+        self.assertFalse(status['running'])
+        self.assertFalse(status['starting'])
+        self.assertIn('exited', status['last_error'])
+
+    def test_runtime_status_preserves_error_and_fullscreen_pause_reason(self):
+        with patch.object(engine, 'running_directory', return_value=False), \
+             patch.object(engine, '_read_status', return_value={'running': False, 'last_error': 'native load failed'}):
+            self.assertEqual(engine.status_directory(engine.ROOT, engine.DATA_ROOT)['last_error'], 'native load failed')
+        with patch.object(engine, 'running_directory', return_value=True), \
+             patch.object(engine, '_read_status', return_value={'running': True, 'effects_paused': True, 'pause_reason': 'fullscreen'}):
+            status = engine.status_directory(engine.ROOT, engine.DATA_ROOT)
+        self.assertTrue(status['running'])
+        self.assertTrue(status['effects_paused'])
+        self.assertEqual(status['pause_reason'], 'fullscreen')
+
+    def test_runtime_status_distinguishes_starting_and_explicit_pause(self):
+        with patch.object(engine, 'running_directory', return_value=True), \
+             patch.object(engine, '_read_status', return_value={'running':False, 'last_error':'previous failure'}):
+            starting = engine.status_directory(engine.ROOT, engine.DATA_ROOT)
+        self.assertTrue(starting['starting'])
+        self.assertFalse(starting['running'])
+        self.assertIsNone(starting['last_error'])
+        with patch.object(engine, 'running_directory', return_value=False), \
+             patch.object(engine, '_read_status', return_value={'running':False, 'shutdown_reason':'stop_requested', 'last_error':None}):
+            stopped = engine.status_directory(engine.ROOT, engine.DATA_ROOT)
+        self.assertFalse(stopped['starting'])
+        self.assertFalse(stopped['running'])
+        self.assertIsNone(stopped['last_error'])
+
+    def test_unreadable_saved_profile_fails_before_applying_default_cursors(self):
+        from pointer.cursor.theme import THEME_NAME
+        kernel = Mock()
+        kernel.WaitForSingleObject.side_effect = [258, 258, 0]
+        published = []
+        with patch.object(engine, 'KERNEL32', kernel), \
+             patch.object(engine, 'USER32'), \
+             patch.object(engine, '_scheme_name', return_value=THEME_NAME), \
+             patch.object(engine, '_set_dpi_awareness'), \
+             patch.object(engine, '_read_profile', side_effect=PermissionError('Access Denied')), \
+             patch.object(engine, '_atomic_json', side_effect=lambda path, value: published.append(dict(value))), \
+             patch.object(engine, '_CursorCache') as cache, \
+             patch('pointer.windows.scheme.reload_cursors'):
+            ctypes.set_last_error(0)
+            engine._run()
+        cache.assert_not_called()
+        self.assertFalse(published[-1]['running'])
+        self.assertEqual(published[-1]['shutdown_reason'], 'error')
+        self.assertIn('PermissionError: Access Denied', published[-1]['last_error'])
+
+    def test_real_click_motion_polls_down_bit_and_applies_only_arrow_and_hand(self):
+        from pointer.cursor.theme import THEME_NAME, ROLE_IDS
+        normal, clicked, kernel, user = Mock(notes=[]), Mock(notes=[]), Mock(), Mock()
+        user.GetAsyncKeyState.side_effect = [1, 0x8000, 0x8000, 0, 0]
+        elapsed, iterations = [0.0], [0]
+        def wait(handle, timeout):
+            if timeout == 0:
+                iterations[0] += 1
+                return 0 if iterations[0] > 5 else 258
+            elapsed[0] += .03
+            return 258
+        kernel.WaitForSingleObject.side_effect = wait
+        profile = {'settings': {'appearance':'light', 'motion':'tilt',
+                                'game_dnd':False, 'shake_to_find':False},
+                   'themes':{}, 'frames':{}, 'size':32}
+        published = []
+        with patch.object(engine, 'KERNEL32', kernel), patch.object(engine, 'USER32', user), \
+             patch.object(engine, '_scheme_name', return_value=THEME_NAME), \
+             patch.object(engine, '_set_dpi_awareness'), patch.object(engine, '_cursor_dpi', return_value=96), \
+             patch.object(engine, '_read_profile', return_value=profile), \
+             patch.object(engine.time, 'monotonic', side_effect=lambda: elapsed[0]), \
+             patch.object(engine, '_atomic_json', side_effect=lambda path, value: published.append(dict(value))), \
+             patch.object(engine, '_CursorCache', side_effect=[normal, clicked]):
+            ctypes.set_last_error(0)
+            engine._run()
+        keys = [call.args[0] for call in clicked.apply.call_args_list]
+        self.assertEqual(keys[0], 'light:0', 'The shared recently-pressed bit is not a current press')
+        self.assertTrue(any(key != 'light:0' for key in keys), 'A held left button must select a motion frame')
+        self.assertTrue(all(call.args[1] == {role:ROLE_IDS[role] for role in ('Arrow','Hand')}
+                            for call in clicked.apply.call_args_list))
+        self.assertEqual(keys[-1], 'light:0')
+        self.assertEqual(published[-1]['click_presses'], 1)
+        self.assertIsNone(published[-1]['last_error'])
+
     def test_cache_loads_requested_physical_canvas(self):
         self.assertIn('size', inspect.signature(engine._CursorCache).parameters)
         cache = engine._CursorCache({'light': {'Arrow': theme_paths('light')['Arrow']}}, size=48)
@@ -104,7 +216,7 @@ class EngineProfileTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 engine._read_profile(path)
 
-    def test_run_recovers_gracefully_when_read_profile_raises_permission_or_corrupt_error(self):
+    def test_run_supports_missing_legacy_profile_with_builtin_resources(self):
         from pointer.cursor import motion
         from pointer.cursor.theme import THEME_NAME, ROLE_IDS
         normal = Mock(notes=[])
@@ -118,7 +230,7 @@ class EngineProfileTests(unittest.TestCase):
             stack.enter_context(patch.object(engine, '_scheme_name', return_value=THEME_NAME))
             stack.enter_context(patch.object(engine, '_set_dpi_awareness'))
             stack.enter_context(patch.object(engine, '_cursor_dpi', return_value=96))
-            stack.enter_context(patch.object(engine, '_read_profile', side_effect=PermissionError('Access Denied')))
+            stack.enter_context(patch.object(engine, '_read_profile', return_value=None))
             stack.enter_context(patch.object(engine, '_initial_theme', return_value='light'))
             stack.enter_context(patch.object(engine, '_atomic_json'))
             cache = stack.enter_context(patch.object(engine, '_CursorCache', side_effect=[normal, clicked]))

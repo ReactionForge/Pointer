@@ -285,6 +285,7 @@ def _run():
     event, cache, click_cache, scheme_name = None, None, None, None
     state = {"pid": os.getpid(), "running": False, "theme": None, "switches": 0, "last_error": None,
              'launch_token':os.environ.get('POINTER_LAUNCH_TOKEN'),
+             'effects_paused': False, 'pause_reason': None,
              'qt_loaded':any(name.startswith('PySide6') for name in sys.modules)}
     last_written = None
 
@@ -295,6 +296,7 @@ def _run():
             last_written = dict(state)
 
     try:
+        publish()
         from pointer.cursor.theme import THEME_NAME, ROLE_IDS, choose_theme, theme_paths, click_paths
         from pointer.cursor.motion import ClickMotion, read_mode
         scheme_name = THEME_NAME
@@ -306,11 +308,9 @@ def _run():
         if _scheme_name() != scheme_name:
             raise _SchemeChanged()
         _set_dpi_awareness()
-        profile = None
-        try:
-            profile = _read_profile()
-        except Exception:
-            profile = None
+        # Missing legacy profiles use the built-in theme; unreadable saved choices
+        # must fail readiness instead of silently applying a different configuration.
+        profile = _read_profile()
         settings = profile['settings'] if profile else {}
         appearance = settings.get('appearance', 'adaptive')
         click_mode = settings.get('motion', read_mode(CLICK_SETTINGS))
@@ -354,6 +354,9 @@ def _run():
                         if state['theme']:
                             cache.apply(state['theme'], ROLE_IDS, scheme_name)
                         applied_click = None
+                    state.update(effects_paused=in_game_dnd,
+                                 pause_reason='fullscreen' if in_game_dnd else None)
+                    publish()
             if in_game_dnd:
                 time.sleep(BACKGROUND_PERIOD)
                 continue
@@ -468,6 +471,26 @@ def _running():
     return running_directory(ROOT, DATA_ROOT)
 
 
+def status_directory(directory, data_root):
+    """Read readiness and errors for this installation without Windows mutations."""
+    status = _read_status(Path(data_root) / STATUS_FILE.name)
+    alive = running_directory(directory, data_root)
+    ready = alive and status.get('running') is True
+    error = status.get('last_error')
+    error = error if isinstance(error, str) and error else None
+    if alive and not ready:
+        # A newly acquired mutex may still be replacing the last run's status.
+        error = None
+    elif not alive and status.get('running') is True and not error:
+        error = 'Cursor helper exited unexpectedly'
+    return {**{key: status[key] for key in ('pid', 'theme', 'click_mode', 'click_presses', 'shutdown_reason')
+               if key in status},
+            'running': ready, 'starting': alive and not ready,
+            'effects_paused': ready and status.get('effects_paused') is True,
+            'pause_reason': status.get('pause_reason') if ready else None,
+            'last_error': error}
+
+
 def running_directory(directory, data_root=None, _legacy=False):
     names = [_identity(directory,data_root)]
     if _legacy or not os.environ.get('POINTER_DATA_DIR'):
@@ -528,7 +551,8 @@ def start():
         if status.get('launch_token') == token and status.get("running") and _running():
             return status
         if process.poll() is not None:
-            raise RuntimeError(status.get("last_error") or status.get("shutdown_reason") or "Cursor helper exited before becoming ready")
+            failure = status if status.get('launch_token') == token else {}
+            raise RuntimeError(failure.get("last_error") or failure.get("shutdown_reason") or "Cursor helper exited before becoming ready")
         time.sleep(.05)
     raise RuntimeError("Cursor helper did not become ready within five seconds")
 

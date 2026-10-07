@@ -16,7 +16,7 @@ class BuildTests(unittest.TestCase):
     def test_background_runtime_hook_skips_qt_import_without_affecting_gui(self):
         hook=Path(__file__).resolve().parents[3]/'packaging/windows/headless_runtime.py'
         self.assertTrue(hook.exists(),'Headless runtime hook missing')
-        for args,skip in ((['Pointer.exe','--run'],True),(['Pointer.exe','--gui'],False)):
+        for args,skip in ((['Pointer.exe','--run'],True),(['Pointer.exe','--prepare-cursors'],True),(['Pointer.exe','--gui'],False)):
             with self.subTest(args=args):
                 qt=Mock();original=qt.create_embedded_qt_conf
                 utility=Mock(qt=qt)

@@ -1,19 +1,29 @@
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QComboBox, QFrame, QPushButton
-from ..theme import card, SettingsRow, HairlineDivider
-from ..input_controls import ChoiceComboBox, DragSlider
-
-
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
+from pointer.cursor.settings import CursorSettings
+from ..theme import card, HairlineDivider
+from ..input_controls import ChoiceComboBox
+from ..parameter_controls import IntegerParameter
 
 class MotionPage(QWidget):
     """Motion Physics Lab: Tune click dynamics, spring dampening, and tactile curves."""
     def __init__(self, change):
         super().__init__()
+        self._change = change
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(14)
 
         frame, inner = card('点击动效', '')
+        heading = QHBoxLayout()
+        heading.addWidget(inner.takeAt(0).widget(), 1)
+        self.reset_motion = QPushButton('重置')
+        self.reset_motion.setObjectName('compactAction')
+        self.reset_motion.setMinimumHeight(32)
+        self.reset_motion.setAccessibleName('重置动效草稿为默认模式、强度和时间')
+        self.reset_motion.setToolTip('恢复默认动效、强度与时间；应用后生效。')
+        self.reset_motion.clicked.connect(self._reset_motion)
+        heading.addWidget(self.reset_motion)
+        inner.insertLayout(0, heading)
         self.mode = ChoiceComboBox()
         self.mode.setToolTip('选择整套光标的左键效果；应用后生效。')
         for text, mode in [('倾斜', 'tilt'), ('缩小回弹', 'shrink'),
@@ -42,6 +52,8 @@ class MotionPage(QWidget):
         layout.addLayout(presets)
         frame, inner = card('响应', '')
         self.sliders = {}
+        self.editors = {}
+        self.parameters = {}
 
         specs = [
             ('strength', '强度', 0, 100, '%', 'strengthSlider', '调整位移、倾斜与缩放幅度。'),
@@ -53,35 +65,29 @@ class MotionPage(QWidget):
             if i > 0:
                 inner.addWidget(HairlineDivider())
 
-            slider_widget = QWidget()
-            sw_layout = QHBoxLayout(slider_widget)
-            sw_layout.setContentsMargins(0, 0, 0, 0)
-            sw_layout.setSpacing(12)
-
-            slider = DragSlider(Qt.Orientation.Horizontal)
-            slider.setRange(minimum, maximum)
-            slider.setObjectName(obj_name)
-            slider.setMinimumWidth(80)
-            slider.setAccessibleName(title)
-            slider.setToolTip(hint)
-            slider.valueChanged.connect(lambda number, field=field: change(**{field: number}))
-            slider.sliderReleased.connect(lambda field=field, s=slider: change(_immediate=True, **{field: s.value()}))
-            sw_layout.addWidget(slider, 1)
-
-            value_lbl = QLabel()
-            value_lbl.setStyleSheet('color: #007aff; font-weight: 600; font-size: 13px;')
-            value_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            value_lbl.setMinimumWidth(100)
-            sw_layout.addWidget(value_lbl)
+            parameter = IntegerParameter(minimum, maximum, suffix, title, hint)
+            parameter.slider.setObjectName(obj_name)
+            parameter.valueChanged.connect(lambda number, field=field: change(**{field: number}))
+            parameter.committed.connect(lambda number, field=field: change(_immediate=True, **{field: number}))
 
             title_label = QLabel(title)
             title_label.setToolTip(hint)
             inner.addWidget(title_label)
-            inner.addWidget(slider_widget)
-            self.sliders[field] = (slider, value_lbl, suffix)
+            inner.addWidget(parameter)
+            self.parameters[field] = parameter
+            self.editors[field] = parameter.editor
+            self.sliders[field] = (parameter.slider, parameter.editor, suffix)
 
         layout.addWidget(frame)
         layout.addStretch()
+
+    def _reset_motion(self):
+        defaults = CursorSettings()
+        fields = {field: getattr(defaults, field)
+                  for field in ('motion', 'strength', 'press_ms', 'release_ms')}
+        for field, parameter in self.parameters.items():
+            parameter.sync(fields[field], force=True)
+        self._change(**fields)
 
     def sync(self, settings):
         for button, fields in self.motion_recipes:
@@ -99,11 +105,7 @@ class MotionPage(QWidget):
         self.retired_hint.setText('此动效不再绘制；原配置保留。可选择倾斜、缩小回弹或关闭。')
         self.retired_hint.setVisible(retired)
         is_active = settings.motion not in ('off', 'pulse', 'trail')
-        for field, (slider, label, suffix) in self.sliders.items():
-            slider.blockSignals(True)
-            slider.setValue(getattr(settings, field))
-            slider.blockSignals(False)
-            val = str(getattr(settings, field)) + suffix
-            label.setText(val if is_active else f"{val} (未启用)")
-            label.setStyleSheet('color: #007aff; font-weight: 600; font-size: 13px;' if is_active else 'color: #86868b; font-weight: 500; font-size: 13px;')
-            slider.setEnabled(is_active)
+        dark = bool(getattr(self.window(), 'ui_dark', False))
+        for field, parameter in self.parameters.items():
+            parameter.sync(getattr(settings, field), active=is_active)
+            parameter.set_theme(dark)

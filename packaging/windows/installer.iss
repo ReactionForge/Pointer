@@ -1,5 +1,5 @@
 #ifndef AppVersion
-  #define AppVersion "1.3.0-beta.3"
+  #define AppVersion "1.3.0-beta.4"
 #endif
 
 [Setup]
@@ -20,7 +20,7 @@ UsePreviousAppDir=yes
 OutputDir=..\..\dist
 OutputBaseFilename=Pointer-v{#AppVersion}-setup-x64
 SetupIconFile=pointer.ico
-UninstallDisplayIcon={app}\Pointer.exe
+UninstallDisplayIcon={app}\pointer.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
@@ -39,14 +39,29 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
 Source: "..\..\dist\Pointer\*"; DestDir: "{tmp}\Pointer-payload"; Flags: ignoreversion recursesubdirs createallsubdirs deleteafterinstall
 
 [Icons]
-Name: "{group}\Pointer"; Filename: "{app}\Pointer.exe"
-Name: "{group}\Uninstall Pointer"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\Pointer"; Filename: "{app}\Pointer.exe"; Tasks: desktopicon
+Name: "{group}\Pointer"; Filename: "{app}\Pointer.exe"; IconFilename: "{app}\pointer.ico"; IconIndex: 0
+Name: "{group}\Uninstall Pointer"; Filename: "{uninstallexe}"; IconFilename: "{app}\pointer.ico"; IconIndex: 0
+Name: "{autodesktop}\Pointer"; Filename: "{app}\Pointer.exe"; IconFilename: "{app}\pointer.ico"; IconIndex: 0; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\Pointer.exe"; Description: "Open Pointer settings"; Flags: nowait postinstall skipifsilent
 
 [Code]
+var PayloadDeployed: Boolean;
+
+procedure NotifyChangedIcon(EventID: LONG; Flags: UINT; Item1: String; Item2: LONG_PTR);
+  external 'SHChangeNotify@shell32.dll stdcall setuponly';
+
+procedure RefreshPointerIcons;
+begin
+  { Refresh only our installed icon and shortcuts after their targets exist. }
+  NotifyChangedIcon($2000, $2005, ExpandConstant('{app}\pointer.ico'), 0);
+  NotifyChangedIcon($2000, $2005, ExpandConstant('{group}\Pointer.lnk'), 0);
+  NotifyChangedIcon($2000, $2005, ExpandConstant('{group}\Uninstall Pointer.lnk'), 0);
+  if IsTaskSelected('desktopicon') then
+    NotifyChangedIcon($2000, $2005, ExpandConstant('{autodesktop}\Pointer.lnk'), 0);
+end;
+
 function DataDirectory(): String;
 begin
   Result := ExtractFileDir(ExpandConstant('{app}')) + '\data';
@@ -57,16 +72,25 @@ begin
   Result := ' --install-dir "' + ExpandConstant('{app}') + '" --data-dir "' + DataDirectory() + '"';
 end;
 
-procedure CurStepChanged(CurStep: TSetupStep);
+procedure EnsurePayloadDeployed;
 var ExitCode: Integer;
+begin
+  if PayloadDeployed then
+    Exit;
+  if not Exec(ExpandConstant('{tmp}\Pointer-payload\Pointer.exe'),
+    '--install --quiet' + PathArguments(), '', SW_HIDE, ewWaitUntilTerminated, ExitCode) then
+    RaiseException('Pointer installation could not start. Your settings are preserved.');
+  if ExitCode <> 0 then
+    RaiseException('Pointer installation failed. See the operation report in your Pointer data folder.');
+  PayloadDeployed := True;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
   begin
-    if not Exec(ExpandConstant('{tmp}\Pointer-payload\Pointer.exe'),
-      '--install --quiet' + PathArguments(), '', SW_HIDE, ewWaitUntilTerminated, ExitCode) then
-      RaiseException('Pointer installation could not start. Your settings are preserved.');
-    if ExitCode <> 0 then
-      RaiseException('Pointer installation failed. See the operation report in your Pointer data folder.');
+    EnsurePayloadDeployed;
+    RefreshPointerIcons;
   end;
 end;
 

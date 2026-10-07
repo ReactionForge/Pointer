@@ -33,6 +33,7 @@ def main():
     backend = Mock()
     backend.settings.return_value = CursorSettings(tray_enabled=False, auto_check_update=False)
     backend.backend.snapshot.return_value = {'running': False, 'startup_enabled': False}
+    backend.runtime_status.return_value = {'running': False}
     for name in ('apply', 'pause', 'resume', 'restore', 'set_startup'):
         getattr(backend, name).side_effect = RuntimeError('隔离预览：系统光标及启动操作已阻止。')
     window = SafeMaterialWindow(backend, sidebar_store=SidebarStore(args.settings),

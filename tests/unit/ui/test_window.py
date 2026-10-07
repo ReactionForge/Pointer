@@ -80,22 +80,25 @@ class WindowTests(unittest.TestCase):
         window.discard_changes()
         window.close()
 
-    def test_discrete_setting_change_uses_short_prewarm_delay(self):
+    def test_discrete_setting_change_waits_for_input_to_settle(self):
         window, application = self.make_window()
         window.change(light_body="#123456")
         self.assertTrue(window._prewarm_timer.isActive())
-        self.assertLessEqual(window._prewarm_timer.interval(), 50)
+        self.assertGreaterEqual(window._prewarm_timer.interval(), 1000)
         window.discard_changes()
         window.close()
 
-    def test_start_preset_prewarm_triggers_application_prewarm(self):
+    def test_start_preset_prewarm_schedules_only_current_draft(self):
         window, application = self.make_window()
         window.start_preset_prewarm()
+        self.assertTrue(window._prewarm_timer.isActive())
+        application.prewarm.assert_not_called()
+        window._trigger_prewarm()
         import time
         deadline = time.monotonic() + 2
         while time.monotonic() < deadline and application.prewarm.call_count == 0:
             time.sleep(0.02)
-        self.assertGreater(application.prewarm.call_count, 0)
+        application.prewarm.assert_called_once_with(window.draft())
         window.close()
 
     def test_scheme_operations_are_silent_by_default(self):

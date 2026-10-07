@@ -1,5 +1,5 @@
 """Value edits require an explicit choice; scrolling belongs to the page."""
-from PySide6.QtCore import QPoint, QPointF, Qt
+from PySide6.QtCore import QEvent, QPoint, QPointF, Qt
 from PySide6.QtGui import QWheelEvent
 from PySide6.QtWidgets import QApplication, QComboBox, QSlider, QSpinBox, QDoubleSpinBox, QScrollArea
 
@@ -37,11 +37,23 @@ class DragSlider(PageWheelMixin, QSlider):
     pass
 
 
-class TypedSpinBox(PageWheelMixin, QSpinBox):
+class TypedValueMixin(PageWheelMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.lineEdit().installEventFilter(self)
+
+    def eventFilter(self, watched, event):
+        if watched is self.lineEdit() and event.type() == QEvent.Type.Wheel:
+            self.wheelEvent(event)
+            return True
+        return super().eventFilter(watched, event)
+
+
+class TypedSpinBox(TypedValueMixin, QSpinBox):
     pass
 
 
-class TypedDoubleSpinBox(PageWheelMixin, QDoubleSpinBox):
+class TypedDoubleSpinBox(TypedValueMixin, QDoubleSpinBox):
     pass
 
 

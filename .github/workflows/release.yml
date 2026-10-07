@@ -144,5 +144,5 @@ jobs:
           }
           $notesPath = Join-Path $env:RUNNER_TEMP 'pointer-release-notes.md'
           Set-Content -LiteralPath $notesPath -Value $section.Value.Trim() -Encoding utf8
-          gh release create $env:RELEASE_TAG $package $checksum $installer $installerChecksum --verify-tag --prerelease --latest=false --title "Pointer $env:RELEASE_TAG Material 桌面预览版" --notes-file $notesPath
+          gh release create $env:RELEASE_TAG $package $checksum $installer $installerChecksum --verify-tag --target DEV --prerelease --latest=false --title "Pointer $env:RELEASE_TAG 桌面修复版" --notes-file $notesPath
           if ($LASTEXITCODE -ne 0) { throw 'GitHub Release creation failed' }

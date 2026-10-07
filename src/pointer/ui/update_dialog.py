@@ -1,7 +1,9 @@
 """macOS Acrylic styled Update Dialog for Pointer."""
 import os
+import threading
+import weakref
 from pathlib import Path
-from PySide6.QtCore import Qt, QThread, Signal, Slot
+from PySide6.QtCore import Qt, Signal, Slot, QObject, QTimer, QEvent
 from PySide6.QtGui import QIcon, QPixmap, QFont
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
@@ -11,7 +13,92 @@ from pointer.paths import DATA_ROOT, ROOT, INSTALL_ROOT
 from pointer.updater import download_update_package, trigger_silent_upgrade, UpdateError
 
 
-class DownloadWorker(QThread):
+UPDATE_CHECK_TIMEOUT_MS = 10000
+
+
+class UpdateCheck(QObject):
+    """Deliver network results through a GUI-owned signal receiver and deadline."""
+    completed = Signal(object, str, bool)
+    cancelled = Signal(bool)
+    _returned = Signal(int, object, str)
+
+    def __init__(self, window):
+        super().__init__(window)
+        self.running = False
+        self._serial = 0
+        self._interactive = False
+        self._cancel_event = None
+        self.deadline = QTimer(self)
+        self.deadline.setSingleShot(True)
+        self.deadline.setInterval(UPDATE_CHECK_TIMEOUT_MS)
+        self.deadline.timeout.connect(self._timed_out)
+        self._returned.connect(self._accept_result, Qt.ConnectionType.QueuedConnection)
+        window.installEventFilter(self)
+
+    def start(self, current_version, *, interactive=False):
+        if self.running:
+            self._interactive |= interactive
+            return
+        self._serial += 1
+        serial = self._serial
+        self.running = True
+        self._interactive = interactive
+        self._cancel_event = cancelled = threading.Event()
+        receiver = weakref.ref(self)
+        self.deadline.start()
+
+        def check():
+            info, error = None, ''
+            try:
+                from pointer.updater import check_for_updates
+                info = check_for_updates(current_version)
+                if not isinstance(info, dict):
+                    raise ValueError('更新服务返回了无效结果')
+            except Exception as caught:
+                error = str(caught) or type(caught).__name__
+            if cancelled.is_set():
+                return
+            bridge = receiver()
+            if bridge is not None:
+                try:
+                    bridge._returned.emit(serial, info, error)
+                except RuntimeError:
+                    # The parent window may have been deleted during the request.
+                    pass
+
+        threading.Thread(target=check, name='Pointer-update-check', daemon=True).start()
+
+    @Slot(int, object, str)
+    def _accept_result(self, serial, info, error):
+        if not self.running or serial != self._serial:
+            return
+        self.deadline.stop()
+        self.running = False
+        self._cancel_event.set()
+        self.completed.emit(info, error, self._interactive)
+
+    @Slot()
+    def _timed_out(self):
+        self._accept_result(self._serial, None, '检查超时，请检查网络后重试。')
+
+    def cancel(self):
+        if not self.running:
+            return
+        self.deadline.stop()
+        self.running = False
+        self._serial += 1
+        self._cancel_event.set()
+        self.cancelled.emit(self._interactive)
+
+    def eventFilter(self, watched, event):
+        # Accepted closes hide the window; rejected dirty-close prompts do not.
+        # Spontaneous hides (minimizing on Windows) leave the request active.
+        if watched is self.parent() and event.type() == QEvent.Type.Hide and not event.spontaneous():
+            self.cancel()
+        return super().eventFilter(watched, event)
+
+
+class DownloadWorker(QObject):
     progress = Signal(int, int)
     finished = Signal(str)
     failed = Signal(str)
@@ -21,23 +108,34 @@ class DownloadWorker(QThread):
         self.url = url
         self.destination = destination
         self.expected_sha256 = expected_sha256
-        self._cancelled = False
+        self._cancelled = threading.Event()
+        self._thread = None
+
+    def start(self):
+        # Network reads may outlive the dialog; a daemon thread never owns Qt UI.
+        self._thread = threading.Thread(target=self.run, name='Pointer-update-download', daemon=True)
+        self._thread.start()
+
+    def isRunning(self):
+        return self._thread is not None and self._thread.is_alive()
 
     def cancel(self):
-        self._cancelled = True
+        self._cancelled.set()
 
     def run(self):
         try:
-            sha256 = download_update_package(
+            download_update_package(
                 self.url,
                 self.destination,
                 expected_sha256=self.expected_sha256,
                 progress_callback=lambda done, total: self.progress.emit(done, total),
-                cancel_flag=lambda: self._cancelled,
+                cancel_flag=self._cancelled.is_set,
             )
-            self.finished.emit(str(self.destination))
+            if not self._cancelled.is_set():
+                self.finished.emit(str(self.destination))
         except Exception as error:
-            self.failed.emit(str(error))
+            if not self._cancelled.is_set():
+                self.failed.emit(str(error))
 
 
 class UpdateDialog(QDialog):
@@ -47,6 +145,7 @@ class UpdateDialog(QDialog):
         self.update_info = update_info
         self.application = application
         self.worker = None
+        self._closed = False
 
         self.setWindowTitle(f"软件更新 · Pointer v{update_info.get('latest_version')}")
         self.setFixedSize(540, 480)
@@ -201,6 +300,8 @@ class UpdateDialog(QDialog):
         self.reject()
 
     def _start_download(self):
+        if self._closed or (self.worker and self.worker.isRunning()):
+            return
         download_url = self.update_info.get("download_url")
         if not download_url:
             self.status_lbl.setText("未找到有效安装包资源，请前往 GitHub 手动下载。")
@@ -230,6 +331,8 @@ class UpdateDialog(QDialog):
 
     @Slot(int, int)
     def _on_progress(self, done, total):
+        if self._closed:
+            return
         if total > 0:
             percent = int(done * 100 / total)
             self.progress_bar.setValue(percent)
@@ -241,7 +344,11 @@ class UpdateDialog(QDialog):
 
     @Slot(str)
     def _on_download_finished(self, installer_path):
-        self.status_lbl.setText("下载完成，完整性校验通过。正在启动静默更新…")
+        if self._closed:
+            return
+        status = ('下载完成，完整性校验通过。正在启动静默更新…'
+                  if self.update_info.get('expected_sha256') else '下载完成，正在启动静默更新…')
+        self.status_lbl.setText(status)
         self.status_lbl.setStyleSheet("color: #34c759; font-size: 11.5px;")
         try:
             trigger_silent_upgrade(installer_path, self.application)
@@ -254,6 +361,8 @@ class UpdateDialog(QDialog):
 
     @Slot(str)
     def _on_download_failed(self, error):
+        if self._closed:
+            return
         self.status_lbl.setText(f"下载失败：{error}")
         self.status_lbl.setStyleSheet("color: #ff453a; font-size: 11.5px;")
         self.update_btn.setEnabled(True)
@@ -261,8 +370,8 @@ class UpdateDialog(QDialog):
         self.skip_btn.setEnabled(True)
         self.progress_bar.hide()
 
-    def closeEvent(self, event):
+    def done(self, result):
+        self._closed = True
         if self.worker and self.worker.isRunning():
             self.worker.cancel()
-            self.worker.wait(1000)
-        super().closeEvent(event)
+        super().done(result)

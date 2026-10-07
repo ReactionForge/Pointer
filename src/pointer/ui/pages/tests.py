@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
 )
 from ..theme import card
 from ..colors import theme_colors
-from ..input_controls import DragSlider
+from ..parameter_controls import IntegerParameter
 
 
 QT_CURSOR_MAP = {
@@ -156,17 +156,18 @@ class TestPage(QWidget):
         sl_label = QLabel('灰度')
         sl_label.setObjectName('muted')
         slider_row.addWidget(sl_label)
-        self.brightness = DragSlider(Qt.Orientation.Horizontal)
-        self.brightness.setAccessibleName('测试背景灰度')
-        self.brightness.setRange(0, 255)
-        self.brightness.setValue(128)
-        self.brightness.valueChanged.connect(self.set_brightness)
-        slider_row.addWidget(self.brightness, 1)
-        self.brightness_value = QLabel()
-        self.brightness_value.setObjectName('testValue')
-        self.brightness_value.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self.brightness_value.setMinimumWidth(72)
-        slider_row.addWidget(self.brightness_value)
+        self.gray_parameter = IntegerParameter(0, 255, ' / 255', '测试背景灰度', '仅更改本页的测试背景。')
+        self.brightness = self.gray_parameter.slider
+        self.brightness_value = self.gray_parameter.editor
+        self.gray_parameter.valueChanged.connect(self.set_brightness)
+        slider_row.addWidget(self.gray_parameter, 1)
+        self.gray_reset = QPushButton('重置')
+        self.gray_reset.setObjectName('compactAction')
+        self.gray_reset.setMinimumHeight(32)
+        self.gray_reset.setAccessibleName('重置测试背景灰度为 128，不更改光标配置')
+        self.gray_reset.setToolTip('恢复中间灰度 128，仅更改本页测试背景。')
+        self.gray_reset.clicked.connect(lambda: self.set_brightness(128, force=True))
+        slider_row.addWidget(self.gray_reset)
         inner.addWidget(gray_controls)
 
         self.gray = TestSurface(self, 'brightness')
@@ -361,6 +362,7 @@ class TestPage(QWidget):
 
     def set_theme(self, dark):
         colors = theme_colors(dark)
+        self.gray_parameter.set_theme(dark)
         self.setStyleSheet(f'''
             QFrame#testGroup {{ background: {colors['surface']}; border: 1px solid {colors['divider']}; border-radius: 16px; }}
             QTabBar#testGroups {{ background: {colors['raised']}; border-radius: 10px; }}
@@ -447,8 +449,8 @@ class TestPage(QWidget):
         for button in self.hand_buttons:
             button.setDown(False)
 
-    def set_brightness(self, value):
+    def set_brightness(self, value, force=False):
+        self.gray_parameter.sync(value, force=force)
         self.gray.setStyleSheet(f'background: rgb({value},{value},{value}); border-radius: 9px;')
         self.gray.set_label_text(f'材质亮度 {value} / 255')
-        self.brightness_value.setText(f'{value} / 255')
         self.gray.label.setStyleSheet('color: ' + ('white' if value < 128 else 'black') + '; background: transparent; font-weight: 600;')
