@@ -9,11 +9,13 @@ import subprocess
 import shutil
 import tempfile
 
+from scripts.shortcut_reader import read_shortcut
+
 ROOT=Path(__file__).resolve().parents[1]
 
 
 def read_shortcuts():
-    """Read the current user's two existing Pointer links without saving them."""
+    """Read the current user's link locations, then their native Unicode metadata."""
     script = r"""
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
@@ -21,13 +23,11 @@ $paths = @(
     @{kind='desktop'; path=(Join-Path ([Environment]::GetFolderPath('DesktopDirectory')) 'Pointer.lnk')},
     @{kind='start_menu'; path=(Join-Path ([Environment]::GetFolderPath('Programs')) 'Pointer\Pointer.lnk')}
 )
-$shell = New-Object -ComObject WScript.Shell
 $rows = foreach ($item in $paths) {
     if (-not (Test-Path -LiteralPath $item.path -PathType Leaf)) {
         throw ('Missing installed shortcut: ' + $item.path)
     }
-    $link = $shell.CreateShortcut($item.path)
-    @{kind=$item.kind; path=$item.path; target=$link.TargetPath; icon=$link.IconLocation}
+    @{kind=$item.kind; path=$item.path}
 }
 ConvertTo-Json -InputObject @($rows) -Compress
 """
@@ -35,11 +35,14 @@ ConvertTo-Json -InputObject @($rows) -Compress
     completed = subprocess.run(
         ['powershell.exe', '-NoLogo', '-NoProfile', '-NonInteractive', '-EncodedCommand', encoded],
         capture_output=True, encoding='utf-8', check=True, timeout=30, creationflags=0x08000000)
-    return json.loads(completed.stdout)
+    rows = json.loads(completed.stdout)
+    for row in rows:
+        row.update(read_shortcut(Path(row['path'])))
+    return rows
 
 
-def verify_shell_icon(path):
-    """Extract and render a link's Shell icon into memory; require visible pixels."""
+def verify_shell_icon(path, expected_icon=None):
+    """Render a link's Shell icon and optionally require the installed artwork."""
     class ShellFileInfo(ctypes.Structure):
         _fields_ = [('hIcon', wintypes.HICON), ('iIcon', ctypes.c_int),
                     ('dwAttributes', wintypes.DWORD), ('szDisplayName', wintypes.WCHAR * 260),
@@ -54,6 +57,7 @@ def verify_shell_icon(path):
 
     ole = ctypes.WinDLL('ole32', use_last_error=True)
     shell = ctypes.WinDLL('shell32', use_last_error=True)
+    comctl = ctypes.WinDLL('comctl32', use_last_error=True)
     user = ctypes.WinDLL('user32', use_last_error=True)
     gdi = ctypes.WinDLL('gdi32', use_last_error=True)
 
@@ -66,8 +70,11 @@ def verify_shell_icon(path):
     signature(ole, 'CoUninitialize', [], None)
     signature(shell, 'SHGetFileInfoW', [wintypes.LPCWSTR, wintypes.DWORD,
               ctypes.POINTER(ShellFileInfo), wintypes.UINT, wintypes.UINT], ctypes.c_size_t)
+    signature(comctl, 'ImageList_GetIcon', [wintypes.HANDLE, ctypes.c_int, wintypes.UINT], wintypes.HICON)
     signature(user, 'DrawIconEx', [wintypes.HDC, ctypes.c_int, ctypes.c_int, wintypes.HICON,
               ctypes.c_int, ctypes.c_int, wintypes.UINT, wintypes.HBRUSH, wintypes.UINT], wintypes.BOOL)
+    signature(user, 'LoadImageW', [wintypes.HINSTANCE, wintypes.LPCWSTR, wintypes.UINT,
+              ctypes.c_int, ctypes.c_int, wintypes.UINT], wintypes.HANDLE)
     signature(user, 'DestroyIcon', [wintypes.HICON], wintypes.BOOL)
     signature(gdi, 'CreateCompatibleDC', [wintypes.HDC], wintypes.HDC)
     signature(gdi, 'CreateDIBSection', [wintypes.HDC, ctypes.c_void_p, wintypes.UINT,
@@ -82,14 +89,25 @@ def verify_shell_icon(path):
         raise OSError('Shell icon COM initialization failed: ' + str(initialized))
     info = ShellFileInfo()
     dc = bitmap = previous = None
+    expected_handle = None
     try:
-        # No USEFILEATTRIBUTES or LINKOVERLAY: inspect the actual installed link.
-        if not shell.SHGetFileInfoW(str(path), 0, ctypes.byref(info), ctypes.sizeof(info), 0x100) or not info.hIcon:
+        # SHGFI_ICON adds a shortcut overlay implicitly on Windows. Borrow the
+        # actual link's system image list and copy only its base artwork instead.
+        image_list = shell.SHGetFileInfoW(str(path), 0, ctypes.byref(info), ctypes.sizeof(info), 0x4000)
+        if not image_list:
             raise AssertionError('Missing Shell icon: ' + str(path))
+        info.hIcon = comctl.ImageList_GetIcon(image_list, info.iIcon, 0)  # ILD_NORMAL, no overlay
+        if not info.hIcon:
+            raise AssertionError('Missing Shell icon: ' + str(path))
+        size = 32
+        if expected_icon is not None:
+            # LR_LOADFROMFILE without LR_SHARED: this HICON belongs to this call.
+            expected_handle = user.LoadImageW(None, str(expected_icon), 1, size, size, 0x10)
+            if not expected_handle:
+                raise AssertionError('Missing expected icon: ' + str(expected_icon))
         dc = gdi.CreateCompatibleDC(None)
         if not dc:
             raise ctypes.WinError(ctypes.get_last_error())
-        size = 32
         header = BitmapInfoHeader(ctypes.sizeof(BitmapInfoHeader), size, -size, 1, 32,
                                   0, size * size * 4, 0, 0, 0, 0)
         bits = ctypes.c_void_p()
@@ -102,13 +120,38 @@ def verify_shell_icon(path):
         previous = old
         background = bytes((219, 31, 177, 255))
         pixels = background * (size * size)
-        ctypes.memmove(bits, pixels, len(pixels))
-        if not user.DrawIconEx(dc, 0, 0, info.hIcon, size, size, 0, None, 3):
-            raise ctypes.WinError(ctypes.get_last_error())
-        gdi.GdiFlush()
-        rendered = ctypes.string_at(bits, len(pixels))
+
+        def render(handle):
+            ctypes.memmove(bits, pixels, len(pixels))
+            if not user.DrawIconEx(dc, 0, 0, handle, size, size, 0, None, 3):
+                raise ctypes.WinError(ctypes.get_last_error())
+            gdi.GdiFlush()
+            return ctypes.string_at(bits, len(pixels))
+
+        rendered = render(info.hIcon)
         if not any(rendered[offset:offset + 3] != background[:3] for offset in range(0, len(pixels), 4)):
             raise AssertionError('Empty Shell icon: ' + str(path))
+        if expected_handle:
+            expected = render(expected_handle)
+            # The Shell image-list alpha conversion differed by at most two RGB
+            # levels from LoadImageW in the native reference probe. Allow only
+            # that rounding: every pixel still has to match the expected artwork.
+            differences = {offset: max(abs(rendered[offset + channel] - expected[offset + channel])
+                                       for channel in range(3))
+                           for offset in range(0, len(pixels), 4)}
+            differing = [offset for offset in range(0, len(pixels), 4)
+                         if differences[offset] > 2]
+            if differing:
+                first = differing[0]
+                pixel = first // 4
+                actual_rgb = tuple(reversed(rendered[first:first + 3]))
+                expected_rgb = tuple(reversed(expected[first:first + 3]))
+                raise AssertionError(
+                    'Shell icon artwork differs from pointer.ico: '
+                    f'{len(differing)}/{size * size} RGB pixels exceed 2-level rounding tolerance; '
+                    f'maximum RGB difference {max(differences.values())}; '
+                    f'first ({pixel % size}, {pixel // size}), '
+                    f'actual={actual_rgb}, expected={expected_rgb}')
     finally:
         if previous:
             gdi.SelectObject(dc, previous)
@@ -118,17 +161,24 @@ def verify_shell_icon(path):
             gdi.DeleteDC(dc)
         if info.hIcon:
             user.DestroyIcon(info.hIcon)
+        if expected_handle:
+            user.DestroyIcon(expected_handle)
         if initialized >= 0:
             ole.CoUninitialize()
 
 
-def verify_shortcuts(target):
+def verify_shortcuts(target, evidence=None):
     for name in ('Pointer.exe', 'pointer.ico'):
         if not (target / name).is_file():
             raise AssertionError('Missing installed shortcut resource: ' + str(target / name))
     rows = read_shortcuts()
     if not isinstance(rows, list) or len(rows) != 2 or {row.get('kind') for row in rows} != {'desktop', 'start_menu'}:
         raise AssertionError('Missing desktop or Start Menu Pointer shortcut')
+    if evidence is not None:
+        evidence.mkdir(parents=True, exist_ok=True)
+        for row in rows:
+            shutil.copy2(row['path'], evidence / (row['kind'] + '.lnk'))
+        (evidence / 'metadata.json').write_text(json.dumps(rows, indent=2), encoding='utf-8')
 
     def normalized(path):
         return ntpath.normcase(ntpath.normpath(str(Path(path.strip().strip('"')).resolve())))
@@ -144,7 +194,7 @@ def verify_shortcuts(target):
             raise AssertionError('Shortcut does not use the installed pointer.ico,0: ' + json.dumps({
                 'shortcut': row['path'], 'actual': row['icon'], 'expected': icon + ',0'}, ensure_ascii=True))
     for row in rows:
-        verify_shell_icon(Path(row['path']))
+        verify_shell_icon(Path(row['path']), expected_icon=target / 'pointer.ico')
     return rows
 
 
@@ -164,7 +214,7 @@ def main():
                 shutil.copy2(root/'install.log',reports/'installer-smoke.log')
             if completed.returncode:
                 raise RuntimeError('Installer failed: '+str(completed.returncode))
-            rows = verify_shortcuts(target)
+            rows = verify_shortcuts(target, evidence=reports / 'installer-shortcuts')
             print('installed shortcut targets, icon locations and Shell pixels passed: ' +
                   json.dumps(rows))
         install()

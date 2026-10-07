@@ -52,7 +52,8 @@ class InstallerSmokeTests(unittest.TestCase):
             self.assertEqual(len(installs), 2)
             for command in installs:
                 self.assertIn('/TASKS=desktopicon', command)
-            self.assertEqual(verify.call_args_list, [unittest.mock.call(stage / 'Pointer 自定义安装')] * 2)
+            self.assertEqual(verify.call_args_list, [unittest.mock.call(stage / 'Pointer 自定义安装',
+                                                  evidence=root / '.local/reports/installer-shortcuts')] * 2)
             self.assertTrue(all(call.args[0].isascii() for call in output.call_args_list),
                             'Redirected CI stdout may use a legacy encoding')
             self.assertEqual((stage / 'data/settings.json').read_bytes(),
@@ -85,7 +86,7 @@ class InstallerSmokeTests(unittest.TestCase):
                  patch.object(smoke, 'verify_shell_icon') as extract:
                 self.assertEqual(smoke.verify_shortcuts(target), records)
             self.assertEqual(extract.call_args_list,
-                             [unittest.mock.call(Path(row['path'])) for row in records])
+                             [unittest.mock.call(Path(row['path']), expected_icon=target / 'pointer.ico') for row in records])
 
     def test_short_and_long_path_aliases_compare_by_their_resolved_files(self):
         short = Path('C:/Users/RUNNER~1/AppData/Local/Temp/Pointer 临时安装')
@@ -162,27 +163,33 @@ class InstallerSmokeTests(unittest.TestCase):
         self.assertTrue(hasattr(smoke, 'read_shortcuts'), 'Shortcut reader is missing')
         rows = self.records(Path('C:/isolated/Pointer'))
         completed = subprocess.CompletedProcess([], 0, json.dumps(rows), '')
-        with patch.object(smoke.subprocess, 'run', return_value=completed) as run:
+        metadata = {row['path']: {'target': row['target'], 'icon': row['icon']} for row in rows}
+        with patch.object(smoke.subprocess, 'run', return_value=completed) as run, \
+             patch.object(smoke, 'read_shortcut', side_effect=lambda path: metadata[str(path)]) as native:
             self.assertEqual(smoke.read_shortcuts(), rows)
+        self.assertEqual(native.call_count, 2)
         command = run.call_args.args[0]
         script = base64.b64decode(command[-1]).decode('utf-16-le')
         self.assertIn("GetFolderPath('DesktopDirectory')", script)
         self.assertIn("GetFolderPath('Programs')", script)
         self.assertIn('Pointer\\Pointer.lnk', script)
-        self.assertLess(script.index('Test-Path -LiteralPath'), script.index('CreateShortcut('))
+        self.assertIn('Test-Path -LiteralPath', script)
+        self.assertNotIn('WScript.Shell', script)
+        self.assertNotIn('CreateShortcut(', script)
         self.assertNotIn('.Save(', script)
         self.assertEqual(run.call_args.kwargs['encoding'], 'utf-8')
         self.assertLessEqual(run.call_args.kwargs['timeout'], 30)
 
 
 class ShellIconTests(unittest.TestCase):
-    def native_mocks(self, draw=True, found=True):
+    def native_mocks(self, draw=True, found=True, actual_rgb=(177, 31, 1), expected_rgb=None,
+                     actual_alpha=255, expected_alpha=255):
         pixels = ctypes.create_string_buffer(32 * 32 * 4)
 
         def extract(path, attributes, info, size, flags):
-            info._obj.hIcon = 123 if found else 0
-            self.assertEqual(flags, 0x100, 'Extract the real Shell icon, without a link overlay')
-            return int(found)
+            info._obj.iIcon = 7
+            self.assertEqual(flags, 0x4000, 'Retrieve the actual link image list without an overlay HICON')
+            return 789 if found else 0
 
         def bitmap(dc, header, usage, bits, section, offset):
             ctypes.cast(bits, ctypes.POINTER(ctypes.c_void_p))[0] = ctypes.addressof(pixels)
@@ -190,17 +197,22 @@ class ShellIconTests(unittest.TestCase):
 
         def render(*args):
             if draw:
-                pixels[0] = b'\x01'
+                color = (expected_rgb or actual_rgb) if args[3] == 456 else actual_rgb
+                alpha = expected_alpha if args[3] == 456 else actual_alpha
+                pixels[:4] = bytes((*reversed(color), alpha))
             return True
 
         ole = SimpleNamespace(CoInitialize=Mock(return_value=0), CoUninitialize=Mock())
         shell = SimpleNamespace(SHGetFileInfoW=Mock(side_effect=extract))
-        user = SimpleNamespace(DrawIconEx=Mock(side_effect=render), DestroyIcon=Mock(return_value=True))
+        comctl = SimpleNamespace(ImageList_GetIcon=Mock(return_value=123),
+                                  ImageList_Destroy=Mock())
+        user = SimpleNamespace(DrawIconEx=Mock(side_effect=render), DestroyIcon=Mock(return_value=True),
+                               LoadImageW=Mock(return_value=456))
         gdi = SimpleNamespace(CreateCompatibleDC=Mock(return_value=111),
                               CreateDIBSection=Mock(side_effect=bitmap),
                               SelectObject=Mock(return_value=333), GdiFlush=Mock(return_value=True),
                               DeleteObject=Mock(return_value=True), DeleteDC=Mock(return_value=True))
-        return {'ole32': ole, 'shell32': shell, 'user32': user, 'gdi32': gdi}
+        return {'ole32': ole, 'shell32': shell, 'user32': user, 'gdi32': gdi, 'comctl32': comctl}
 
     def require_extractor(self):
         self.assertTrue(hasattr(smoke, 'verify_shell_icon'), 'Shell icon extraction is missing')
@@ -211,6 +223,8 @@ class ShellIconTests(unittest.TestCase):
         with patch.object(smoke.ctypes, 'WinDLL', side_effect=lambda name, **kw: native[name]):
             smoke.verify_shell_icon(Path('C:/isolated/desktop/Pointer.lnk'))
         native['user32'].DestroyIcon.assert_called_once_with(123)
+        native['comctl32'].ImageList_GetIcon.assert_called_once_with(789, 7, 0)
+        native['comctl32'].ImageList_Destroy.assert_not_called()
         native['gdi32'].DeleteObject.assert_called_once_with(222)
         native['gdi32'].DeleteDC.assert_called_once_with(111)
         self.assertEqual(native['gdi32'].SelectObject.call_args_list,
@@ -253,6 +267,87 @@ class ShellIconTests(unittest.TestCase):
             smoke.verify_shell_icon(Path('C:/isolated/Pointer.lnk'))
         native['ole32'].CoUninitialize.assert_not_called()
         native['user32'].DestroyIcon.assert_called_once_with(123)
+
+    def test_matching_expected_icon_renders_both_handles_with_unicode_filename(self):
+        native = self.native_mocks(actual_alpha=0, expected_alpha=255)
+        expected = Path('C:/isolated/Pointer 中文/pointer.ico')
+        with patch.object(smoke.ctypes, 'WinDLL', side_effect=lambda name, **kw: native[name]):
+            smoke.verify_shell_icon(Path('C:/isolated/Pointer.lnk'), expected_icon=expected)
+        native['user32'].LoadImageW.assert_called_once_with(None, str(expected), 1, 32, 32, 0x10)
+        self.assertEqual([call.args[3] for call in native['user32'].DrawIconEx.call_args_list], [123, 456])
+        self.assertEqual({call.args[0] for call in native['user32'].DestroyIcon.call_args_list}, {123, 456})
+        self.assertEqual(native['user32'].DestroyIcon.call_count, 2)
+        native['ole32'].CoUninitialize.assert_called_once()
+
+    def test_shell_alpha_quantization_allows_two_rgb_levels_but_rejects_three(self):
+        for actual, accepted in [((175, 29, 1), True), ((174, 31, 1), False)]:
+            with self.subTest(actual=actual, accepted=accepted):
+                native = self.native_mocks(actual_rgb=actual, expected_rgb=(177, 31, 1))
+                with patch.object(smoke.ctypes, 'WinDLL', side_effect=lambda name, **kw: native[name]):
+                    if accepted:
+                        smoke.verify_shell_icon(Path('C:/isolated/Pointer.lnk'),
+                                                expected_icon=Path('C:/isolated/pointer.ico'))
+                    else:
+                        with self.assertRaisesRegex(AssertionError, 'maximum RGB difference 3'):
+                            smoke.verify_shell_icon(Path('C:/isolated/Pointer.lnk'),
+                                                    expected_icon=Path('C:/isolated/pointer.ico'))
+                self.assertEqual(native['user32'].DestroyIcon.call_count, 2)
+                native['comctl32'].ImageList_Destroy.assert_not_called()
+
+    def test_system_image_list_icon_copy_failure_is_not_accepted(self):
+        native = self.native_mocks()
+        native['comctl32'].ImageList_GetIcon.return_value = 0
+        with patch.object(smoke.ctypes, 'WinDLL', side_effect=lambda name, **kw: native[name]):
+            with self.assertRaisesRegex(AssertionError, 'Missing Shell icon'):
+                smoke.verify_shell_icon(Path('C:/isolated/Pointer.lnk'),
+                                        expected_icon=Path('C:/isolated/pointer.ico'))
+        native['user32'].DestroyIcon.assert_not_called()
+        native['user32'].LoadImageW.assert_not_called()
+        native['comctl32'].ImageList_Destroy.assert_not_called()
+        native['gdi32'].CreateCompatibleDC.assert_not_called()
+        native['ole32'].CoUninitialize.assert_called_once()
+
+    def test_generic_or_wrong_nonempty_artwork_fails_and_releases_both_icons(self):
+        for actual in ((255, 255, 255), (0, 80, 200)):
+            with self.subTest(actual=actual):
+                native = self.native_mocks(actual_rgb=actual, expected_rgb=(177, 31, 1))
+                with patch.object(smoke.ctypes, 'WinDLL', side_effect=lambda name, **kw: native[name]):
+                    with self.assertRaisesRegex(AssertionError, 'artwork.*RGB pixels'):
+                        smoke.verify_shell_icon(Path('C:/isolated/Pointer.lnk'), expected_icon=Path('C:/isolated/pointer.ico'))
+                self.assertEqual({call.args[0] for call in native['user32'].DestroyIcon.call_args_list}, {123, 456})
+                native['gdi32'].DeleteObject.assert_called_once_with(222)
+                native['gdi32'].DeleteDC.assert_called_once_with(111)
+                native['ole32'].CoUninitialize.assert_called_once()
+
+    def test_render_exception_also_releases_the_expected_icon(self):
+        for failed_handle in (123, 456):
+            with self.subTest(failed_handle=failed_handle):
+                native = self.native_mocks()
+                original = native['user32'].DrawIconEx.side_effect
+
+                def render(*args):
+                    if args[3] == failed_handle:
+                        raise OSError('mock render failure')
+                    return original(*args)
+
+                native['user32'].DrawIconEx.side_effect = render
+                with patch.object(smoke.ctypes, 'WinDLL', side_effect=lambda name, **kw: native[name]):
+                    with self.assertRaisesRegex(OSError, 'mock render failure'):
+                        smoke.verify_shell_icon(Path('C:/isolated/Pointer.lnk'),
+                                                expected_icon=Path('C:/isolated/pointer.ico'))
+                self.assertEqual({call.args[0] for call in native['user32'].DestroyIcon.call_args_list}, {123, 456})
+                native['gdi32'].DeleteObject.assert_called_once_with(222)
+                native['gdi32'].DeleteDC.assert_called_once_with(111)
+                native['ole32'].CoUninitialize.assert_called_once()
+
+    def test_missing_expected_icon_fails_without_accepting_a_visible_shell_fallback(self):
+        native = self.native_mocks()
+        native['user32'].LoadImageW.return_value = 0
+        with patch.object(smoke.ctypes, 'WinDLL', side_effect=lambda name, **kw: native[name]):
+            with self.assertRaisesRegex(AssertionError, 'expected icon'):
+                smoke.verify_shell_icon(Path('C:/isolated/Pointer.lnk'), expected_icon=Path('C:/isolated/missing.ico'))
+        native['user32'].DestroyIcon.assert_called_once_with(123)
+        native['ole32'].CoUninitialize.assert_called_once()
 
 
 if __name__ == '__main__':
