@@ -1,6 +1,8 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QComboBox, QFrame
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider, QComboBox, QFrame, QPushButton
 from ..theme import card, SettingsRow, HairlineDivider
+from ..input_controls import ChoiceComboBox, DragSlider
+
 
 
 class MotionPage(QWidget):
@@ -11,42 +13,40 @@ class MotionPage(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(14)
 
-        # 1. Mode card
-        frame, inner = card('点击反馈动效微物理', '鼠标左键按下时给予富有生命力的微形变回弹，松开后自然优雅回正。')
-        self.mode = QComboBox()
-        self.mode.setMinimumWidth(260)
-        for text, mode in [
-            ('整体倾侧 (Tilt · 拟物灵动，受力自然微倾侧)', 'tilt'),
-            ('缩小回弹 (Shrink · 紧凑触感，按压微缩后轻快回弹)', 'shrink'),
-            ('弹簧果冻回弹 (Spring Bounce · 二阶欠阻尼物理弹簧振子)', 'spring'),
-            ('点击冲击波 (Pulse Wave · 尖端能量扩散涟漪冲击波)', 'pulse'),
-            ('灵动微拖尾 (Velocity Trails · 速度感应空气动力微拖尾)', 'trail'),
-            ('关闭动效 (Off · 纯静态指针，保留纯净标准状态)', 'off'),
-        ]:
+        frame, inner = card('点击动效', '')
+        self.mode = ChoiceComboBox()
+        self.mode.setToolTip('选择整套光标的左键效果；应用后生效。')
+        for text, mode in [('倾斜', 'tilt'), ('缩小回弹', 'shrink'),
+                           ('弹簧回弹', 'spring'), ('关闭', 'off')]:
             self.mode.addItem(text, mode)
         self.mode.currentIndexChanged.connect(lambda: change(motion=self.mode.currentData()))
 
-        row_mode = SettingsRow('交互反馈模式', '模拟真实触控反馈物理惯性与微形变特征', self.mode)
-        inner.addWidget(row_mode)
+        inner.addWidget(self.mode)
+        self.retired_hint = QLabel('')
+        self.retired_hint.setObjectName('muted')
+        self.retired_hint.setWordWrap(True)
+        self.retired_hint.hide()
+        inner.addWidget(self.retired_hint)
         layout.addWidget(frame)
-
-        # 2. Rhythm & Parameters card
-        frame, inner = card('物理手感与时间阻尼精调', '经真实操控手感验证的时间曲线与形变阻尼，按下敏捷利落，回弹自然丝滑。')
+        presets = QHBoxLayout()
+        self.motion_recipes = []
+        for title, fields in [('轻压', dict(motion='shrink', strength=20, press_ms=60, release_ms=120)),
+                              ('轻倾', dict(motion='tilt', strength=25, press_ms=60, release_ms=150)),
+                              ('静止', dict(motion='off'))]:
+            button = QPushButton(title)
+            button.setCheckable(True)
+            self.motion_recipes.append((button, fields))
+            button.setToolTip('设置当前动效草稿，显式应用后生效。')
+            button.clicked.connect(lambda checked=False, fields=fields: change(**fields))
+            presets.addWidget(button)
+        layout.addLayout(presets)
+        frame, inner = card('响应', '')
         self.sliders = {}
 
         specs = [
-            (
-                'strength', '动效形变强度', 0, 100, '%', 'strengthSlider',
-                '控制位移与倾斜的最大幅度（推荐 40%–60% 适度微反馈）'
-            ),
-            (
-                'press_ms', '按下响应时间', 40, 200, ' ms', 'pressSlider',
-                '左键压下时的形变过渡时长，数值越小越敏捷锐利'
-            ),
-            (
-                'release_ms', '松开回弹时间', 80, 400, ' ms', 'releaseSlider',
-                '松开按键后平滑复位的缓冲时长，数值越大越柔和优雅'
-            ),
+            ('strength', '强度', 0, 100, '%', 'strengthSlider', '调整位移、倾斜与缩放幅度。'),
+            ('press_ms', '按下时间', 40, 200, ' ms', 'pressSlider', '值越小，按下响应越快。'),
+            ('release_ms', '松开时间', 80, 400, ' ms', 'releaseSlider', '值越大，恢复越缓慢。'),
         ]
 
         for i, (field, title, minimum, maximum, suffix, obj_name, hint) in enumerate(specs):
@@ -58,10 +58,12 @@ class MotionPage(QWidget):
             sw_layout.setContentsMargins(0, 0, 0, 0)
             sw_layout.setSpacing(12)
 
-            slider = QSlider(Qt.Orientation.Horizontal)
+            slider = DragSlider(Qt.Orientation.Horizontal)
             slider.setRange(minimum, maximum)
             slider.setObjectName(obj_name)
-            slider.setMinimumWidth(160)
+            slider.setMinimumWidth(80)
+            slider.setAccessibleName(title)
+            slider.setToolTip(hint)
             slider.valueChanged.connect(lambda number, field=field: change(**{field: number}))
             slider.sliderReleased.connect(lambda field=field, s=slider: change(_immediate=True, **{field: s.value()}))
             sw_layout.addWidget(slider, 1)
@@ -69,21 +71,34 @@ class MotionPage(QWidget):
             value_lbl = QLabel()
             value_lbl.setStyleSheet('color: #007aff; font-weight: 600; font-size: 13px;')
             value_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            value_lbl.setFixedWidth(64)
+            value_lbl.setMinimumWidth(100)
             sw_layout.addWidget(value_lbl)
 
-            row = SettingsRow(title, hint, slider_widget)
-            inner.addWidget(row)
+            title_label = QLabel(title)
+            title_label.setToolTip(hint)
+            inner.addWidget(title_label)
+            inner.addWidget(slider_widget)
             self.sliders[field] = (slider, value_lbl, suffix)
 
         layout.addWidget(frame)
         layout.addStretch()
 
     def sync(self, settings):
+        for button, fields in self.motion_recipes:
+            button.setChecked(all(getattr(settings, field) == value for field, value in fields.items()))
         self.mode.blockSignals(True)
+        for retired_mode in ('pulse', 'trail'):
+            index = self.mode.findData(retired_mode)
+            if index >= 0:
+                self.mode.removeItem(index)
+        retired = settings.motion in ('pulse', 'trail')
+        if retired:
+            self.mode.addItem('叠加动效已停用（配置保留）', settings.motion)
         self.mode.setCurrentIndex(self.mode.findData(settings.motion))
         self.mode.blockSignals(False)
-        is_active = (settings.motion != 'off')
+        self.retired_hint.setText('此动效不再绘制；原配置保留。可选择倾斜、缩小回弹或关闭。')
+        self.retired_hint.setVisible(retired)
+        is_active = settings.motion not in ('off', 'pulse', 'trail')
         for field, (slider, label, suffix) in self.sliders.items():
             slider.blockSignals(True)
             slider.setValue(getattr(settings, field))

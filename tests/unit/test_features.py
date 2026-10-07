@@ -15,7 +15,7 @@ from pointer.windows.engine import _is_fullscreen_game
 
 class FeatureTests(unittest.TestCase):
     def test_four_geometric_styles(self):
-        self.assertEqual(len(STYLES), 4)
+        self.assertEqual(len(STYLES), 10)  # Six recommendations and four historical IDs.
         for style in ('sequoia', 'precision', 'falcon', 'pixel'):
             contour = arrow_contour(style=style)
             self.assertGreater(len(contour), 3)

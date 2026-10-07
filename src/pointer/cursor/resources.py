@@ -20,7 +20,7 @@ from .art.codec import dib, riff_chunk
 from pointer.paths import ASSET_ROOT
 
 DPI_VARIANTS = (96, 144, 192, 288, 384, 768)
-RENDER_VERSION = 3
+RENDER_VERSION = 7
 
 
 @dataclass(frozen=True)
@@ -34,6 +34,9 @@ class RenderRequest:
 
 @lru_cache(maxsize=2048)
 def _base(role, pixels, animation_frame, style='sequoia'):
+    from .art.families import STYLES, render_family
+    if style in STYLES:
+        return render_family(pixels, role, style, animation_frame)
     if role in ('busy', 'working'):
         return render_loading(pixels, animation_frame, role == 'working')
     if role not in RENDERERS:
@@ -89,11 +92,12 @@ def render_cursor(request):
     padding = round((math.ceil(settings.size * .4) + 2) * request.dpi / 96)
     style = getattr(settings, 'style', 'sequoia')
     image = _color(_base(role, pixels, request.frame if role in ('busy', 'working') else 0, style=style), settings, theme)
+    active_press = role in ('arrow', 'hand') and request.frame and settings.motion not in ('off', 'pulse', 'trail') and settings.strength
     canvas = Image.new('RGBA', (pixels + 2 * padding, pixels + 2 * padding))
     canvas.paste(image, (padding, padding))
     hotspot = ((3, 3) if role == 'working' else (16, 16)) if role in ('busy', 'working') else RENDERERS[role][1]
     hotspot = tuple(round(v * pixels / 32) + padding for v in hotspot)
-    if role in ('arrow', 'hand') and request.frame and settings.motion != 'off' and settings.strength:
+    if active_press:
         amount = request.frame / 4 * settings.strength / 50
         motion_mode = settings.motion
         if motion_mode == 'shrink':
@@ -107,38 +111,6 @@ def render_cursor(request):
             scale = 1.0 + (target_scale - 1.0) * (settings.strength / 50)
             angle = math.radians(-3 * amount) if role == 'arrow' else 0
             pivot = (20, 16) if role == 'arrow' else RENDERERS[role][1]
-        elif motion_mode == 'pulse':
-            scale = 1.0
-            angle = 0
-            pivot = RENDERERS[role][1]
-            from PIL import ImageDraw
-            pulse_draw = ImageDraw.Draw(canvas)
-            hx, hy = hotspot
-            radius = round(amount * 10 * pixels / 32)
-            if radius > 1:
-                outline_color = getattr(settings, theme + '_outline')
-                rgb = tuple(int(outline_color[i:i+2], 16) for i in (1, 3, 5))
-                alpha = max(0, round(180 * (1 - amount)))
-                pulse_draw.ellipse(
-                    (hx - radius, hy - radius, hx + radius, hy + radius),
-                    outline=(*rgb, alpha),
-                    width=max(1, round(1.5 * request.dpi / 96))
-                )
-        elif motion_mode == 'trail':
-            scale = 1.0
-            angle = math.radians(-2 * amount)
-            pivot = RENDERERS[role][1]
-            from PIL import ImageDraw
-            trail_draw = ImageDraw.Draw(canvas)
-            offset = round(amount * 4 * pixels / 32)
-            body_color = getattr(settings, theme + '_body')
-            rgb = tuple(int(body_color[i:i+2], 16) for i in (1, 3, 5))
-            trail_draw.polygon(
-                [(hotspot[0] + offset, hotspot[1] + offset),
-                 (hotspot[0] + offset + 2, hotspot[1] + offset + 5),
-                 (hotspot[0] + offset + 5, hotspot[1] + offset + 2)],
-                fill=(*rgb, round(100 * amount))
-            )
         else:  # tilt
             scale = 1
             angle = math.radians((-6 if role == 'arrow' else -12) * amount)
@@ -297,6 +269,8 @@ def _generate_bundle(settings, root):
 def prepare_resources(settings, cache_root):
     defaults = CursorSettings()
     geometry = ('size', 'strength', 'light_body', 'light_outline', 'dark_body', 'dark_outline', 'style', 'aura_glow', 'aura_color')
+    # Approved original rounded assets are the reference, never regenerated
+    # merely to align them with a new family or a different sampling path.
     if all(getattr(settings, name) == getattr(defaults, name) for name in geometry) and settings.motion in ('tilt', 'shrink', 'off'):
         return ResourceBundle('builtin', ASSET_ROOT / 'adaptive', 32, settings, True)
     cache_root = Path(cache_root).resolve()

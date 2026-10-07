@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QFontDatabase, QPainter, QColor, QPen
 from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QCheckBox
 from pointer.paths import ROOT
+from .colors import widget_colors
 
 CHECK_ICON_PATH = (ROOT / 'assets' / 'check.png').resolve().as_posix()
 
@@ -446,7 +447,7 @@ class HairlineDivider(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedHeight(1)
-        self.setStyleSheet('background-color: rgba(255, 255, 255, 0.06); border: none;')
+        self.setObjectName('hairlineDivider')
 
 
 class SettingsRow(QFrame):
@@ -463,13 +464,12 @@ class SettingsRow(QFrame):
         text_layout.setSpacing(2)
         title_lbl = QLabel(title)
         title_lbl.setObjectName('rowTitle')
-        title_lbl.setStyleSheet('color: #f5f5f7; font-weight: 600; font-size: 13px;')
+        title_lbl.setWordWrap(True)
         text_layout.addWidget(title_lbl)
 
         if subtitle:
             sub_lbl = QLabel(subtitle)
             sub_lbl.setObjectName('rowSubtitle')
-            sub_lbl.setStyleSheet('color: #86868b; font-size: 11.5px;')
             sub_lbl.setWordWrap(True)
             text_layout.addWidget(sub_lbl)
 
@@ -494,17 +494,21 @@ class MacSwitch(QCheckBox):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         checked = self.isChecked()
+        colors = widget_colors(self)
         w = float(self.width())
         h = float(self.height())
         radius = h / 2.0
 
         # Background track
         if checked:
-            track_color = QColor('#34c759')  # Apple Green
-            border_color = QColor('#34c759')
+            track_color = QColor(colors['on_track'])
+            border_color = QColor(colors['on_border'])
         else:
-            track_color = QColor(255, 255, 255, 38)
-            border_color = QColor(255, 255, 255, 28)
+            track_color = QColor(colors['off_track'])
+            border_color = QColor(colors['off_border'])
+        if not self.isEnabled():
+            track_color = QColor(colors['raised'])
+            border_color = QColor(colors['border'])
 
         track_rect = QRectF(0.5, 0.5, w - 1.0, h - 1.0)
         painter.setPen(QPen(border_color, 1.0))
@@ -524,5 +528,8 @@ class MacSwitch(QCheckBox):
         # Knob body
         painter.setBrush(QColor('#ffffff'))
         painter.drawEllipse(QRectF(knob_x, knob_y, knob_dia, knob_dia))
+        if self.hasFocus() and self.property('keyboardFocus'):
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.setPen(QPen(QColor(colors['focus']), 2))
+            painter.drawRoundedRect(QRectF(1, 1, w - 2, h - 2), radius, radius)
         painter.end()
-

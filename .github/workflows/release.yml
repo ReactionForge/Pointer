@@ -67,6 +67,9 @@ jobs:
           }
           if ($result.click_resources -ne 32) { throw 'Incomplete click animation resources' }
           if (-not $result.qt_version) { throw 'Missing Qt runtime' }
+          if ($result.gui_shell -cne 'MaterialWindow' -or $result.composition_helper -cne 'native/CompositionSidecar.exe') {
+            throw 'Missing Material desktop entry or bundled background component'
+          }
       - name: Isolated package installation and upgrade
         shell: pwsh
         run: |
@@ -109,6 +112,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: windows-x64
@@ -130,14 +136,13 @@ jobs:
           $installerChecksum = "$installer.sha256"
           $expectedInstaller = ((Get-Content -LiteralPath $installerChecksum -Raw).Trim() -split '\s+')[0]
           if ((Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash -ine $expectedInstaller) { throw 'Installer checksum mismatch' }
-          $notes = @'
-          桌面 APP 预览版：下载安装 EXE，或完整解压 ZIP 后双击 Pointer.exe。
-          APP 支持配色、大小、左键动效、自定义节奏、双色预览、内置系统光标测试、开机启动和配置导入导出。
-          首次打开后点击“应用配置”启用光标。开机启动由用户选择，关闭界面后后台仍可运行。
-          无需 Python 或管理员权限；升级保留配置与原光标备份，卸载前恢复原光标。
-          发布包尚未签名；SHA-256 校验文件随包提供。
-          '@
+          $changelog = Get-Content -LiteralPath CHANGELOG.md -Raw -Encoding utf8
+          $pattern = '(?ms)^## ' + [regex]::Escape($env:RELEASE_VERSION) + ' [—-] [^\r\n]+\r?\n(?<body>.*?)(?=^## |\z)'
+          $section = [regex]::Match($changelog, $pattern)
+          if (-not $section.Success -or [string]::IsNullOrWhiteSpace($section.Groups['body'].Value)) {
+            throw 'Missing changelog section for this release'
+          }
           $notesPath = Join-Path $env:RUNNER_TEMP 'pointer-release-notes.md'
-          Set-Content -LiteralPath $notesPath -Value $notes -Encoding utf8
-          gh release create $env:RELEASE_TAG $package $checksum $installer $installerChecksum --verify-tag --prerelease --latest=false --title "Pointer $env:RELEASE_TAG 桌面预览版" --notes-file $notesPath
+          Set-Content -LiteralPath $notesPath -Value $section.Value.Trim() -Encoding utf8
+          gh release create $env:RELEASE_TAG $package $checksum $installer $installerChecksum --verify-tag --prerelease --latest=false --title "Pointer $env:RELEASE_TAG Material 桌面预览版" --notes-file $notesPath
           if ($LASTEXITCODE -ne 0) { throw 'GitHub Release creation failed' }

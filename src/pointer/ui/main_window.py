@@ -2,23 +2,25 @@
 from dataclasses import replace
 import json
 import sys
-from PySide6.QtCore import Qt, QThread, QTimer, Slot, QPropertyAnimation, QEasingCurve
+from PySide6.QtCore import Qt, QThread, QTimer, Slot, QPropertyAnimation, QEasingCurve, QEvent, QSize
 from PySide6.QtGui import QFont, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QFrame, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QStackedWidget, QScrollArea, QFileDialog, QMessageBox,
-    QGraphicsOpacityEffect
+    QGraphicsOpacityEffect, QStyle
 )
 from pointer.cursor.settings import CursorSettings, _write_json
 from pointer.paths import DATA_ROOT, INSTALL_ROOT, ROOT
 from .theme import STYLE, initialize_fonts
-from .preview import PreviewPanel
+from .confirmations import ask_confirmation
 from .workers import Worker
 from .native_cursor import NativeCursorFilter
-from .pages.appearance import AppearancePage
 from .pages.motion import MotionPage
 from .pages.tests import TestPage
 from .pages.preferences import PreferencesPage
+from .family_workspace import FamilyAppearancePage, FamilyPreviewPanel, workspace_style, navigation_icon
+from .input_controls import PropertyScrollArea
+from .colors import theme_colors
 
 
 class ToastWidget(QFrame):
@@ -108,8 +110,11 @@ class ToastWidget(QFrame):
         self.timer.start(2800)
 
     def _fade_out(self):
+        if getattr(self.window(), 'reduce_motion', True):
+            self.hide()
+            return
         self.anim = QPropertyAnimation(self.opacity_effect, b"opacity")
-        self.anim.setDuration(350)
+        self.anim.setDuration(140)
         self.anim.setStartValue(1.0)
         self.anim.setEndValue(0.0)
         self.anim.setEasingCurve(QEasingCurve.Type.OutCubic)
@@ -124,6 +129,7 @@ class MainWindow(QMainWindow):
         initialize_fonts()
         self.application = application
         self.busy = False
+        self.reduce_motion = not bool(QApplication.style().styleHint(QStyle.StyleHint.SH_Widget_Animate))
         self._threads = []
         self.load_error = None
         self._replace_draft = False
@@ -151,7 +157,8 @@ class MainWindow(QMainWindow):
 
         self.resize(1180, 800)
         self.setMinimumSize(880, 620)
-        self.setStyleSheet(STYLE)
+        self.ui_dark = False
+        self.setStyleSheet(STYLE + workspace_style())
 
         root = QWidget()
         root.setObjectName('rootWidget')
@@ -174,7 +181,7 @@ class MainWindow(QMainWindow):
         brand_cluster.setSpacing(10)
         if self.icon_path:
             logo_lbl = QLabel()
-            logo_pix = QPixmap(str(self.icon_path)).scaled(26, 26, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            logo_pix = QIcon(str(self.icon_path)).pixmap(QSize(32, 32), self.devicePixelRatioF())
             logo_lbl.setPixmap(logo_pix)
             brand_cluster.addWidget(logo_lbl)
 
@@ -187,14 +194,14 @@ class MainWindow(QMainWindow):
         brand_cluster.addWidget(badge_lbl)
         header_layout.addLayout(brand_cluster)
 
-        header_layout.addStretch(1)
+        header_layout.addSpacing(20)
 
         # 2. Center macOS Segmented Control Navigation
         nav_capsule = QFrame()
         nav_capsule.setObjectName('navCapsule')
-        capsule_layout = QHBoxLayout(nav_capsule)
-        capsule_layout.setContentsMargins(3, 2, 3, 2)
-        capsule_layout.setSpacing(2)
+        capsule_layout = QVBoxLayout(nav_capsule)
+        capsule_layout.setContentsMargins(6, 12, 6, 12)
+        capsule_layout.setSpacing(6)
 
         self.navigation = []
         nav_items = [
@@ -207,12 +214,19 @@ class MainWindow(QMainWindow):
             button = QPushButton(title)
             button.setCheckable(True)
             button.setObjectName(f'nav{index}')
+            button.setFixedHeight(48)
+            button.setMinimumWidth(88)
             button.setCursor(Qt.CursorShape.PointingHandCursor)
+            button.setIcon(navigation_icon(index, self.ui_dark, self.devicePixelRatioF()))
+            button.setIconSize(QSize(20, 20))
+            button.setAccessibleName(('外观', '动效', '测试', '设置')[index])
             button.clicked.connect(lambda checked=False, idx=index: self.select_page(idx))
             capsule_layout.addWidget(button)
             self.navigation.append(button)
 
-        header_layout.addWidget(nav_capsule)
+        nav_capsule.setFixedWidth(112)
+        self.nav_rail = nav_capsule
+        capsule_layout.addStretch(1)
 
         header_layout.addStretch(1)
 
@@ -227,16 +241,25 @@ class MainWindow(QMainWindow):
         chip_layout.setSpacing(6)
 
         self.status = QLabel('●  等待应用')
-        self.status.setStyleSheet('color: #34c759; font-weight: 600; font-size: 11.5px;')
+        self.status.setStyleSheet('color: ' + ('#b2b5c0' if self.ui_dark else '#5d5f68') + '; font-weight: 600; font-size: 12px;')
         chip_layout.addWidget(self.status)
         right_hub.addWidget(status_chip)
 
         version = (ROOT / 'VERSION').read_text(encoding='utf-8').strip() if (ROOT / 'VERSION').exists() else '开发版'
         ver_lbl = QLabel(f'v{version}')
         ver_lbl.setObjectName('headerVersion')
-        right_hub.addWidget(ver_lbl)
+        ver_lbl.hide()
 
         header_layout.addLayout(right_hub)
+        self.theme_button = QPushButton('切换深色')
+        self.theme_button.setObjectName('themeToggle')
+        self.theme_button.setFixedHeight(36)
+        self.theme_button.setAccessibleName('切换界面明暗，不改变光标配置')
+        self.theme_button.clicked.connect(self.toggle_workspace_theme)
+        self.theme_button.setToolTip('仅切换界面主题，不修改光标配置')
+        badge_lbl.hide()
+        for button, text in zip(self.navigation, ('外观', '动效', '测试', '设置')):
+            button.setText(text)
         root_layout.addWidget(top_header)
 
         # ======================================================================
@@ -246,7 +269,7 @@ class MainWindow(QMainWindow):
         content.setObjectName('content')
         self.content_widget = content
         layout = QVBoxLayout(content)
-        layout.setContentsMargins(24, 16, 24, 16)
+        layout.setContentsMargins(16, 12, 16, 16)
         layout.setSpacing(12)
 
         # Banner Info Card
@@ -272,17 +295,19 @@ class MainWindow(QMainWindow):
 
         # Central Stage: Stacked Pages & Grand Preview Showcase
         body = QHBoxLayout()
-        body.setSpacing(18)
+        self.body_layout = body
+        body.setSpacing(16)
 
         self.stack = QStackedWidget()
         self.pages = [
-            AppearancePage(self.change),
+            FamilyAppearancePage(self.change),
             MotionPage(self.change),
             TestPage(application),
             PreferencesPage(self)
         ]
+        self.pages[0].validation_changed.connect(self.sync)
         for page in self.pages:
-            scroll = QScrollArea()
+            scroll = PropertyScrollArea()
             scroll.setWidgetResizable(True)
             scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             scroll.setFrameShape(QFrame.Shape.NoFrame)
@@ -290,12 +315,9 @@ class MainWindow(QMainWindow):
             scroll.setWidget(page)
             page.setAutoFillBackground(False)
             self.stack.addWidget(scroll)
-        body.addWidget(self.stack, 3)
-
-        self.preview = PreviewPanel(self._draft)
-        self.preview.setMinimumWidth(260)
-        self.preview.setMaximumWidth(340)
-        body.addWidget(self.preview, 2)
+        self.preview = FamilyPreviewPanel(self._draft)
+        body.addWidget(self.preview, 3)
+        body.addWidget(self.stack, 2)
         layout.addLayout(body, 1)
 
         # Floating Toast Notification
@@ -308,32 +330,45 @@ class MainWindow(QMainWindow):
         control_bar.setObjectName('controlBar')
         control_layout = QHBoxLayout(control_bar)
         control_layout.setContentsMargins(18, 8, 18, 8)
-        control_layout.setSpacing(14)
+        control_layout.setSpacing(8)
 
         self.draft_label = QLabel('● 当前配置已同步')
-        self.draft_label.setStyleSheet('color: #34c759; font-weight: 600;')
-        control_layout.addWidget(self.draft_label)
+        self.draft_label.setStyleSheet('color: ' + ('#b2b5c0' if self.ui_dark else '#5d5f68') + '; font-weight: 600;')
 
-        self.feedback = QLabel('所见即所得：配置在展台实时预览，应用后立即同步至 Windows 系统。')
+
+        self.feedback = QLabel('预览不改变系统光标')
         self.feedback.setObjectName('feedback')
         self.feedback.setWordWrap(True)
         control_layout.addWidget(self.feedback, 1)
+        control_layout.addWidget(self.draft_label)
 
         self.discard = QPushButton('放弃修改')
         self.discard.setCursor(Qt.CursorShape.PointingHandCursor)
         self.discard.clicked.connect(self.discard_changes)
+        self.discard.setFixedWidth(88)
         control_layout.addWidget(self.discard)
 
         self.apply_button = QPushButton('应用配置')
         self.apply_button.setObjectName('applyButton')
         self.apply_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.apply_button.clicked.connect(self.apply_draft)
+        self.apply_button.setText('应用更改')
+        self.apply_button.setFixedWidth(112)
         control_layout.addWidget(self.apply_button)
 
         layout.addWidget(control_bar)
-        root_layout.addWidget(content, 1)
+        workspace = QHBoxLayout()
+        workspace.setContentsMargins(8, 0, 0, 0)
+        workspace.setSpacing(0)
+        workspace.addWidget(nav_capsule)
+        workspace.addWidget(content, 1)
+        root_layout.addLayout(workspace, 1)
 
         self.select_page(0)
+        for widget in self.findChildren(QWidget):
+            if widget.focusPolicy() != Qt.FocusPolicy.NoFocus:
+                widget.setProperty('keyboardFocus', False)
+                widget.installEventFilter(self)
         self.sync()
 
         if self.load_error:
@@ -397,20 +432,21 @@ class MainWindow(QMainWindow):
     def _run_preset_prewarm(self):
         if not hasattr(self, 'application') or not hasattr(self.application, 'prewarm'):
             return
-        from pointer.ui.pages.appearance import PRESETS
+        from pointer.ui.pages.appearance import WORKSPACE_PRESETS
+        draft = self._draft
         try:
-            self.application.prewarm(self._draft)
-            if self._draft == self._draft:
-                self._last_prewarmed_draft = self._draft
+            self.application.prewarm(draft)
+            if self._draft == draft:
+                self._last_prewarmed_draft = draft
         except Exception:
             pass
-        current_size = getattr(self._draft, 'size', 32)
-        for preset in PRESETS:
-            if getattr(self, 'busy', False):
+        current_size = getattr(draft, 'size', 32)
+        for preset in WORKSPACE_PRESETS:
+            if getattr(self, 'busy', False) or self._draft != draft:
                 return
             try:
                 preset_settings = replace(
-                    self._draft,
+                    draft,
                     size=current_size,
                     light_body=preset['light_body'],
                     light_outline=preset['light_outline'],
@@ -423,6 +459,8 @@ class MainWindow(QMainWindow):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
+        if hasattr(self, 'nav_rail'):
+            self.nav_rail.setFixedWidth(112 if self.width() < 1000 else 152)
         if hasattr(self, 'toast') and hasattr(self, 'content_widget'):
             pw = self.content_widget.width()
             ph = self.content_widget.height()
@@ -453,18 +491,20 @@ class MainWindow(QMainWindow):
         self._schedule_prewarm(delay=delay)
 
     def sync(self):
+        self.pages[0].setEnabled(not self.busy)
         for index in (0, 1, 3):
             self.pages[index].sync(self._draft)
         self.preview.set_settings(self._draft)
         dirty = self._draft != self.applied
         if dirty:
-            self.draft_label.setText('● 有未应用的修改')
-            self.draft_label.setStyleSheet('color: #ff9f0a; font-weight: 600;')
+            self.draft_label.setText('未应用')
+            self.draft_label.setStyleSheet('color: ' + ('#ffcf81' if self.ui_dark else '#9a4b00') + '; font-weight: 600;')
         else:
-            self.draft_label.setText('● 当前配置已同步')
-            self.draft_label.setStyleSheet('color: #34c759; font-weight: 600;')
+            self.draft_label.setText('无待应用更改')
+            self.draft_label.setStyleSheet('color: ' + ('#b2b5c0' if self.ui_dark else '#5d5f68') + '; font-weight: 600;')
         self.discard.setEnabled(dirty and not self.busy)
-        self.apply_button.setEnabled(not self.busy and not self.load_error)
+        self.apply_button.setEnabled(dirty and not self.busy and not self.load_error and not self.pages[0].invalid_fields)
+        self.apply_button.setText('处理中…' if self.busy else '应用更改')
         if getattr(self, 'tray_controller', None):
             try:
                 self.tray_controller.update_menu()
@@ -472,15 +512,13 @@ class MainWindow(QMainWindow):
                 pass
 
     def select_page(self, index):
-        titles = ['光标外观 · 视觉方案', '点击动效 · 触感微调', '全景沙盒 · 实操检验', '系统偏好 · 常驻自愈']
-        descriptions = [
-            '自适应圆角光标，智能感应背景亮度，在浅色与深色背景下始终保持清晰锐利。',
-            '鼠标左键按下时给予富有生命力的微物理形变，松开后自然丝滑回正。',
-            '在此实时观察 Windows 系统原生光标效果，支持全部 17 种指针与真实环境检验。',
-            '管理后台常驻服务、开机启动自愈与个性化配置备份。'
-        ]
+        titles = ['外观', '动效', '光标测试', '应用设置']
         self.title.setText(titles[index])
-        self.subtitle.setText(descriptions[index])
+        self.subtitle.setText('检查已应用的系统光标')
+        self.subtitle.setVisible(index == 2)
+        self.stack.setMinimumWidth(350 if index in (0, 1) else 0)
+        self.stack.setMaximumWidth(500 if index in (0, 1) else 16777215)
+        self.preview.clear_press()
         self.stack.setCurrentIndex(index)
         for number, button in enumerate(self.navigation):
             button.setChecked(number == index)
@@ -489,19 +527,62 @@ class MainWindow(QMainWindow):
             self.pages[2].set_wait(False)
             self.pages[2].button_release()
 
+    def toggle_workspace_theme(self):
+        self.ui_dark = not self.ui_dark
+        self.setStyleSheet(STYLE + workspace_style(self.ui_dark))
+        for index, button in enumerate(self.navigation):
+            button.setIcon(navigation_icon(index, self.ui_dark, self.devicePixelRatioF()))
+        self.theme_button.setText('切换浅色' if self.ui_dark else '切换深色')
+        self.theme_button.setAccessibleName(('当前深色界面，切换浅色' if self.ui_dark else '当前浅色界面，切换深色') + '，不改变光标配置')
+        self.pages[2].set_theme(self.ui_dark)
+        self.preview.ui_theme = 'dark' if self.ui_dark else 'light'
+        self.pages[0].ui_theme = self.preview.ui_theme
+        self.sync()
+        self.refresh_status()
+
+    def eventFilter(self, watched, event):
+        if event.type() == QEvent.Type.FocusIn:
+            keyboard = event.reason() in (Qt.FocusReason.TabFocusReason, Qt.FocusReason.BacktabFocusReason, Qt.FocusReason.ShortcutFocusReason)
+            watched.setProperty('keyboardFocus', keyboard)
+        elif event.type() == QEvent.Type.MouseButtonPress:
+            watched.setProperty('keyboardFocus', False)
+        else:
+            return super().eventFilter(watched, event)
+        watched.style().unpolish(watched)
+        watched.style().polish(watched)
+        watched.update()
+        return super().eventFilter(watched, event)
+
+    def event(self, event):
+        if event.type() == QEvent.Type.WindowDeactivate and hasattr(self, 'preview'):
+            self.preview.clear_press()
+            self.pages[2].set_wait(False)
+            self.pages[2].button_release()
+        return super().event(event)
+
     def discard_changes(self):
+        self.pages[0].reset_color_session()
         self._draft = self.applied
+        self.feedback.setProperty('error', False)
+        self.feedback.style().unpolish(self.feedback)
+        self.feedback.style().polish(self.feedback)
+        self.feedback.setText('已放弃未应用的更改')
         self.sync()
         self.toast.show_message('已放弃未应用的草稿修改')
         self._schedule_prewarm()
 
     def apply_draft(self):
+        if self.busy or self._draft == self.applied or self.pages[0].invalid_fields:
+            return
         desired = self._draft
-        self.run_operation(lambda: self.application.apply(desired), '配置已成功应用至 Windows 系统', replace_draft=True)
+        self.run_operation(lambda: self.application.apply(desired, preserve_runtime=True), '配置已成功应用至 Windows 系统', replace_draft=True)
 
     def run_operation(self, operation, success, replace_draft=False):
         if self.busy:
             return
+        self.feedback.setProperty('error', False)
+        self.feedback.style().unpolish(self.feedback)
+        self.feedback.style().polish(self.feedback)
         self.busy = True
         self.stack.setEnabled(False)
         self.sync()
@@ -531,10 +612,14 @@ class MainWindow(QMainWindow):
     def operation_done(self, result):
         self.busy = False
         self.stack.setEnabled(True)
+        self.feedback.setProperty('error', False)
+        self.feedback.style().unpolish(self.feedback)
+        self.feedback.style().polish(self.feedback)
         if 'settings' in result:
             self.applied = CursorSettings.from_dict(result['settings'])
             if self._replace_draft:
                 self._draft = self.applied
+                self.pages[0].reset_color_session()
         elif 'startup_enabled' in result:
             self.applied = replace(self.applied, startup=result['startup_enabled'])
             self._draft = replace(self._draft, startup=result['startup_enabled'])
@@ -547,7 +632,10 @@ class MainWindow(QMainWindow):
     def operation_failed(self, error):
         self.busy = False
         self.stack.setEnabled(True)
-        err_msg = '未完成：' + error + '。请检查后重试。'
+        err_msg = '未完成：' + error + '。可修正后重试。'
+        self.feedback.setProperty('error', True)
+        self.feedback.style().unpolish(self.feedback)
+        self.feedback.style().polish(self.feedback)
         self.feedback.setText(err_msg)
         self.toast.show_message(err_msg, is_error=True)
         self.sync()
@@ -559,10 +647,10 @@ class MainWindow(QMainWindow):
             state = self.application.backend.snapshot()
             if state['running']:
                 self.status.setText('●  光标效果运行中')
-                self.status.setStyleSheet('color: #34c759; font-weight: 600; font-size: 11.5px;')
+                self.status.setStyleSheet('color: ' + ('#b2b5c0' if self.ui_dark else '#5d5f68') + '; font-weight: 600; font-size: 12px;')
             else:
                 self.status.setText('○  光标效果已暂停')
-                self.status.setStyleSheet('color: #86868b; font-weight: 500; font-size: 11.5px;')
+                self.status.setStyleSheet('color: ' + theme_colors(self.ui_dark)['muted'] + '; font-weight: 500; font-size: 12px;')
             if state.get('last_error'):
                 self.feedback.setText('后台错误：' + state['last_error'])
         except Exception:
@@ -570,7 +658,7 @@ class MainWindow(QMainWindow):
             self.status.setStyleSheet('color: #ff453a; font-weight: 500; font-size: 11.5px;')
 
     def reset_defaults(self):
-        if self.load_error and QMessageBox.question(self, '重置配置', '现有配置无法读取。保留原文件副本并使用默认配置？') != QMessageBox.StandardButton.Yes:
+        if self.load_error and ask_confirmation(self, '重置配置', '现有配置无法读取。保留原文件副本并使用默认配置？', '使用默认配置', '取消') != QMessageBox.StandardButton.Yes:
             return
         if self.load_error:
             import time
@@ -696,7 +784,7 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def confirm_restore(self):
-        if QMessageBox.question(self, '恢复原光标', '恢复 Windows 原光标并关闭 Pointer 开机启动？') == QMessageBox.StandardButton.Yes:
+        if ask_confirmation(self, '恢复原光标', '恢复 Windows 原光标并关闭 Pointer 开机启动？', '恢复原光标', '取消') == QMessageBox.StandardButton.Yes:
             self.run_operation(self.application.restore, '原光标已恢复', replace_draft=True)
 
     def closeEvent(self, event):
@@ -704,10 +792,14 @@ class MainWindow(QMainWindow):
             event.ignore()
             self.feedback.setText('请等待当前操作完成后关闭窗口。')
             return
-        if self._draft != self.applied and QMessageBox.question(self, '未应用的修改', '放弃未应用的修改并关闭窗口？') != QMessageBox.StandardButton.Yes:
+        if self._draft != self.applied and ask_confirmation(self, '未应用的修改', '放弃未应用的修改并关闭窗口？', '放弃修改', '继续编辑') != QMessageBox.StandardButton.Yes:
             event.ignore()
             return
         event.accept()
+
+
+def _ready_for_upgrade(window):
+    return not window.busy and window.draft() == window.applied and not getattr(window, 'sidebar_dirty', False)
 
 
 def launch(test_page=False):
@@ -722,7 +814,19 @@ def launch(test_page=False):
     app.setFont(QFont('Segoe UI Variable Text', 10))
     filter = NativeCursorFilter()
     app.installNativeEventFilter(filter)
-    window = MainWindow(Application(DATA_ROOT, INSTALL_ROOT))
+    # Imported here because MaterialWindow's inheritance chain uses MainWindow.
+    from .material_workspace import MaterialWindow
+    from .sidebar_settings import SidebarStore
+    helper, composition_error = None, None
+    if sys.platform == 'win32' and app.platformName() == 'windows':
+        from pointer.windows.composition_host import prepare_helper
+        try:
+            helper = prepare_helper(DATA_ROOT / 'composition-cache')
+        except OSError as error:
+            composition_error = str(error)
+    window = MaterialWindow(Application(DATA_ROOT, INSTALL_ROOT),
+                            sidebar_store=SidebarStore(DATA_ROOT / 'sidebar-appearance.json'),
+                            composition_helper=helper, composition_error=composition_error)
     window.start_preset_prewarm()
     if test_page:
         window.select_page(2)
@@ -742,7 +846,7 @@ def launch(test_page=False):
             if request['token'] != handled:
                 handled = request['token']
                 detached = str(ROOT.resolve()).casefold() != str(request.get('target_root', ROOT)).casefold()
-                ready = detached or (not window.busy and window.draft() == window.applied)
+                ready = detached or _ready_for_upgrade(window)
                 _write_json(REPLY, {'token': handled, 'ready': ready, 'detached': detached, 'error': '请先应用或放弃未应用的修改，并关闭设置窗口。'})
                 if ready and not detached:
                     window.close()
@@ -761,4 +865,9 @@ def launch(test_page=False):
     try:
         return app.exec()
     finally:
-        instance.close()
+        try:
+            host = getattr(window, '_backdrop_host', None)
+            if host is not None:
+                host.shutdown()
+        finally:
+            instance.close()

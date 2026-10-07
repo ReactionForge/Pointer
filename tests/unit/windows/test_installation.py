@@ -19,6 +19,26 @@ def package(root,content=b'new'):
 
 
 class InstallationTests(unittest.TestCase):
+    def test_portable_apply_forwards_runtime_intent_without_reinstall(self):
+        from pointer.cursor.settings import CursorSettings
+        with tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
+            root = Path(folder)
+            source, target, data = root/'source', root/'app', root/'data'
+            package(source)
+            package(target)
+            data.mkdir()
+            for name, value in (('ROOT', source), ('INSTALL_ROOT', target), ('DATA_ROOT', data)):
+                stack.enter_context(patch.object(installation, name, value))
+            install = stack.enter_context(patch.object(installation, 'install'))
+            execute = stack.enter_context(patch.object(installation, '_execute', return_value={'running': False}))
+            for preserve in (True, False):
+                installation.apply_portable(CursorSettings(), preserve_runtime=preserve)
+                arguments = execute.call_args.args[1]
+                self.assertEqual('--preserve-runtime' in arguments, preserve)
+                self.assertIn('--settings-file', arguments)
+                self.assertEqual(list(data.iterdir()), [])
+            install.assert_not_called()
+
     def test_custom_install_identity_is_written_and_resolved_on_normal_launch(self):
         from pointer.paths import resolve_paths
         with tempfile.TemporaryDirectory() as folder:

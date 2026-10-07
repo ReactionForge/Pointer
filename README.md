@@ -2,24 +2,32 @@
 
 Windows 圆角光标桌面 APP。浅色背景黑色主体、白色边框；深色背景白色主体、黑色边框。覆盖 17 种系统光标，保留加载动画，无蓝光。
 
-**DEV 桌面预览版：1.3.0-beta.1**。开发修改只推送 DEV，稳定版仍为 v1.1.1。
+**DEV 桌面预览版：1.3.0-beta.2**。开发修改只推送 DEV，稳定版仍为 v1.1.1。
 
-[下载安装 EXE](https://github.com/ReactionForge/Pointer/releases/download/v1.3.0-beta.1/Pointer-v1.3.0-beta.1-setup-x64.exe) · [下载便携 ZIP](https://github.com/ReactionForge/Pointer/releases/download/v1.3.0-beta.1/Pointer-v1.3.0-beta.1-windows-x64.zip) · [预览版与校验文件](https://github.com/ReactionForge/Pointer/releases/tag/v1.3.0-beta.1)
+[下载安装 EXE](https://github.com/ReactionForge/Pointer/releases/download/v1.3.0-beta.2/Pointer-v1.3.0-beta.2-setup-x64.exe) · [下载便携 ZIP](https://github.com/ReactionForge/Pointer/releases/download/v1.3.0-beta.2/Pointer-v1.3.0-beta.2-windows-x64.zip) · [预览版与校验文件](https://github.com/ReactionForge/Pointer/releases/tag/v1.3.0-beta.2)
 
-![Pointer 光标外观界面](docs/images/desktop-app.png)
+设置页提供浅色／深色分段选择与可直接输入数值的滑轨。最新实施和验收范围见 [beta.2 验收记录](docs/releases/1.3.0-beta.2.md)。
+
+![beta.1 光标外观界面留档](docs/images/desktop-app.png)
+
+上图保留 beta.1 界面记录；beta.2 使用已认可的 Material 界面。
 
 ## 使用
 
 1. 安装 EXE，或完整解压 ZIP 后打开 `Pointer.exe`。支持 Windows 10/11 x64，无需 Python、管理员权限或联网。
-2. 在 APP 调整主体与边框配色、大小、倾斜或缩小动效、强度和按下/松开时间。右侧预览草稿，点击 **应用配置** 后才启用系统光标。
+2. 在 APP 调整主体与边框配色、大小、点击动效、强度和按下/松开时间。右侧预览草稿，点击 **应用更改** 后才启用系统光标。
 3. 打开 **光标测试**，体验黑白交界、亮度变化、箭头、小手、输入、拖动、等待与各类缩放状态。
 4. 在 **应用设置** 中选择开机启动、暂停/恢复、导入导出配置或恢复 Windows 原光标。
+
+设置页的浅色/深色选择只改变界面。侧栏透明度和背景模糊分别控制，滑轨右侧可直接输入数值，按回车或离开输入框后预览；“保存外观”保存到独立文件，“取消预览”恢复已保存值。透明度按深浅主题分别记忆，外观设置不产生系统光标配置草稿。
+
+真正的背景模糊使用 Windows Composition host backdrop 与 Gaussian，支持的 Windows 11 环境可调 0–48（0 关闭模糊）；组件已随包交付，无需用户编译。Windows 10、不支持的合成环境、高对比、系统关闭透明效果或窗口失活时使用回退，不修改 Windows 全局设置。混合 DPI、跨屏和 Snap 尚未完成实机验收。
 
 关闭设置窗口后，已启用的后台光标效果继续工作。暂停与开机启动互相独立，未变化的启动项不会重复写入。新安装默认不启用开机启动；已有用户升级保留选择。
 
 默认动效：箭头整体向左下倾斜约 6°，顶部移动明显、下方两尖轻微跟随；小手倾斜约 12°。长按保持，松开约 150 ms 回正。保留缩小回弹模式，各帧点击热点固定。
 
-![APP 内的系统光标测试页](docs/images/desktop-tests.png)
+![beta.1 系统光标测试页留档](docs/images/desktop-tests.png)
 
 配置与原光标备份位于 `%LOCALAPPDATA%\Pointer\data`，程序文件位于相邻 `app` 目录。商店应用宿主可能重定向路径。ZIP 首次应用时部署到持久目录，应用成功后可以移动或删除解压文件夹。升级保留用户数据，卸载前恢复原光标；恢复失败会中止卸载。
 
@@ -74,6 +82,6 @@ python -m venv .build-env
 .\.build-env\Scripts\python.exe -m scripts.build_release
 ```
 
-需要 Inno Setup 6 编译器，可用 `--compiler` 指定路径。没有编译器时，`--skip-installer` 仅构建开发 ZIP。构建环境隔离其他工具 DLL，保留 Qt Widgets 所需的平台插件、动态库和许可说明。
+需要现有 .NET Framework 编译器和 Windows WinRT 元数据来构建随包背景组件；用户运行发布包不需要编译器。安装包构建需要 Inno Setup 6，可用 `--compiler` 指定路径。没有 Inno 编译器时，`--skip-installer` 仅构建开发 ZIP；`--output-root .local/<新的构建目录>` 将候选 ZIP 输出隔离。构建环境隔离其他工具 DLL，保留 Qt Widgets 所需的平台插件、动态库和许可说明。
 
 DEV 推送会运行测试、构建 EXE/ZIP、打包诊断、隔离安装升级卸载检查；成功后保存构建产物。对应版本标签发布预览版，标记 prerelease，不替换稳定版。压缩包和安装 EXE 都有 SHA-256 校验文件。发布包尚未代码签名。

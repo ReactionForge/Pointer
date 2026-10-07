@@ -101,14 +101,19 @@ class TrayController(QObject):
             ("整体倾侧 (Tilt)", "tilt"),
             ("缩小回弹 (Shrink)", "shrink"),
             ("弹簧果冻 (Spring)", "spring"),
-            ("点击冲击波 (Pulse)", "pulse"),
-            ("灵动微拖尾 (Trail)", "trail"),
             ("关闭动效 (Off)", "off"),
         ]:
             act = motion_menu.addAction(text)
+            act.setData(mo)
             act.setCheckable(True)
             act.setChecked(self.window.draft().motion == mo)
             act.triggered.connect(lambda checked=False, m=mo: self.window.change(motion=m))
+        if self.window.draft().motion in ('pulse', 'trail'):
+            retired = motion_menu.addAction('叠加动效已停用（配置保留）')
+            retired.setData('retired_overlay')
+            retired.setCheckable(True)
+            retired.setChecked(True)
+            retired.setEnabled(False)
 
         menu.addSeparator()
 
@@ -146,6 +151,8 @@ class TrayController(QObject):
             self.window.check_updates_interactive()
 
     def _quit_application(self):
+        if not self.window.close():
+            return
         from PySide6.QtWidgets import QApplication
         self.tray.hide()
         app = QApplication.instance()

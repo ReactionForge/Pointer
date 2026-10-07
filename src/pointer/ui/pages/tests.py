@@ -1,9 +1,12 @@
-from PySide6.QtCore import Qt, QEvent, QPointF
+from PySide6.QtCore import Qt, QEvent
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
-    QLabel, QPushButton, QSlider, QPlainTextEdit, QFrame
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QBoxLayout,
+    QLabel, QPushButton, QPlainTextEdit, QFrame, QTabBar, QSizePolicy
 )
 from ..theme import card
+from ..colors import theme_colors
+from ..input_controls import DragSlider
+
 
 QT_CURSOR_MAP = {
     'arrow': Qt.CursorShape.ArrowCursor,
@@ -34,6 +37,7 @@ class TestSurface(QFrame):
         self.setObjectName(name)
         self.setProperty('cursorRole', role)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setMinimumWidth(180)
         self.setMinimumHeight(104)
 
         bg = '#1c1c1e' if dark else '#f9f9fb'
@@ -45,13 +49,24 @@ class TestSurface(QFrame):
         text_color = '#f5f5f7' if dark else '#1d1d1f'
         self.label.setStyleSheet(f'color: {text_color}; background: transparent; font-weight: 600; font-size: 12px;')
         self.label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        sh = self.label.sizeHint()
-        self.label.resize(sh.width() + 48, max(24, sh.height()))
+        self.label.setWordWrap(True)
+        self._fit_label()
 
     def set_label_text(self, text):
         self.label.setText(text)
-        sh = self.label.sizeHint()
-        self.label.resize(sh.width() + 48, max(24, sh.height()))
+        self._fit_label()
+
+    def _fit_label(self):
+        width = min(self.label.fontMetrics().horizontalAdvance(self.label.text()) + 16,
+                    max(24, self.width() - 32))
+        height = max(24, self.label.heightForWidth(width))
+        self.label.resize(width, height)
+        self.label.move(min(self.label.x(), max(16, self.width() - width - 16)),
+                        min(self.label.y(), max(14, self.height() - height - 14)))
+
+    def resizeEvent(self, event):
+        self._fit_label()
+        super().resizeEvent(event)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -96,37 +111,63 @@ class TestSurface(QFrame):
 
 
 class TestPage(QWidget):
-    """Panoramic Interactive Sandbox: Full-bleed arena with real Windows cursor validation."""
+    """Local cursor checks grouped by the interaction being inspected."""
     def __init__(self, application):
         super().__init__()
         self.application, self.down, self.presses = application, False, 0
         self.surfaces = {}
+        self.groups = []
+        self.hand_buttons = []
+        self.role_tiles = []
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(16)
 
-        # 1. Real-world Contrast & Grayscale
-        frame, inner = card('深浅背景跨界与灰度阶梯', '移动真实鼠标跨过黑白与灰度交界面，观察自适应光标主体与边框的高清平滑反转。')
+        self.group_tabs = QTabBar()
+        self.group_tabs.setObjectName('testGroups')
+        self.group_tabs.setAccessibleName('光标测试分组')
+        self.group_tabs.setExpanding(True)
+        self.group_tabs.setDrawBase(False)
+        self.group_tabs.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        for title in ('背景适配', '点击与拖动', '输入与加载'):
+            self.group_tabs.addTab(title)
+        layout.addWidget(self.group_tabs)
+
+        frame, inner = card('深浅背景与灰度', '移动鼠标跨过背景交界，检查已应用光标的主体与边框。')
+        self.groups.append(frame)
+        frame.setObjectName('testGroup')
+        inner.setContentsMargins(16, 16, 16, 16)
+        inner.setSpacing(12)
         row = QHBoxLayout()
         row.setSpacing(12)
         for name, dark in [('light-arrow', False), ('dark-arrow', True)]:
             area = TestSurface(self, name, dark=dark)
+            area.setMinimumHeight(144)
             self.surfaces[name] = area
             row.addWidget(area)
         inner.addLayout(row)
 
-        inner.addSpacing(4)
-        slider_row = QHBoxLayout()
-        sl_label = QLabel('动态连续灰度测试：')
-        sl_label.setStyleSheet('color: #86868b; font-weight: 500; font-size: 12px;')
+        gray_controls = QFrame()
+        gray_controls.setObjectName('grayControls')
+        slider_row = QHBoxLayout(gray_controls)
+        slider_row.setContentsMargins(0, 0, 0, 0)
+        slider_row.setSpacing(12)
+        sl_label = QLabel('灰度')
+        sl_label.setObjectName('muted')
         slider_row.addWidget(sl_label)
-        self.brightness = QSlider(Qt.Orientation.Horizontal)
+        self.brightness = DragSlider(Qt.Orientation.Horizontal)
+        self.brightness.setAccessibleName('测试背景灰度')
         self.brightness.setRange(0, 255)
         self.brightness.setValue(128)
         self.brightness.valueChanged.connect(self.set_brightness)
         slider_row.addWidget(self.brightness, 1)
-        inner.addLayout(slider_row)
+        self.brightness_value = QLabel()
+        self.brightness_value.setObjectName('testValue')
+        self.brightness_value.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.brightness_value.setMinimumWidth(72)
+        slider_row.addWidget(self.brightness_value)
+        inner.addWidget(gray_controls)
 
         self.gray = TestSurface(self, 'brightness')
         self.gray.setMinimumHeight(68)
@@ -139,7 +180,7 @@ class TestPage(QWidget):
         for level in (0, 48, 96, 144, 192, 255):
             block = QLabel(f'{level}')
             block.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            block.setMinimumHeight(34)
+            block.setFixedHeight(28)
             block.setProperty('cursorRole', 'arrow')
             block.setStyleSheet(
                 f'background: rgb({level},{level},{level}); '
@@ -150,10 +191,14 @@ class TestPage(QWidget):
         inner.addLayout(shades)
         layout.addWidget(frame)
 
-        # 2. Click, Hand & Dragging Playground
-        frame, inner = card('左键动效、手型与拖动游标', '点击空白测试动效手感；悬浮或按住测试手型；拖拽卡片体验流畅移动光标。')
+        frame, inner = card('点击与拖动', '点击测试按下与松开；移入按钮检查手型，拖动下方文字检查移动光标。')
+        self.groups.append(frame)
+        frame.setObjectName('testGroup')
+        inner.setContentsMargins(16, 16, 16, 16)
+        inner.setSpacing(12)
         self.counter = QLabel()
-        self.counter.setStyleSheet('color: #007aff; background: rgba(0, 122, 255, 0.08); border: 0.5px solid rgba(0, 122, 255, 0.22); border-radius: 8px; padding: 8px 14px; font-weight: 600; font-size: 12.5px;')
+        self.counter.setObjectName('testCounter')
+        self.counter.setWordWrap(True)
         inner.addWidget(self.counter)
 
         btn_row = QHBoxLayout()
@@ -169,27 +214,35 @@ class TestPage(QWidget):
             button.pressed.connect(self.button_press)
             button.released.connect(self.button_release)
             button.installEventFilter(self)
+            self.hand_buttons.append(button)
             btn_row.addWidget(button)
         inner.addLayout(btn_row)
 
         drag = TestSurface(self, 'drag', 'move')
+        drag.setMinimumHeight(180)
         drag.set_label_text('拖动此卡片检验移动光标 (Move)')
         drag.setStyleSheet('QFrame#drag { background: rgba(0, 122, 255, 0.04); border: 1.5px dashed rgba(0, 122, 255, 0.35); border-radius: 10px; }')
         self.surfaces['drag'] = drag
         inner.addWidget(drag)
         layout.addWidget(frame)
 
-        # 3. Real-world Code Editor & Busy Loading
-        frame, inner = card('代码编辑与系统加载沙盒', '在富代码编辑区测试细腻的 I-Beam 文本输入光标；在加载区测试旋转动画。')
+        frame, inner = card('输入与加载', '输入文字检查文本光标；加载状态只在测试区域生效，移出或切换分组即结束。')
+        self.groups.append(frame)
+        frame.setObjectName('testGroup')
+        inner.setContentsMargins(16, 16, 16, 16)
+        inner.setSpacing(12)
+        self.input_loading = QBoxLayout(QBoxLayout.Direction.LeftToRight)
+        self.input_loading.setSpacing(16)
 
-        # Code editor container
         code_box = QFrame()
-        code_box.setStyleSheet('QFrame { background: #18181a; border: 0.5px solid rgba(255, 255, 255, 0.08); border-radius: 10px; }')
+        code_box.setObjectName('testInput')
+        code_box.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         code_layout = QVBoxLayout(code_box)
-        code_layout.setContentsMargins(12, 10, 12, 10)
-        code_layout.setSpacing(6)
+        code_layout.setContentsMargins(0, 0, 0, 0)
+        code_layout.setSpacing(8)
 
-        code_title = QLabel("<span style='color: #ff5f56;'>●</span> <span style='color: #ffbd2e;'>●</span> <span style='color: #27c93f;'>●</span>  <span style='color: #86868b; font-size: 11px; font-weight: 500;'>main.ts — Pointer Cursor Playground</span>")
+        code_title = QLabel('文本输入')
+        code_title.setObjectName('testPanelTitle')
         code_layout.addWidget(code_title)
 
         edit = QPlainTextEdit(
@@ -201,43 +254,51 @@ class TestPage(QWidget):
             "});\n"
             "pointer.listen();"
         )
+        self.editor = edit
+        edit.setObjectName('testEditor')
+        edit.setAccessibleName('文本光标输入测试')
         edit.setProperty('cursorRole', 'ibeam')
         edit.viewport().setProperty('cursorRole', 'ibeam')
-        edit.setStyleSheet('''
-            QPlainTextEdit {
-                background: #121214;
-                color: #f5f5f7;
-                font-family: "SF Mono", Consolas, monospace;
-                font-size: 12px;
-                border: 0.5px solid rgba(255, 255, 255, 0.06);
-                border-radius: 6px;
-                padding: 10px;
-            }
-        ''')
-        edit.setMaximumHeight(125)
+        edit.setMinimumHeight(172)
+        edit.setMaximumHeight(192)
         code_layout.addWidget(edit)
-        inner.addWidget(code_box)
+        self.input_loading.addWidget(code_box, 1)
 
-        # Wait state controls
+        loading_box = QFrame()
+        loading_box.setObjectName('testLoading')
+        loading_box.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        loading_layout = QVBoxLayout(loading_box)
+        loading_layout.setContentsMargins(0, 0, 0, 0)
+        loading_layout.setSpacing(8)
+        load_title = QLabel('加载状态')
+        load_title.setObjectName('testPanelTitle')
+        loading_layout.addWidget(load_title)
         load_row = QHBoxLayout()
-        load_row.setSpacing(10)
-        for text, role in [('等待状态 (Wait)', 'busy'), ('后台运行 (AppStarting)', 'working'), ('结束加载', 'arrow')]:
+        load_row.setSpacing(6)
+        for text, role in [('等待', 'busy'), ('后台运行', 'working'), ('结束加载', 'arrow')]:
             btn = QPushButton(text)
+            btn.setObjectName('testLoadButton')
+            btn.setMinimumHeight(32)
+            btn.setAccessibleName(text + '光标测试')
             btn.clicked.connect(lambda checked=False, role=role: self.set_wait(role != 'arrow', role))
             load_row.addWidget(btn)
-        inner.addLayout(load_row)
+        loading_layout.addLayout(load_row)
 
         area = TestSurface(self, 'wait')
         area.set_label_text('点击上方按钮，再将鼠标移入此处观察加载动画')
         area.setStyleSheet('QFrame#wait { background: rgba(0, 122, 255, 0.06); border: 0.5px solid rgba(0, 122, 255, 0.3); border-radius: 10px; }')
         self.surfaces['wait'] = area
-        inner.addWidget(area)
-        layout.addWidget(frame)
+        area.setMinimumHeight(128)
+        loading_layout.addWidget(area, 1)
+        self.input_loading.addWidget(loading_box, 1)
+        inner.addLayout(self.input_loading)
 
-        # 4. All 17 System Cursor Roles Matrix
-        frame, inner = card('全部 17 种 Windows 系统光标矩阵', '移动鼠标至各个卡片，即刻调用对应原生系统光标进行实时检验。')
-        grid = QGridLayout()
-        grid.setSpacing(10)
+        inner.addSpacing(8)
+        role_heading = QLabel('系统光标 · 17 种状态')
+        role_heading.setObjectName('testPanelTitle')
+        inner.addWidget(role_heading)
+        self.role_grid = QGridLayout()
+        self.role_grid.setSpacing(8)
 
         all_roles = [
             ('普通箭头', 'arrow', 'Arrow 默认指针'),
@@ -263,41 +324,89 @@ class TestPage(QWidget):
             tile = QFrame()
             tile.setProperty('cursorRole', role)
             tile.setCursor(QT_CURSOR_MAP.get(role, Qt.CursorShape.ArrowCursor))
-            tile.setMinimumHeight(56)
-            tile.setStyleSheet('''
-                QFrame {
-                    background: rgba(255, 255, 255, 0.035);
-                    border: 0.5px solid rgba(255, 255, 255, 0.07);
-                    border-radius: 8px;
-                    padding: 6px 10px;
-                }
-                QFrame:hover {
-                    background: rgba(0, 122, 255, 0.12);
-                    border-color: rgba(0, 122, 255, 0.35);
-                }
-            ''')
+            tile.setMinimumHeight(52)
+            tile.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+            tile.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+            tile.setAccessibleName(text + '，' + desc)
+            tile.setObjectName('roleTile')
             tile_layout = QVBoxLayout(tile)
             tile_layout.setContentsMargins(6, 6, 6, 6)
             tile_layout.setSpacing(2)
 
             t_lbl = QLabel(f"<b>{text}</b>")
             t_lbl.setProperty('cursorRole', role)
-            t_lbl.setStyleSheet('color: #f5f5f7; font-size: 12px;')
+            t_lbl.setObjectName('tileTitle')
             t_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
             d_lbl = QLabel(desc)
+            d_lbl.setWordWrap(True)
             d_lbl.setProperty('cursorRole', role)
-            d_lbl.setStyleSheet('color: #86868b; font-size: 11px;')
+            d_lbl.setObjectName('tileSubtitle')
             d_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
             tile_layout.addWidget(t_lbl)
             tile_layout.addWidget(d_lbl)
-            grid.addWidget(tile, index // 3, index % 3)
+            self.role_tiles.append(tile)
+            self.role_grid.addWidget(tile, index // 4, index % 4)
 
-        inner.addLayout(grid)
+        inner.addLayout(self.role_grid)
         layout.addWidget(frame)
+        layout.addStretch(1)
 
+        self.group_tabs.currentChanged.connect(self.select_group)
+        self.select_group(0)
+        self._fit_groups()
         self.update_counter()
+        self.set_theme(False)
+
+    def set_theme(self, dark):
+        colors = theme_colors(dark)
+        self.setStyleSheet(f'''
+            QFrame#testGroup {{ background: {colors['surface']}; border: 1px solid {colors['divider']}; border-radius: 16px; }}
+            QTabBar#testGroups {{ background: {colors['raised']}; border-radius: 10px; }}
+            QTabBar#testGroups::tab {{ color: {colors['muted']}; background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 8px 12px; min-height: 20px; }}
+            QTabBar#testGroups::tab:selected {{ background: {colors['surface']}; color: {colors['text']}; border-color: {colors['divider']}; }}
+            QTabBar#testGroups::tab:hover {{ color: {colors['text']}; }}
+            QTabBar#testGroups::tab:focus {{ border-color: {colors['focus']}; }}
+            #grayControls, #testInput, #testLoading {{ background: transparent; border: none; }}
+            #testCounter, #testValue {{ color: {colors['muted']}; background: transparent; border: none; font-size: 12px; }}
+            #testPanelTitle {{ color: {colors['text']}; font-weight: 600; background: transparent; }}
+            QPlainTextEdit#testEditor {{ background: {colors['canvas']}; color: {colors['text']}; font-family: Consolas, monospace; font-size: 12px; border: 1px solid {colors['divider']}; border-radius: 10px; padding: 10px; }}
+            QPlainTextEdit#testEditor:focus {{ border-color: {colors['focus']}; }}
+            QPushButton#testLoadButton {{ padding: 4px 8px; }}
+            QFrame#roleTile {{ background: {colors['raised']}; border: 1px solid transparent; border-radius: 8px; }}
+            QFrame#roleTile:focus {{ border-color: {colors['focus']}; }}
+            #tileTitle {{ color: {colors['text']}; font-size: 12px; background: transparent; }}
+            #tileSubtitle {{ color: {colors['muted']}; font-size: 11px; background: transparent; }}
+        ''')
+        for name in ('drag', 'wait'):
+            surface = self.surfaces[name]
+            surface.setStyleSheet(f"QFrame#{name} {{ background: {colors['raised']}; border: 1px {'dashed' if name == 'drag' else 'solid'} {colors['border']}; border-radius: 10px; }}")
+            surface.label.setStyleSheet(f"color: {colors['text']}; background: transparent; font-weight: 600; font-size: 13px;")
+
+    def select_group(self, index):
+        self.finish_busy()
+        for number, group in enumerate(self.groups):
+            group.setVisible(number == index)
+        self._fit_groups()
+
+    def _fit_groups(self):
+        if not hasattr(self, 'input_loading'):
+            return
+        wide = self.width() >= 760
+        self.input_loading.setDirection(QBoxLayout.Direction.LeftToRight if wide else QBoxLayout.Direction.TopToBottom)
+        columns = 4 if wide else 3 if self.width() >= 560 else 2
+        for index, tile in enumerate(self.role_tiles):
+            self.role_grid.removeWidget(tile)
+            self.role_grid.addWidget(tile, index // columns, index % columns)
+
+    def resizeEvent(self, event):
+        self._fit_groups()
+        super().resizeEvent(event)
+
+    def hideEvent(self, event):
+        self.finish_busy()
+        super().hideEvent(event)
 
     def scenario(self, name):
         return self.surfaces[name]
@@ -307,8 +416,8 @@ class TestPage(QWidget):
 
     def update_counter(self):
         if hasattr(self, 'counter'):
-            state_text = '● 按下' if self.down else '○ 松开'
-            self.counter.setText(f'鼠标手感监测：当前状态 {state_text}    |    累计点击次数：{self.presses} 次')
+            state_text = '按下' if self.down else '已松开'
+            self.counter.setText(f'{state_text}  ·  累计点击 {self.presses} 次')
 
     def button_press(self):
         self.down = True
@@ -333,8 +442,13 @@ class TestPage(QWidget):
     def finish_busy(self):
         self.set_wait(False)
         self.button_release()
+        for surface in self.surfaces.values():
+            surface.clear_press()
+        for button in self.hand_buttons:
+            button.setDown(False)
 
     def set_brightness(self, value):
         self.gray.setStyleSheet(f'background: rgb({value},{value},{value}); border-radius: 9px;')
         self.gray.set_label_text(f'材质亮度 {value} / 255')
+        self.brightness_value.setText(f'{value} / 255')
         self.gray.label.setStyleSheet('color: ' + ('white' if value < 128 else 'black') + '; background: transparent; font-weight: 600;')

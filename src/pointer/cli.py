@@ -25,12 +25,19 @@ def diagnose():
     switcher._set_dpi_awareness()
     files = package_files(ROOT) if FROZEN else {}
     qt_version = None
+    helper_name = None
+    gui_shell = None
     if FROZEN:
         for name in ('_internal/PySide6/plugins/platforms/qwindows.dll','licenses/LGPL-3.0.txt','licenses/Python-LICENSE.txt'):
             if not (ROOT/name).is_file():
                 raise FileNotFoundError(name)
         from PySide6.QtCore import qVersion
         qt_version = qVersion()
+        from pointer.windows.composition_host import bundled_helper, BUNDLED_HELPER
+        bundled_helper(ROOT)
+        helper_name = BUNDLED_HELPER
+        from pointer.ui.material_workspace import MaterialWindow
+        gui_shell = MaterialWindow.__name__
     count = animated = 0
     for theme in ("light", "dark"):
         for path in theme_paths(theme).values():
@@ -52,7 +59,8 @@ def diagnose():
                 click_count += 1
     return {"cursor_resources": count, "animated_resources": animated,
             "click_resources": click_count,
-            "package_files": len(files), "frozen": FROZEN, 'qt_version':qt_version}
+            "package_files": len(files), "frozen": FROZEN, 'qt_version':qt_version,
+            'composition_helper': helper_name, 'gui_shell': gui_shell}
 
 
 def _application():
@@ -60,9 +68,9 @@ def _application():
     return Application(DATA_ROOT,INSTALL_ROOT)
 
 
-def apply_theme(settings=None):
+def apply_theme(settings=None, *, preserve_runtime=False):
     application = _application()
-    return application.apply(settings or application.settings())
+    return application.apply(settings or application.settings(), preserve_runtime=preserve_runtime)
 
 
 def stop_theme():
@@ -119,6 +127,7 @@ def main(argv=None):
     parser.add_argument('--data-dir', type=Path)
     parser.add_argument('--install-dir', type=Path)
     parser.add_argument('--settings-file', type=Path)
+    parser.add_argument('--preserve-runtime', action='store_true')
     parser.add_argument('--purge-settings', action='store_true')
     args = parser.parse_args(argv)
     if args.quiet:
@@ -141,8 +150,9 @@ def main(argv=None):
                     shrink="已启用缩小回弹：按下缩小约 10%，松开恢复。")
     messages.update(prepare_upgrade='已为升级做好准备。', uninstall='原光标已恢复，可以卸载。')
     try:
-        if action == 'apply' and args.settings_file:
-            result.update(apply_theme(_application().store.import_file(args.settings_file)))
+        if action == 'apply' and (args.settings_file or args.preserve_runtime):
+            settings = _application().store.import_file(args.settings_file) if args.settings_file else None
+            result.update(apply_theme(settings, preserve_runtime=args.preserve_runtime))
         elif action == 'uninstall':
             from pointer.windows.installation import uninstall
             result.update(uninstall(args.purge_settings))

@@ -1,0 +1,6334 @@
+{
+  "source_commit": "3511e3ea486d9e897ff752b2d0ee2e19e369e884",
+  "authority": "Existing native assets and clock from immutable Git commit, confirmed equal to pre-V3 archived assets; never current V3 output",
+  "asset_sha256": {
+    "assets/cursors/adaptive/light/adaptive-arrow.cur": "f4cde0a7537da62c1f7dedaf02714d863618ced59a86ef1a69575047c2fe19ba",
+    "assets/cursors/adaptive/tilt/light/arrow-1.cur": "32d6c9ca88537d30b9f831cac5cf9ecd29bae12f619760841ad0b775293c5782",
+    "assets/cursors/adaptive/tilt/light/arrow-2.cur": "30d3b18dfd30747c730dc145a55c08387b9a029f524297f1c8a24f604e6b30b0",
+    "assets/cursors/adaptive/tilt/light/arrow-3.cur": "00a9adec74bc6f89983d3b52c39d268a8d918c5b7a53d324221954e8009fa7b2",
+    "assets/cursors/adaptive/tilt/light/arrow-4.cur": "34736d6890b55120210fc2c772500b0cc27ae581b65c414dd3344df94228460a",
+    "assets/cursors/adaptive/light/adaptive-hand.cur": "dbe9f4e876167e8fbe5ce02c1dc818e45a6d102f0dc3c5f3203503ea193ec2cc",
+    "assets/cursors/adaptive/tilt/light/hand-1.cur": "638c836f42f830d1dd1baa801a9655e291e6b92f86d9403cb2814daba412108a",
+    "assets/cursors/adaptive/tilt/light/hand-2.cur": "b2a1297bba2a1b935489baa0f59075aaaa5d5d6d890e4436e7bebf8b45f18d3d",
+    "assets/cursors/adaptive/tilt/light/hand-3.cur": "89e575a20550f15d24b17aa7f8aa4b73d6aaf891191d017cb41edda16303e4b7",
+    "assets/cursors/adaptive/tilt/light/hand-4.cur": "93b86cc63eec0b1c491aac494fcae565e058a5bbe2ebc02e3e9391125d9bbe3a",
+    "assets/cursors/adaptive/dark/adaptive-arrow.cur": "3044c04faf2f839a707e6fdf152eda72530190562f07df3a34b7f9cb0fae3274",
+    "assets/cursors/adaptive/tilt/dark/arrow-1.cur": "81f5a492185957c34dacad96d5cc522aa8233d78609b9104accf20fc3c5fc815",
+    "assets/cursors/adaptive/tilt/dark/arrow-2.cur": "1e845ae59e503819d9340f6e2aaa7244244d4ffe85d9e576e06bae1416f42a8e",
+    "assets/cursors/adaptive/tilt/dark/arrow-3.cur": "8a3b897a1451479b17805353716206c85c40700faf3f488947d0241b47ff28dc",
+    "assets/cursors/adaptive/tilt/dark/arrow-4.cur": "6fe79b2b58b0f0b01ee8cd1bbe41ebd594a3a52498a33a612563b14c5f641806",
+    "assets/cursors/adaptive/dark/adaptive-hand.cur": "a51f65891c5bc7ba349a2e630fd7f4e76bed8a47c69e9873083ddc5db668cce5",
+    "assets/cursors/adaptive/tilt/dark/hand-1.cur": "d01834d475d7ec9fc64d5ed591e196ab4f897f87ddf46f8e9e2abf97024c665c",
+    "assets/cursors/adaptive/tilt/dark/hand-2.cur": "9f5e8781b6afbc585f22405c8865d15148adfdc70ca2d14db88c680fc6131e70",
+    "assets/cursors/adaptive/tilt/dark/hand-3.cur": "f6f3c5a82318b023e7c493d9b83b367f6d535f745959d9a82d734da812ce2e45",
+    "assets/cursors/adaptive/tilt/dark/hand-4.cur": "b956997cfbfc29821db68baae865e0c3ac28a0cd67f9d7209c46b6e5690fd494",
+    "assets/cursors/adaptive/click/light/arrow-1.cur": "f2f97c8613ea34567b9873cf93a8ab019cc26bcc8ded6f82eead46a33a450a52",
+    "assets/cursors/adaptive/click/light/arrow-2.cur": "4b672a9b858e0c952a4ef1129565b74103e570a34c66e568884f3773a5879d3b",
+    "assets/cursors/adaptive/click/light/arrow-3.cur": "efdd7a2e45d1f9d8bae05c447b680979ed762e74936d97bf0bb60d6447e4a5cd",
+    "assets/cursors/adaptive/click/light/arrow-4.cur": "5c8fdaeebe60573860fda85bf065472fca01be1f71cb53095385ed29a7419b46",
+    "assets/cursors/adaptive/click/light/hand-1.cur": "dd8285c7447055f9da6e0b2d3b9082af8124c4c5401ec8bbf36e2c967cbe4f45",
+    "assets/cursors/adaptive/click/light/hand-2.cur": "9d58361a4204eeab5573113eb49fd18e8cec4217751801871a7f0fd87f04b13c",
+    "assets/cursors/adaptive/click/light/hand-3.cur": "49bd6f0da27ed64ebc3042836f947d4e1b2f6a5fcf1f71da74efbce491c14864",
+    "assets/cursors/adaptive/click/light/hand-4.cur": "6c4a1f4802fb91f20feb050d7b50951423c253f291d7fff7d92d26aa79a71f57",
+    "assets/cursors/adaptive/click/dark/arrow-1.cur": "d686bc8f0598a4ef5e0351f37df01ecdeb953a1cb5e2f81c2d6dbeba2998e373",
+    "assets/cursors/adaptive/click/dark/arrow-2.cur": "8c33edd361ffd188e1b82a32bdacfb44efb3150f1f4bfeccd4660879b921f1f2",
+    "assets/cursors/adaptive/click/dark/arrow-3.cur": "112ee938cbc4031c5bf08c1d0ace226bf2659ef5efe2280da9775902a6eb7a72",
+    "assets/cursors/adaptive/click/dark/arrow-4.cur": "99d32c90fe7f516e33bc022f95174f419a3bfd4af7e2559ba65e8fda2dde94bc",
+    "assets/cursors/adaptive/click/dark/hand-1.cur": "115317666b814364c67ead064f6029f3c0bea2135a96a86b77c178527b4f8566",
+    "assets/cursors/adaptive/click/dark/hand-2.cur": "ae6bf7d664a89b7058b20835ded722760ff5d066e5574843036d167b4ba1ffdc",
+    "assets/cursors/adaptive/click/dark/hand-3.cur": "3f4839295a530ebd1090d33feb8110f7ff0871b2b75d11831dc392d3df18bbcc",
+    "assets/cursors/adaptive/click/dark/hand-4.cur": "d8f8c788fd382bae86e7af3879011e4bc48c0cf40577b4e0300d39b0eaa07b7d"
+  },
+  "native_rgba": {
+    "tilt/light/arrow/0/32": {
+      "body_bgra_sha256": "5edc1c47c605a7751067d9d0fd443c8fd386f363139ee28758e4d00ff8787064",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "tilt/light/arrow/0/48": {
+      "body_bgra_sha256": "11e064821a2bfe2531ac9ac2ed0ff6a40b6db05bb28935435df6a4aae273fc9d",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "tilt/light/arrow/0/64": {
+      "body_bgra_sha256": "13a0a3d5bbdbfa3944acda6233741808f322cd0ea601c6df08b4543dffbc315e",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "tilt/light/arrow/0/96": {
+      "body_bgra_sha256": "be9337dcce8b82f46d9af96ebeae8e7c391236ef1eb2454fa98a19708b37633f",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "tilt/light/arrow/0/128": {
+      "body_bgra_sha256": "ee04f54e0ca6b9f25f82c801938ce50761a3e794361114c4615862a83f06dc34",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "tilt/light/arrow/0/256": {
+      "body_bgra_sha256": "f7a9cb72f0fb55476ff0b18dcd3e6e307aa0ff3e8757c8439dbbae642c9ef273",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "tilt/light/arrow/1/32": {
+      "body_bgra_sha256": "7f25d1ee9dc48c5739be8dd447b6c9f39f95dc736f80b416cecf849ad719e3ee",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "tilt/light/arrow/1/48": {
+      "body_bgra_sha256": "f5e59e042d9a15c3c4b4fafaae0eb9074e5b7296930320f5c812841177be2163",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "tilt/light/arrow/1/64": {
+      "body_bgra_sha256": "1b2cba5bddbddbe5c0f225ee477ed9d93a3b370271e9c8f99f3cf10166e766be",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "tilt/light/arrow/1/96": {
+      "body_bgra_sha256": "92b22b1aeb6e5ef7b939c419f8a95ae35ba57514fc9d0615de01575a69919d20",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "tilt/light/arrow/1/128": {
+      "body_bgra_sha256": "d66857b19482ee6ba82bc793d3cc96697c1703db479c79ee0472d9c1c3d08dd0",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "tilt/light/arrow/1/256": {
+      "body_bgra_sha256": "af381f12478d06db318bf4004d497547661e73325b4445384edb5193816bbb46",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "tilt/light/arrow/2/32": {
+      "body_bgra_sha256": "44c56bbce670253202ee2fa4f050f754319c1a5d5c431267c9de0578f97ba450",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "tilt/light/arrow/2/48": {
+      "body_bgra_sha256": "f80f5ddceff96ed9ebf1a0186c79f67a20eed2ce132ea6190cc8d2b3da8a43e9",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "tilt/light/arrow/2/64": {
+      "body_bgra_sha256": "82fac856261d4993b35863aee689c290ccf0bc4a253915efaae6611fbefc0374",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "tilt/light/arrow/2/96": {
+      "body_bgra_sha256": "4ad98e5caa678cf0c71a758238d38b20112e6962811224c627d2a51bdc52ca0f",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "tilt/light/arrow/2/128": {
+      "body_bgra_sha256": "005540ea5a551a695c6fdbcff91137bd0ba8019eb9ed28de1a03d63d6ec1fb48",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "tilt/light/arrow/2/256": {
+      "body_bgra_sha256": "ccdaacf16263a6d11597e35e39ebe0951226d17fc4559eabca6c09e83f889339",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "tilt/light/arrow/3/32": {
+      "body_bgra_sha256": "a96cf47d80660c867b17d93f4bb5d5cc0bd7f3b297b1c97787c18be4dd7e2ad0",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "tilt/light/arrow/3/48": {
+      "body_bgra_sha256": "233f471001f0e59d57128b724bf476c9b20bc2184f1ca3c3e39e3c1b53c5cf3d",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "tilt/light/arrow/3/64": {
+      "body_bgra_sha256": "edfd377eef660c4cebd49e17fc9af38813b2eb4544e7807886ba36479b45afae",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "tilt/light/arrow/3/96": {
+      "body_bgra_sha256": "25d68f166d4abd4fc46bafcc4265f44ecb986182d3b6820ec688674ad7518e18",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "tilt/light/arrow/3/128": {
+      "body_bgra_sha256": "2300bc19e459d1e21c4273dbeaa2312fdb84d5386f35b1cd37acdfbb84426e47",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "tilt/light/arrow/3/256": {
+      "body_bgra_sha256": "721d67ecda6f962f54827e0fd4cc60a9190442a3123188d0c847fab56fd464ef",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "tilt/light/arrow/4/32": {
+      "body_bgra_sha256": "de9d59ffa1d2bdb1d1f6006d8860662c5ac0f82fb2f50277aa318c65e703dcd2",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "tilt/light/arrow/4/48": {
+      "body_bgra_sha256": "b5bb722c9d6c00ad56bbbd59a52a90d172434c7acd3f6ba2247bef4a5c90ce56",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "tilt/light/arrow/4/64": {
+      "body_bgra_sha256": "db62fee21a8fdf4c05da1179d1e70de3732a64591291cd9c0173b3ea4534d47d",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "tilt/light/arrow/4/96": {
+      "body_bgra_sha256": "431b8b88139a9f74f45b2da67100c7cdac1a1806f67ea42b7300b7f21f58397b",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "tilt/light/arrow/4/128": {
+      "body_bgra_sha256": "e5d5bcb2fbeb65de8595d161ffe8b31d2a9fed7f4c13becce588696d7316ea69",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "tilt/light/arrow/4/256": {
+      "body_bgra_sha256": "b9f2e7edce62d570dd51f0c4ab225a78b06bd703587a69d8622354eb7ec4c100",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "tilt/light/hand/0/32": {
+      "body_bgra_sha256": "7edf87a7404e42636e52286e4a486e060b33fc75a76a18bf6bfa7d5a77180274",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "tilt/light/hand/0/48": {
+      "body_bgra_sha256": "d5ed3cde248d7cd6e9f406445bc2943f45fb283ed1f6f41bdb7e6959c9fd8d68",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "tilt/light/hand/0/64": {
+      "body_bgra_sha256": "e3ebd2550369192d547850db00f2d452be33c2ea15a5f74f51e06e594f734876",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "tilt/light/hand/0/96": {
+      "body_bgra_sha256": "3adcb5a03d91ba3302848e5f26ba60ac27d08986e51e6da5c2dcd900cad7b035",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "tilt/light/hand/0/128": {
+      "body_bgra_sha256": "d3ef87751fb4fa32fede4bd3be160a3a317a3ece2eeb47217e3e5c0555cfdf9e",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "tilt/light/hand/0/256": {
+      "body_bgra_sha256": "18a1c3b40a8ca4f673b45bb123c63267d53605c6f7df15df71d668df7d36861e",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "tilt/light/hand/1/32": {
+      "body_bgra_sha256": "22da48c23e33f0483f0a5cb04cd47bd0bc0df63b49589b5214caa51c90e03750",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "tilt/light/hand/1/48": {
+      "body_bgra_sha256": "5ffebce7503ba6738318e55ee2fd673ba4b9d845d3e8b38ea3b5f384d3d554eb",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "tilt/light/hand/1/64": {
+      "body_bgra_sha256": "d1a2ad4c82234e1943608f0abf265f4246d655d8705e56d6b5518bb7274cd8eb",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "tilt/light/hand/1/96": {
+      "body_bgra_sha256": "3e42065494fb3dd547392e5d15d12391daa20cbe79f1b72534a6e4525359d1dc",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "tilt/light/hand/1/128": {
+      "body_bgra_sha256": "47a72e5b9fec51565332aca22db11f92b235005f7ef03f4a8e2ef668028d73f0",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "tilt/light/hand/1/256": {
+      "body_bgra_sha256": "8947f8cfce9beba57c41fbf63a86af2790f07558925f71cc0d562ef96944f441",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "tilt/light/hand/2/32": {
+      "body_bgra_sha256": "43e9036d173e97d5a75f4664a67e9dd5d0bb27bf090d742750e0af389ea3f9c9",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "tilt/light/hand/2/48": {
+      "body_bgra_sha256": "ca02b452a40d65b0e18a9b20358d2175380c1a628ef010cf17b1a3f46a3c297c",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "tilt/light/hand/2/64": {
+      "body_bgra_sha256": "e964ab7b9f9c78293a97d10df515da04597129364a82c62a74c1cd516f5880d0",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "tilt/light/hand/2/96": {
+      "body_bgra_sha256": "2ab351c6052f58ad1bfd7dfb1f344bf6696d3d39879b2e0b6126dd2941bbf41b",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "tilt/light/hand/2/128": {
+      "body_bgra_sha256": "c34b0d4cfc7f4905e38085b7cb82ca6ad2ef1c6ac35d0309bb86d2c69fa61dfe",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "tilt/light/hand/2/256": {
+      "body_bgra_sha256": "fa130e14cb6b45d5b8df887b0b54b2d1f686ef857e84637385e2bbb1deac64e4",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "tilt/light/hand/3/32": {
+      "body_bgra_sha256": "9f24c39e2d4be1a486197f99ea8cca0f21e50d683b9aacc2fde9f6a3c51cdbd9",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "tilt/light/hand/3/48": {
+      "body_bgra_sha256": "c17632df567535a9229ff1807fa10ca6bb82a6b6d2228c582d398f69c3033302",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "tilt/light/hand/3/64": {
+      "body_bgra_sha256": "aca724d5fed358d34fa7a64b4dd8ca2e949b123f4696cb519a8ec8f712f579f3",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "tilt/light/hand/3/96": {
+      "body_bgra_sha256": "b2ccef16355012d9c90a34e53ab844468895a2e4039710c5274812c6636d085d",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "tilt/light/hand/3/128": {
+      "body_bgra_sha256": "02d3f2370afeb5f5dd3f79246a1f802cd7f4f000fd0ca164a916ad31ef33c476",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "tilt/light/hand/3/256": {
+      "body_bgra_sha256": "3a4bb26789a8e1480572fad93a7b6535f30a529d902aab073915e290d4ac1846",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "tilt/light/hand/4/32": {
+      "body_bgra_sha256": "50bb224999f7e0533eb7fdfdc34b7a89b1ca28bd10fc9725917d5991597d8bc5",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "tilt/light/hand/4/48": {
+      "body_bgra_sha256": "e0f92bac0a2745bacfa6760af420541b06ced82feab3ccfe044c476d27f0533b",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "tilt/light/hand/4/64": {
+      "body_bgra_sha256": "66331209e7cb28431737fbfb8dcd805c24146bcd11f44700dc019fa255c371f7",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "tilt/light/hand/4/96": {
+      "body_bgra_sha256": "03f926bde9299cd534fa4a812ffae39a7935121d11e37029e60d52845e410b68",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "tilt/light/hand/4/128": {
+      "body_bgra_sha256": "a3006740ecf48343fb89d3d628ac5db85eb0b49351fd711320bbb6610fc0d113",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "tilt/light/hand/4/256": {
+      "body_bgra_sha256": "01eb2d9e9c3a177f2dc5a15453b809d570e9f7caf9ec6721ad41b47870e0c2ca",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "tilt/dark/arrow/0/32": {
+      "body_bgra_sha256": "f91f990947bf989ef1f117ee02c600dee748c20592eb6c12d02557a4dd86003d",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "tilt/dark/arrow/0/48": {
+      "body_bgra_sha256": "d855de4832ebe80664d4f8910669d88c20724e6f343e5cd38e31f42629087a1f",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "tilt/dark/arrow/0/64": {
+      "body_bgra_sha256": "84d4908d52ef4748c01c35ca3e3d55af9a2944baea3557f40b66910fbcafb7d0",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "tilt/dark/arrow/0/96": {
+      "body_bgra_sha256": "4bdab6745ffaf0ef42e8ad328eda76a74c022dd5c116448dc69826fa856e7cae",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "tilt/dark/arrow/0/128": {
+      "body_bgra_sha256": "148453231d8e4c67dd8a3b82b259be8a85f284a0ebc39bb2209b0f389908e96c",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "tilt/dark/arrow/0/256": {
+      "body_bgra_sha256": "cdd17afda835058249fcf49070b2b70fe20aa530b2795794d484698159f2add4",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "tilt/dark/arrow/1/32": {
+      "body_bgra_sha256": "369a185b6085cb27f3bea0d381cb25ef4e754c37423e2d2b80ab6b4bd3be36da",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "tilt/dark/arrow/1/48": {
+      "body_bgra_sha256": "66ccfe27cd2ca9039a516c5b6763ee74312c6aa7f8cebc9e795ae8191ff36ea5",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "tilt/dark/arrow/1/64": {
+      "body_bgra_sha256": "7105966ce8c212a3c9c247be166c304e4d61ca4ad367b7e815bbbb8dde29470d",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "tilt/dark/arrow/1/96": {
+      "body_bgra_sha256": "1be01094f8fb9201eda205da6b49a7a54063d55abcac1e091eb4d517982f35ef",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "tilt/dark/arrow/1/128": {
+      "body_bgra_sha256": "84fd694891c5d90eef4fe1b487b145ec218ceb0585aa9bd30af95887ea8b355b",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "tilt/dark/arrow/1/256": {
+      "body_bgra_sha256": "7bc33009d115175c35989320e602fea3973aaf2022c0b4d4a44434844648fa7b",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "tilt/dark/arrow/2/32": {
+      "body_bgra_sha256": "7881949a5d936c5b26a25d199c7e8457ca29c23cbbf5eff96c294ae549cd42ae",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "tilt/dark/arrow/2/48": {
+      "body_bgra_sha256": "c2e365d03f999508e229162654310a7c25fbddf440274864e045c96ec5dee979",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "tilt/dark/arrow/2/64": {
+      "body_bgra_sha256": "3eb90fced36bdbdb44022c3bd3b73309610a1bbf1650da717cdcafc2296d5bd2",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "tilt/dark/arrow/2/96": {
+      "body_bgra_sha256": "f4037db448dd62febcf8bf62dd0d49003f2d9141d6c2c8c3277666a3925eb01d",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "tilt/dark/arrow/2/128": {
+      "body_bgra_sha256": "5cb7d0a80656cb566d50dd1f39218a7521128f1e4e0a32b3fa76e592e037e850",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "tilt/dark/arrow/2/256": {
+      "body_bgra_sha256": "7a9200ca3d12a42ea803d43973008b3f33ad79921c2f244a3e39ef75f5dfa855",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "tilt/dark/arrow/3/32": {
+      "body_bgra_sha256": "576befbaafa340fff0ed921c15c5fbccd0902cb9fad291006838eb8c897129c2",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "tilt/dark/arrow/3/48": {
+      "body_bgra_sha256": "a33a258aa0d1cc0b5ff15bbfc1ad8420ed3e60e9f814ae3fc67d01b3b9c75dd8",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "tilt/dark/arrow/3/64": {
+      "body_bgra_sha256": "29a6018dca766df51d27387c1b4a09aacf6ff473739e3a995770d9fb64710084",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "tilt/dark/arrow/3/96": {
+      "body_bgra_sha256": "defa48b5bf5c12dbb90e06b86ce9ba6ad84feda480aa911cd4646f0c86bc1d57",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "tilt/dark/arrow/3/128": {
+      "body_bgra_sha256": "d34a149511d1e4f4717e7a3e96881d8574e9c1ad9400affd08aecf13064103e7",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "tilt/dark/arrow/3/256": {
+      "body_bgra_sha256": "3b80f5ad6dbe106ad3171e30a53d7c8c4cfacc2e1e8b1cce5ef58d6fabdf8556",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "tilt/dark/arrow/4/32": {
+      "body_bgra_sha256": "5674557514d9c84a8ca1572432a1ceeeb784d389d32a9c261c9de82dda2730ac",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "tilt/dark/arrow/4/48": {
+      "body_bgra_sha256": "6ac3c13e9e34c4c24265d0e38d0c8e643a8f65a8861fed070a1f6eca2f27a077",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "tilt/dark/arrow/4/64": {
+      "body_bgra_sha256": "6398c0a734525aec31f5c47ab5d67bc71e410b349278d93b27d4fde435399ece",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "tilt/dark/arrow/4/96": {
+      "body_bgra_sha256": "5d328e34a81afea36b3719adbd20cafcc1f4085e2fdb2fa994beb2de705641be",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "tilt/dark/arrow/4/128": {
+      "body_bgra_sha256": "12a839ec42c2bd2806409d068313aa5bef883e23f8ddd5c3313caebf75800565",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "tilt/dark/arrow/4/256": {
+      "body_bgra_sha256": "8491c3eafbeb63c28de069bc5c01107edf9b4fd7dd5611732cfe0c3a0d17a0ea",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "tilt/dark/hand/0/32": {
+      "body_bgra_sha256": "0664e9c9c02e48613a46adde70730fc2c8711ff91181efcad7ba9e14e519c065",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "tilt/dark/hand/0/48": {
+      "body_bgra_sha256": "adbf55650dc31f6b33a8ab980cb2221ded03a79dba5415142839412122ace2ac",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "tilt/dark/hand/0/64": {
+      "body_bgra_sha256": "e6880d80b3a6c82ac21e31f950c7a8eb26e95f9fe81a5f90902f4cb34c334b43",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "tilt/dark/hand/0/96": {
+      "body_bgra_sha256": "e4d7deb3b7668841ab8fd57528cca8ecad68b7df77d75f380df7cd9c25714b1c",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "tilt/dark/hand/0/128": {
+      "body_bgra_sha256": "3f706d751c4e8efb37c5065b42f1143ddc41cd83571189a54bf547d73b80dceb",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "tilt/dark/hand/0/256": {
+      "body_bgra_sha256": "f83e080fc227748ed16add24545c84a74be350658f160080a3168b8ca15f108f",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "tilt/dark/hand/1/32": {
+      "body_bgra_sha256": "c7ad1b76804742102e1556fe3d196568ef3436d542d6969d3d115bf478558141",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "tilt/dark/hand/1/48": {
+      "body_bgra_sha256": "b51dcae3f858878c715c98c72277fe7d4f85d9c0310a82b183658a8ae9d6f83b",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "tilt/dark/hand/1/64": {
+      "body_bgra_sha256": "2e6dc11889bc4dcd73bd321ce09dd90c1c073139a3ffb88ca18d1d873d52251f",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "tilt/dark/hand/1/96": {
+      "body_bgra_sha256": "1e3f2b30a0777ca98d71af888f6fd2741d9e91b90671f4a0217e434d892d9f62",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "tilt/dark/hand/1/128": {
+      "body_bgra_sha256": "b34f74832c82282d601f7b7e7bedb68efb2cbd3373b880f318688e38faf931a7",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "tilt/dark/hand/1/256": {
+      "body_bgra_sha256": "3216447d0763a6e5c419165be31e375dfda11cb9d82c78e7a1402d45adf7bc69",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "tilt/dark/hand/2/32": {
+      "body_bgra_sha256": "c8fd5aaa0bb291027149c322dc17539019731227944f6e1dafe41c9a11b4f4a0",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "tilt/dark/hand/2/48": {
+      "body_bgra_sha256": "59de1bcdf5ef5be8dfdbb35abf866e71b55d81900bdbaa3f30ebd8acdcbfdebb",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "tilt/dark/hand/2/64": {
+      "body_bgra_sha256": "82052b18ca75bae2aad2ea270ac7f400485637d16e3ddca1b250325f304b3b9b",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "tilt/dark/hand/2/96": {
+      "body_bgra_sha256": "3296e6d4b361e9c4a240da4cb01491a8e15b19ad8eddf3244bcd35958756dbbb",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "tilt/dark/hand/2/128": {
+      "body_bgra_sha256": "6a01789abea80f17b13447671432053c59c8b4a82834d86a533f9c33f89a99d3",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "tilt/dark/hand/2/256": {
+      "body_bgra_sha256": "557ab7a5c358c4c8a6ee818b8a005660e63d63c3bb705f3e1cb26366beb10613",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "tilt/dark/hand/3/32": {
+      "body_bgra_sha256": "993b95bcfd0d69355c1c78b0b2a8deb6d8c59b96784981a44f1ec37968a4ef8e",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "tilt/dark/hand/3/48": {
+      "body_bgra_sha256": "a73518ddbef2a1d4e9eb1c188566a8461f6e0490d6baa154f7b03d5b8405e006",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "tilt/dark/hand/3/64": {
+      "body_bgra_sha256": "4e68e5b9efba15ef1399663b6c5496fa78081f6303f6fa6c16d9190546fd0732",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "tilt/dark/hand/3/96": {
+      "body_bgra_sha256": "75b808eb47555205123b88dd96f02954dbf8f0832588a8e5294a728f471b20fe",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "tilt/dark/hand/3/128": {
+      "body_bgra_sha256": "17bbe40322aba84948e809aceafca3193bc428c5d4f421bad2f6aac9590a32ae",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "tilt/dark/hand/3/256": {
+      "body_bgra_sha256": "c5d8a580417afe89d3901142bce7966cb23179126a973de03f9279c73df7d5f0",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "tilt/dark/hand/4/32": {
+      "body_bgra_sha256": "681b47b6732cd4cd2e0a880d83826d9728fad2dcff7f9c0216f5d188d90546ba",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "tilt/dark/hand/4/48": {
+      "body_bgra_sha256": "253c5f9ede32a8ad50bcaf6d3aef5e455597f55b856c57fe415aceb7201e010c",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "tilt/dark/hand/4/64": {
+      "body_bgra_sha256": "523de73e6c7a08dac1a1628b421e7044c6a3c8534fff3e1d518424bd7c99e1b9",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "tilt/dark/hand/4/96": {
+      "body_bgra_sha256": "4315d3dee08b351ddb9ee043d2cc2334d58c3f3415eb48652799d40ecdeb173d",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "tilt/dark/hand/4/128": {
+      "body_bgra_sha256": "8b5cc0a62dba9dba185d4d0e50d92dc84781718614172777a15de6b3af95289f",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "tilt/dark/hand/4/256": {
+      "body_bgra_sha256": "86772433f9c3d7196f7804be5f05284519c258809ab81fa064c41df91a19ed08",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "shrink/light/arrow/0/32": {
+      "body_bgra_sha256": "5edc1c47c605a7751067d9d0fd443c8fd386f363139ee28758e4d00ff8787064",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "shrink/light/arrow/0/48": {
+      "body_bgra_sha256": "11e064821a2bfe2531ac9ac2ed0ff6a40b6db05bb28935435df6a4aae273fc9d",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "shrink/light/arrow/0/64": {
+      "body_bgra_sha256": "13a0a3d5bbdbfa3944acda6233741808f322cd0ea601c6df08b4543dffbc315e",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "shrink/light/arrow/0/96": {
+      "body_bgra_sha256": "be9337dcce8b82f46d9af96ebeae8e7c391236ef1eb2454fa98a19708b37633f",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "shrink/light/arrow/0/128": {
+      "body_bgra_sha256": "ee04f54e0ca6b9f25f82c801938ce50761a3e794361114c4615862a83f06dc34",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "shrink/light/arrow/0/256": {
+      "body_bgra_sha256": "f7a9cb72f0fb55476ff0b18dcd3e6e307aa0ff3e8757c8439dbbae642c9ef273",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "shrink/light/arrow/1/32": {
+      "body_bgra_sha256": "a6eeebf0e4df0e3ea4c4cbfd2c79a6e95913f1d2157248b059575e71327f668c",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "shrink/light/arrow/1/48": {
+      "body_bgra_sha256": "9bf55bce585b2c32a435301622a9a0ef238a11778dfd23bf27d37bfd8b9d36ba",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "shrink/light/arrow/1/64": {
+      "body_bgra_sha256": "d7a04b26939ffb47ecfd61a844b199af0b24457f079f7b36fb28acc31e745434",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "shrink/light/arrow/1/96": {
+      "body_bgra_sha256": "d05a2746fb891a18bf392ddfcf10ebdfc8e72309227abcdf1c1c9ebc30fcf6a5",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "shrink/light/arrow/1/128": {
+      "body_bgra_sha256": "0f3a153a2fda0c6101f51d496f3025f5da43ffdc3b4f3578585c4c4eb143c63b",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "shrink/light/arrow/1/256": {
+      "body_bgra_sha256": "8171a18916892a94171fa4c227f0e3f43c6a7cd89ccf558a03abaa4633128675",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "shrink/light/arrow/2/32": {
+      "body_bgra_sha256": "38998f91744d4203acbd675dae2907c93a8dea88252ad3f6167a8780bf7ab579",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "shrink/light/arrow/2/48": {
+      "body_bgra_sha256": "cfaaac72cbf116b5f492b6690291f4c286e46dd75d1a1271046ca16f3db71d56",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "shrink/light/arrow/2/64": {
+      "body_bgra_sha256": "55c89967f19ee4fdda423dbb7d9fa6462bd350ea08f45e9dffc1f2e406c14cc8",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "shrink/light/arrow/2/96": {
+      "body_bgra_sha256": "7fd715025d6be63976df05402ea9d388b0b009fdd8ac827de29adafbc0c3c8ec",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "shrink/light/arrow/2/128": {
+      "body_bgra_sha256": "4419d4c69737610e996e04942378331a218548d0bb685c838181a3b57ff4f342",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "shrink/light/arrow/2/256": {
+      "body_bgra_sha256": "56cdd63829b83908ee35b83fc45bd9cdd94e60badda03db592a7731cb2d5dbdb",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "shrink/light/arrow/3/32": {
+      "body_bgra_sha256": "57d4afbc15b146ec9b4fc48730e7b86a00ed83ffeb8cb784dc8b8ebac54a823b",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "shrink/light/arrow/3/48": {
+      "body_bgra_sha256": "f5ce83e143723655d2a626535972f160fe28aadefea3cab0b14069784d64ad66",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "shrink/light/arrow/3/64": {
+      "body_bgra_sha256": "c7dd9587238d9e4bfc327e0a9985aac47837bff2c6258ec430de876280351897",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "shrink/light/arrow/3/96": {
+      "body_bgra_sha256": "6f3fcb5947b37ce254f2f60fb0ed850b48009042cd2252520a7d225bc7d8905b",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "shrink/light/arrow/3/128": {
+      "body_bgra_sha256": "db3b4201064185f383887659e5bb703793d7c898d72763edd67a1d8bddc0c6de",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "shrink/light/arrow/3/256": {
+      "body_bgra_sha256": "b0204d6db1a375a6b568d2c1b2cff3a99eee0bd501c62219e70b9f6da419c5d9",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "shrink/light/arrow/4/32": {
+      "body_bgra_sha256": "cc742b2c15801bf0d5a37e470d3829370e94cf28c389976ae071214584e8ab08",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "shrink/light/arrow/4/48": {
+      "body_bgra_sha256": "149f2c549f7ac54c5e68cd1a41b05c295563d1856c0b2cc17b3ccd4b52e12fae",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "shrink/light/arrow/4/64": {
+      "body_bgra_sha256": "f7831f6f75cbfcd9795b9d1dc0e75da2b6ae98c971e9fd5c72d23293849b5c47",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "shrink/light/arrow/4/96": {
+      "body_bgra_sha256": "bb95dd82cf0d63dfc4b300e066821f4c9d498ec36048b6ebb0a7040bc4155c1b",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "shrink/light/arrow/4/128": {
+      "body_bgra_sha256": "983389008820c77ef47ba3b128a77d2e3e153a49cb6e29af36c5ad23d9e714c1",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "shrink/light/arrow/4/256": {
+      "body_bgra_sha256": "0ac36717db871e2653824b69d5f7e8bc5d248874a1303ab9979d305d070c6710",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "shrink/light/hand/0/32": {
+      "body_bgra_sha256": "7edf87a7404e42636e52286e4a486e060b33fc75a76a18bf6bfa7d5a77180274",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "shrink/light/hand/0/48": {
+      "body_bgra_sha256": "d5ed3cde248d7cd6e9f406445bc2943f45fb283ed1f6f41bdb7e6959c9fd8d68",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "shrink/light/hand/0/64": {
+      "body_bgra_sha256": "e3ebd2550369192d547850db00f2d452be33c2ea15a5f74f51e06e594f734876",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "shrink/light/hand/0/96": {
+      "body_bgra_sha256": "3adcb5a03d91ba3302848e5f26ba60ac27d08986e51e6da5c2dcd900cad7b035",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "shrink/light/hand/0/128": {
+      "body_bgra_sha256": "d3ef87751fb4fa32fede4bd3be160a3a317a3ece2eeb47217e3e5c0555cfdf9e",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "shrink/light/hand/0/256": {
+      "body_bgra_sha256": "18a1c3b40a8ca4f673b45bb123c63267d53605c6f7df15df71d668df7d36861e",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "shrink/light/hand/1/32": {
+      "body_bgra_sha256": "6e79633c7994a777f1f04cdb053224068b5cf15ab707a39f039c1f4e3a566e6b",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "shrink/light/hand/1/48": {
+      "body_bgra_sha256": "e7be713d818e1cd0143076ec0eea0d4e560be0dc6a37a50935cce72e42f5ee12",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "shrink/light/hand/1/64": {
+      "body_bgra_sha256": "9647964c98ae5be32bf72ede6721b3af5c8ba3bdb4df71641b5d4ed26195d7c6",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "shrink/light/hand/1/96": {
+      "body_bgra_sha256": "8feb7ac4aab371209093b3dab58d1b25d689b04b711f571490bff173c6af1d4b",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "shrink/light/hand/1/128": {
+      "body_bgra_sha256": "599e2f63a1048a6b871be8bc72e7845ced450e99db13dce1135e88bbd54c18a6",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "shrink/light/hand/1/256": {
+      "body_bgra_sha256": "2493284c9a4dfdf9143407f52340085538c5d5270c960bd1def914e73423ca43",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "shrink/light/hand/2/32": {
+      "body_bgra_sha256": "eead425df7d5609f0e8bcec8ebddce5062072abed3da9e0437fb1cba071fd607",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "shrink/light/hand/2/48": {
+      "body_bgra_sha256": "63c5f0125f17bc6e62d268dbe56dceb1001cc39ee9e7b955178fb4c5a2f87c97",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "shrink/light/hand/2/64": {
+      "body_bgra_sha256": "42b7af8f8ad1de6c0891c9c6f140df181006c54904a0b75620b2cdf291df4364",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "shrink/light/hand/2/96": {
+      "body_bgra_sha256": "6075fbfe13a9ca5b6cb44fc3bd7226f3938fc9a9cbed571efd5da4c523991517",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "shrink/light/hand/2/128": {
+      "body_bgra_sha256": "7c8f063075901f3b46b6d49610f27eeceae2d8abb7aef8fa8b27fca89dfb31fa",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "shrink/light/hand/2/256": {
+      "body_bgra_sha256": "bd95bf09870c514c6afbe497268430ba67e0459cdf89c3ea792d8eb6b65fa226",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "shrink/light/hand/3/32": {
+      "body_bgra_sha256": "07dba65b957a2ef07190312fa7b4a9bc1cae3cdfb5009625119c9c0fd0bb5027",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "shrink/light/hand/3/48": {
+      "body_bgra_sha256": "c04b5863e84cc0752c03c0542a62c3004f07258020d370a5d88e5151aa199711",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "shrink/light/hand/3/64": {
+      "body_bgra_sha256": "92ec4e0da878ec4518be0ecc8f3a983e87bad405498c2ab2eb716c93dbd240f8",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "shrink/light/hand/3/96": {
+      "body_bgra_sha256": "a3ac3049d388049d5d2b3f03332cf1dcb8d416217c2ed25823dcc5dc2fefed35",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "shrink/light/hand/3/128": {
+      "body_bgra_sha256": "0dc8b37e341c91cc870fec54a74f84d4b6bd6838e297f69da8a5fe531e748241",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "shrink/light/hand/3/256": {
+      "body_bgra_sha256": "a232b9efcedf1b191238555e625f4737b95abd53cfe0fc5c82c696c662995424",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "shrink/light/hand/4/32": {
+      "body_bgra_sha256": "db2eb44cbf7efd01983def7996b35bce2175f1be307be59a19a839664aa0edea",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "shrink/light/hand/4/48": {
+      "body_bgra_sha256": "180e2383acccf1142b852dfa4a738862fcb466ec4348726a57cb9e08584d885b",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "shrink/light/hand/4/64": {
+      "body_bgra_sha256": "266e68150399209a15ad0e3e3b045b0d12a64ae7ea076ead35ae4fdd9572d687",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "shrink/light/hand/4/96": {
+      "body_bgra_sha256": "6d9a3f345c4030518fc97396cdc7f19d1a21548856bbfda7848514dd6b455ba1",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "shrink/light/hand/4/128": {
+      "body_bgra_sha256": "31bf0fb24d14d4f420dc08247080f2873f32a07ea933e1ca523beb7901867259",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "shrink/light/hand/4/256": {
+      "body_bgra_sha256": "7a52949656f73c3cfe818c1f61219a4b363992e9c622091583590248e19e834f",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "shrink/dark/arrow/0/32": {
+      "body_bgra_sha256": "f91f990947bf989ef1f117ee02c600dee748c20592eb6c12d02557a4dd86003d",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "shrink/dark/arrow/0/48": {
+      "body_bgra_sha256": "d855de4832ebe80664d4f8910669d88c20724e6f343e5cd38e31f42629087a1f",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "shrink/dark/arrow/0/64": {
+      "body_bgra_sha256": "84d4908d52ef4748c01c35ca3e3d55af9a2944baea3557f40b66910fbcafb7d0",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "shrink/dark/arrow/0/96": {
+      "body_bgra_sha256": "4bdab6745ffaf0ef42e8ad328eda76a74c022dd5c116448dc69826fa856e7cae",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "shrink/dark/arrow/0/128": {
+      "body_bgra_sha256": "148453231d8e4c67dd8a3b82b259be8a85f284a0ebc39bb2209b0f389908e96c",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "shrink/dark/arrow/0/256": {
+      "body_bgra_sha256": "cdd17afda835058249fcf49070b2b70fe20aa530b2795794d484698159f2add4",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "shrink/dark/arrow/1/32": {
+      "body_bgra_sha256": "792dad891ba907428e22c4ad69c5e77b7343cde49829343748558a8d6e2364a0",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "shrink/dark/arrow/1/48": {
+      "body_bgra_sha256": "068cf095c75a8fe44149c9eb0a5e4578ab13f2cace08d671b3255b846bfd561e",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "shrink/dark/arrow/1/64": {
+      "body_bgra_sha256": "ebeda97ef206dd4892794562167ac530d9e25d429781f9023c815e96c613c20b",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "shrink/dark/arrow/1/96": {
+      "body_bgra_sha256": "8c03c062f2a475a1391f4d03536a82b7b697c9b991820af710f098b8d266b850",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "shrink/dark/arrow/1/128": {
+      "body_bgra_sha256": "1780fdf441cadc8f724d6ee710f5963e099f53ee8df0e39f200f1419d028ee37",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "shrink/dark/arrow/1/256": {
+      "body_bgra_sha256": "9f1bc71f80e2558c30361f37a9f8457d0b5eb4e54ae9a08b64e4b36e63061b79",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "shrink/dark/arrow/2/32": {
+      "body_bgra_sha256": "a93102a023d2b8764f717a8e84ac70f7a984e64c24f5b029c506705c26cfe502",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "shrink/dark/arrow/2/48": {
+      "body_bgra_sha256": "9b09a818f104f02d3ef7a9a02242b127c21a7bfedebe628aac63a08d36bdd4a5",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "shrink/dark/arrow/2/64": {
+      "body_bgra_sha256": "7250b25d8ade0a0ef846f0fa4bf4bdee309ce29e28680a46d538c92d8db8cbd0",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "shrink/dark/arrow/2/96": {
+      "body_bgra_sha256": "0cd43a29b7f7a5f4953d22c135fab4f8c1fd5e7dcb2ed7659584e703fd6f9969",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "shrink/dark/arrow/2/128": {
+      "body_bgra_sha256": "49382b22bde63cb1eebeea40c8d5a957e32fa7517fd8e435cc62ef5e5073d102",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "shrink/dark/arrow/2/256": {
+      "body_bgra_sha256": "f74dd360078e23c9b8eeeb1000cc87880b2fc7f409b917de6bcb419a786720df",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "shrink/dark/arrow/3/32": {
+      "body_bgra_sha256": "fd22d6db0d48360c9edbe7e3cb3e808c15c2db2afb2ae6deff14e5038593cff3",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "shrink/dark/arrow/3/48": {
+      "body_bgra_sha256": "8860853afe24081c103468b5bd408b00b7c242407dc93a460b34df048883ac2b",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "shrink/dark/arrow/3/64": {
+      "body_bgra_sha256": "9eed94889aadb2af4bccf077c7ddedb080bcf976ece852ed4bbf0c4d8079fff3",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "shrink/dark/arrow/3/96": {
+      "body_bgra_sha256": "df8f7558e374762786870280b69a65b73e67aaa0ae807f70bf7eab0cba032a23",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "shrink/dark/arrow/3/128": {
+      "body_bgra_sha256": "6b74e679999b257bf7c48d5ef49833bcfcb3a4e9a4fb4c917d230087d113dbae",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "shrink/dark/arrow/3/256": {
+      "body_bgra_sha256": "961f05509a8c2f1f36f9aaca52fa98ba1732caae1bf9b6e50a12da29975f2beb",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "shrink/dark/arrow/4/32": {
+      "body_bgra_sha256": "93b13ac6a8607bde0b53d46d738586f424d6aefc4deffccaf921c989f321bcc6",
+      "hotspot": [
+        3,
+        3
+      ]
+    },
+    "shrink/dark/arrow/4/48": {
+      "body_bgra_sha256": "439e1add0ea95c18743ea9f28c2b41684b4e76e08608d730bde4a79e2a2f64b3",
+      "hotspot": [
+        4,
+        4
+      ]
+    },
+    "shrink/dark/arrow/4/64": {
+      "body_bgra_sha256": "78e137e5b6c43b7bf91130c342709a164c749c9f837fcd256b9590494991e679",
+      "hotspot": [
+        6,
+        6
+      ]
+    },
+    "shrink/dark/arrow/4/96": {
+      "body_bgra_sha256": "e37604e8c89e34d2cea4239cb669dc15f6049d11456279930520520b5ec4e5c9",
+      "hotspot": [
+        9,
+        9
+      ]
+    },
+    "shrink/dark/arrow/4/128": {
+      "body_bgra_sha256": "1991fdade9b159de2d133de52c9de436dd9dc3d63eb71fa8428062122a2f6443",
+      "hotspot": [
+        12,
+        12
+      ]
+    },
+    "shrink/dark/arrow/4/256": {
+      "body_bgra_sha256": "0b92eadbdd7d3c8000d00c25c69ca3aea147b6cf29ba72a742a1004890584364",
+      "hotspot": [
+        24,
+        24
+      ]
+    },
+    "shrink/dark/hand/0/32": {
+      "body_bgra_sha256": "0664e9c9c02e48613a46adde70730fc2c8711ff91181efcad7ba9e14e519c065",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "shrink/dark/hand/0/48": {
+      "body_bgra_sha256": "adbf55650dc31f6b33a8ab980cb2221ded03a79dba5415142839412122ace2ac",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "shrink/dark/hand/0/64": {
+      "body_bgra_sha256": "e6880d80b3a6c82ac21e31f950c7a8eb26e95f9fe81a5f90902f4cb34c334b43",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "shrink/dark/hand/0/96": {
+      "body_bgra_sha256": "e4d7deb3b7668841ab8fd57528cca8ecad68b7df77d75f380df7cd9c25714b1c",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "shrink/dark/hand/0/128": {
+      "body_bgra_sha256": "3f706d751c4e8efb37c5065b42f1143ddc41cd83571189a54bf547d73b80dceb",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "shrink/dark/hand/0/256": {
+      "body_bgra_sha256": "f83e080fc227748ed16add24545c84a74be350658f160080a3168b8ca15f108f",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "shrink/dark/hand/1/32": {
+      "body_bgra_sha256": "07d1a0fd858340e7a849ae0b7f1572d31d5eb6e8f1a7d0ff485c0b0c0626bd98",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "shrink/dark/hand/1/48": {
+      "body_bgra_sha256": "dcaa7dc4c9a0503d30ebbb6e2ef71aa59458f6702ddd294af20383a2fa2cc811",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "shrink/dark/hand/1/64": {
+      "body_bgra_sha256": "d566908a3b0acfe8cb6600fcd15a00a6421b86320722f90a208f6acd5be1cad8",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "shrink/dark/hand/1/96": {
+      "body_bgra_sha256": "e7a50581268bc5005081b0391b4380e796e9cad80a91c79feafaacdc3362805c",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "shrink/dark/hand/1/128": {
+      "body_bgra_sha256": "e78ba4df6915fc6ad5cc2f25debf433f00ec4695b87c46c803cccb2d2472aa33",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "shrink/dark/hand/1/256": {
+      "body_bgra_sha256": "e7220ebfecb0f219d05f2354723390b962c71e31a09b530e76dc0d29fc29f7e4",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "shrink/dark/hand/2/32": {
+      "body_bgra_sha256": "ef791de2dde315938087998ebf90e99dfef287267ac38db90799c97132fa04be",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "shrink/dark/hand/2/48": {
+      "body_bgra_sha256": "ebcdd8e3df8b424b92b7eb514903812bc7cb116a09c326c92781255341867794",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "shrink/dark/hand/2/64": {
+      "body_bgra_sha256": "4a583ceb843cc635cff656af5c7b8037bb6bf6611f3c806cb76208fa8417167a",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "shrink/dark/hand/2/96": {
+      "body_bgra_sha256": "c5223b87d870aa57c8b651dccd3f5517a091acb1b8ab16f2499bf44c8e53f43e",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "shrink/dark/hand/2/128": {
+      "body_bgra_sha256": "cd34ce2f7ac9914ffe2ef536bd3b8c8e5ac23b8dda608935c3f767dc6460c67c",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "shrink/dark/hand/2/256": {
+      "body_bgra_sha256": "40c18faa050d7c44cee041df9190063716c60d222595a9b8993d4cf6dd3537d6",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "shrink/dark/hand/3/32": {
+      "body_bgra_sha256": "d7e018c47369846c6ab0c72f8c8f4878db2e7853d977a3da822a0f5310f879b5",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "shrink/dark/hand/3/48": {
+      "body_bgra_sha256": "240077d7d770baf686639695f5fbb5f663ed4c96df69183677ce5f3d44d5db19",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "shrink/dark/hand/3/64": {
+      "body_bgra_sha256": "4c3e8cb5ad41331cb28dd2a482e1f23358692b24e259d24773ebee80cabcfc16",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "shrink/dark/hand/3/96": {
+      "body_bgra_sha256": "8a8c7506effaa90f42e5ae28cb53d933b1d34e1cccb1866eefe89dbb609d2c6a",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "shrink/dark/hand/3/128": {
+      "body_bgra_sha256": "0cfb33a505ba25b177c8274569b059c44ced5ba3ca0dba2a5d39312c3adc58af",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "shrink/dark/hand/3/256": {
+      "body_bgra_sha256": "5b6cdc05cc240e032c19fe9df1541e73691d307d325c4668b692b1c6de038645",
+      "hotspot": [
+        112,
+        24
+      ]
+    },
+    "shrink/dark/hand/4/32": {
+      "body_bgra_sha256": "3e1226edc1be3a5364fc8ef8c84c2f840490c9c19d7f55e497ff10b8061f8544",
+      "hotspot": [
+        14,
+        3
+      ]
+    },
+    "shrink/dark/hand/4/48": {
+      "body_bgra_sha256": "ec4fe6d61ea149825020a994436b1213ccab83b8518a4c9aa410af822c9ee1f0",
+      "hotspot": [
+        21,
+        4
+      ]
+    },
+    "shrink/dark/hand/4/64": {
+      "body_bgra_sha256": "30daecdad6b65e02b0ef5ad78cf57de8372ca2a5aa184c7cd4671634858c5c77",
+      "hotspot": [
+        28,
+        6
+      ]
+    },
+    "shrink/dark/hand/4/96": {
+      "body_bgra_sha256": "92584968a68176d5bd6e0e4ba8bb0af1808b1e9f6ccd71dda586a3b09108ec45",
+      "hotspot": [
+        42,
+        9
+      ]
+    },
+    "shrink/dark/hand/4/128": {
+      "body_bgra_sha256": "64af87b1ba592863f2757d9fe70ec9d8be18bdac368d2c16ba503b7b36b000a6",
+      "hotspot": [
+        56,
+        12
+      ]
+    },
+    "shrink/dark/hand/4/256": {
+      "body_bgra_sha256": "7a5512cad2ab68b2ca48a9f56d2379390d034b397d2e4203d5db7e473b8b4f82",
+      "hotspot": [
+        112,
+        24
+      ]
+    }
+  },
+  "time_inputs": [
+    [
+      false,
+      0
+    ],
+    [
+      true,
+      1
+    ],
+    [
+      true,
+      1.02
+    ],
+    [
+      true,
+      1.04
+    ],
+    [
+      true,
+      1.061
+    ],
+    [
+      true,
+      2
+    ],
+    [
+      false,
+      2
+    ],
+    [
+      false,
+      2.04
+    ],
+    [
+      false,
+      2.08
+    ],
+    [
+      false,
+      2.12
+    ],
+    [
+      false,
+      2.151
+    ]
+  ],
+  "timelines": {
+    "tilt": [
+      0,
+      0,
+      3,
+      4,
+      4,
+      4,
+      4,
+      3,
+      2,
+      1,
+      0
+    ],
+    "shrink": [
+      0,
+      0,
+      3,
+      4,
+      4,
+      4,
+      4,
+      3,
+      2,
+      1,
+      0
+    ],
+    "spring": [
+      0,
+      0,
+      3,
+      4,
+      4,
+      4,
+      4,
+      0,
+      0,
+      0,
+      0
+    ],
+    "pulse": [
+      0,
+      0,
+      3,
+      4,
+      4,
+      4,
+      4,
+      3,
+      2,
+      1,
+      0
+    ],
+    "trail": [
+      0,
+      0,
+      3,
+      4,
+      4,
+      4,
+      4,
+      3,
+      2,
+      1,
+      0
+    ],
+    "off": [
+      0,
+      0,
+      3,
+      4,
+      4,
+      4,
+      4,
+      3,
+      2,
+      1,
+      0
+    ]
+  },
+  "clock_source_sha256": "691cc45da96b685cd5217b4091fb03c49f5eb64fa551e5a776de36c6fe4799a4",
+  "preview_source_sha256": "12ec2955c2715901efc4c355a953f4d52984ee45b7c7859f648ed02922cd7176",
+  "historical_preview": {
+    "tilt/light/arrow/24/96/0": {
+      "rgba_sha256": "d71aef2a24692ce50f31ae141d59c638b7223bf7f19e3a02e6b66dc2078d83b9",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "tilt/light/arrow/24/96/1": {
+      "rgba_sha256": "63a91ded3250be934dfb177704e6786045044c6beaed85e20a7a550d340246ca",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "tilt/light/arrow/24/96/2": {
+      "rgba_sha256": "618136c8967c466fd9916c0c56ffa59c80ec8c1ee6596429000e83bd6e058cef",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "tilt/light/arrow/24/96/3": {
+      "rgba_sha256": "ce68ba19b489fa2a1ede9a308156ba7f9f5e32fd9a9f3b4a7d5009ac46a3c84d",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "tilt/light/arrow/24/96/4": {
+      "rgba_sha256": "eb4a5cae4af6eac714bfd937c4ff298e31d0e787b50f13eee67807c32a2c37a2",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "tilt/light/arrow/24/192/0": {
+      "rgba_sha256": "ce580bc1e1a7a799023892f1bf7a306f0b0beb7d4b8d91fbd08b1a6a1e2fb76d",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "tilt/light/arrow/24/192/1": {
+      "rgba_sha256": "98a18171326dd0bb270afc2c6fe7f469f0f7e32774e18313814abe390c5f5429",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "tilt/light/arrow/24/192/2": {
+      "rgba_sha256": "1851083b12be502d307c6ba32b689f6c7cbb99dd70c86a7d97c72f3484a397d8",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "tilt/light/arrow/24/192/3": {
+      "rgba_sha256": "81e9cfdca5b87014d15118fe04775e4703cf954af3d9c516c63c85c17bc4d5b4",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "tilt/light/arrow/24/192/4": {
+      "rgba_sha256": "c0c4a298c07d8917db4a3f2a6cce7a1996d0d60784eda65c57b1a902db525f9d",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "tilt/light/arrow/32/96/0": {
+      "rgba_sha256": "b6416b0ecf2fdefa11ea305c4ee85316efc0cb888f02bf7c154a0504fa6a52a3",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "tilt/light/arrow/32/96/1": {
+      "rgba_sha256": "c5ffdfe439f64d8ff831755f988af6ae67ec94c6fface2da9f9b46d64be5a8d6",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "tilt/light/arrow/32/96/2": {
+      "rgba_sha256": "81644fa0e42c5b52f7ad468fdc1973df9acbc2559f559f0626f045448e7f72a2",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "tilt/light/arrow/32/96/3": {
+      "rgba_sha256": "75dca994b7eb772620ad3da786792b237b3e05675db58f888624fc8bd889e60e",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "tilt/light/arrow/32/96/4": {
+      "rgba_sha256": "bde31f405497a7cbab044c73a28cbd872fe653c286f50d38fdab2a30b11bb78d",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "tilt/light/arrow/32/192/0": {
+      "rgba_sha256": "bf2433d82b4682bfb163356b5dd64cb2b9c50d3783e6280446516bd013dc283e",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "tilt/light/arrow/32/192/1": {
+      "rgba_sha256": "461d9c115a56ea4cdfafcebb5984545fa22dd421b7aead51c8d1471344a1ba74",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "tilt/light/arrow/32/192/2": {
+      "rgba_sha256": "0bd8d02f36ad99df55cefe078c05144d9bd7231a63056ae8ec84c70e923bcd03",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "tilt/light/arrow/32/192/3": {
+      "rgba_sha256": "b44021a3f845c884baae84df07b96b49e447d8f0ce0eb7af184168723af3f19e",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "tilt/light/arrow/32/192/4": {
+      "rgba_sha256": "61bd87cd7aa08f5fc6b5ffc45faf3246e82517d1d0630ef9f081238c07913b4e",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "tilt/light/arrow/48/96/0": {
+      "rgba_sha256": "85a28f4d430cd80031bb72675f5e31200193e62caec045f78f6d721fe237e779",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "tilt/light/arrow/48/96/1": {
+      "rgba_sha256": "0c3bbdf1a86d1bb3461a6f6f150bf904953ef61a511e8c76570368ce7276bd03",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "tilt/light/arrow/48/96/2": {
+      "rgba_sha256": "f81397c9d4a12f15e722866e8640ae72b58c68bcdf188c154d8585aba45b7d4b",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "tilt/light/arrow/48/96/3": {
+      "rgba_sha256": "81c72ad1925a8350ff6983b11eaedf25ef5cbd7c037439e6f69455e1cd11f07e",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "tilt/light/arrow/48/96/4": {
+      "rgba_sha256": "79cbd6d26546d7e22105b4f6c97202f6be8cf7c71f3d8f4df6feeb475cd7cbe0",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "tilt/light/arrow/48/192/0": {
+      "rgba_sha256": "39619554e5799b140f5344ef660c27df82db85164cbbd8776f9cc2a780fcd0c7",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "tilt/light/arrow/48/192/1": {
+      "rgba_sha256": "09da785ce0416acbe457880c49bca84bc3ce9ffcfd930e55f022014eeb236393",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "tilt/light/arrow/48/192/2": {
+      "rgba_sha256": "9bbc243b470d5637ce7f2be610b0cb7e8304d142c6f71b9d1c575bb2bf144bf2",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "tilt/light/arrow/48/192/3": {
+      "rgba_sha256": "ab6f3d64657d067f3647cf2287735c70d3d4ec588fe6925ca549766fc498db89",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "tilt/light/arrow/48/192/4": {
+      "rgba_sha256": "9e0d72e2995013c48a9f42261c43d91b540b764b96b67071245471910bad5d73",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "tilt/light/arrow/64/96/0": {
+      "rgba_sha256": "874c9813e794aa7d4ddc2ff93510c325bdd93f7b86cb9e1f6b49b8d3d09d30a2",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "tilt/light/arrow/64/96/1": {
+      "rgba_sha256": "1071fcc70f997134d57dfc4e288e69061d36ed4909f975d67ec59c58e7ae8744",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "tilt/light/arrow/64/96/2": {
+      "rgba_sha256": "312b674dc5aaa6384defc4d28493c251eb00a5e0aee747266af07509831e1cc4",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "tilt/light/arrow/64/96/3": {
+      "rgba_sha256": "b4e6e0938b0efd35ca90b47538bc56fdaea6589a6c651b24611673ed14a5fced",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "tilt/light/arrow/64/96/4": {
+      "rgba_sha256": "1f23afc0ad6197aeae71d27cffd65d1337dba498134fa3117b7ea8c121451172",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "tilt/light/arrow/64/192/0": {
+      "rgba_sha256": "6888b864afd82cbd8b4c7b2241a97d597e426758f36d6b0bbd78ad190d9360fc",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "tilt/light/arrow/64/192/1": {
+      "rgba_sha256": "5460b09a64bf92da018beba245442b81a6bf9a5a0d43a7b0a35c822b2f8dd9f9",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "tilt/light/arrow/64/192/2": {
+      "rgba_sha256": "272d039ee268b16cf951995e70d9a57d5450024a79031e04a52d23328da4de29",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "tilt/light/arrow/64/192/3": {
+      "rgba_sha256": "962a394e75a06ef480b93a5f2e31a9ef4a0c7789c41e8d84efeffd311a54ccac",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "tilt/light/arrow/64/192/4": {
+      "rgba_sha256": "c694a949200e096f892f22b8c39434ea7be0fbdcbee24de7baf60d43ba61ddb0",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "tilt/light/hand/24/96/0": {
+      "rgba_sha256": "50fc435ea6590dccb218d51f3350af9bb5abf20d096de3eea3f69a63252e79f1",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "tilt/light/hand/24/96/1": {
+      "rgba_sha256": "09c34f7cedd6747f70d2eee73319e8864ae30f0ff85060f5c4528fd4a8f463d9",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "tilt/light/hand/24/96/2": {
+      "rgba_sha256": "91a8c3ddc83c3340c552cb5cd5aae09caf21a4936ddcce729dad03f5c477b5e6",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "tilt/light/hand/24/96/3": {
+      "rgba_sha256": "01ca39cd64fb9be567e030f1407829cbee21e292fb1a9e009d770d1c59f349cb",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "tilt/light/hand/24/96/4": {
+      "rgba_sha256": "b4a7a1fb6e9701e852692c358ab4486543b41c7c7194fb2fa6365412e3e5d01c",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "tilt/light/hand/24/192/0": {
+      "rgba_sha256": "2c57c85558878f3b60097b4102816b421ca225444581691a686dd6eeb59ffa8c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "tilt/light/hand/24/192/1": {
+      "rgba_sha256": "e83027bb2684cf86384d4f5ff5209515dc561b33fb2d7fec5edd10958bb6015d",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "tilt/light/hand/24/192/2": {
+      "rgba_sha256": "517370bf28e804d8024c556de2b1c8ac93ac0d0572f8402a11091f97986799bd",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "tilt/light/hand/24/192/3": {
+      "rgba_sha256": "6ebe033432bb01b8341b06b2e358f1cd086bdb7d284b017f1164cb97e2616d40",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "tilt/light/hand/24/192/4": {
+      "rgba_sha256": "33efd02d6bea26196dfb274525c7fc909c809a29821c0252b89a9e9c5d417843",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "tilt/light/hand/32/96/0": {
+      "rgba_sha256": "65193c475bc70af0e57296fa243e7cc95ffb20eabb5039c341e2fbe500749b83",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "tilt/light/hand/32/96/1": {
+      "rgba_sha256": "1d43cd2ba114549afdaf30d940b293d03844c87e87a1c1848e9723e47206fc0e",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "tilt/light/hand/32/96/2": {
+      "rgba_sha256": "22180a39abce22bcd8e458a981c1066935c4f6ba68c35434cd04bcd4988c297a",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "tilt/light/hand/32/96/3": {
+      "rgba_sha256": "99c1c3b262071adb71cd69c61fa30b2a1da1d29c62bcf938ba6c45eea2c7c603",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "tilt/light/hand/32/96/4": {
+      "rgba_sha256": "19d83b0ed30f2fbce5eae3ac1e5272db34ade0d78112bb4ca37949b58c679eed",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "tilt/light/hand/32/192/0": {
+      "rgba_sha256": "b22040338c06c4777a51dfd5fc38fbc920afd2c5bf4bcfce23a91f32e06cc5a8",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "tilt/light/hand/32/192/1": {
+      "rgba_sha256": "e558ee28191ec8dae5cee06cba21b50a1e865ae0367979549c121f58f20de23d",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "tilt/light/hand/32/192/2": {
+      "rgba_sha256": "25ce4f50f2e5e1ac3c22541ed069578cf4bf8cfa291d49ea45e80a06a7f5b207",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "tilt/light/hand/32/192/3": {
+      "rgba_sha256": "fd25a1819d0f3c263e579d9355c84e02d425a7abc6c67ee026e90677a1746e4d",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "tilt/light/hand/32/192/4": {
+      "rgba_sha256": "b508fd7a050c5b46af8aa86479ae05e745fa4c952e67ca95480dd1ac769b3ef8",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "tilt/light/hand/48/96/0": {
+      "rgba_sha256": "5e900b12bb100c64bb52713c247fb596797502763620c3ddf0428276d9e16c4e",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "tilt/light/hand/48/96/1": {
+      "rgba_sha256": "5551d40f2bcc2322fbf4b311d39b91cc6247bba8638faedbb4112ac271e351ce",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "tilt/light/hand/48/96/2": {
+      "rgba_sha256": "a0c5deebcd90890233664380fa4ce700dd1c8116180ac9e89125073f6777effc",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "tilt/light/hand/48/96/3": {
+      "rgba_sha256": "304f1cbede77da02c7b677772949b4d92c816e385bb876f99f30b4a60e963ea5",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "tilt/light/hand/48/96/4": {
+      "rgba_sha256": "d949e609782743c18e999d7803372b3ad45aa4ba479b2898ca915a486a97878c",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "tilt/light/hand/48/192/0": {
+      "rgba_sha256": "1c4edc86225260a234c30c368f672fc2124926fc41466c383c9157df6bc0aa93",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "tilt/light/hand/48/192/1": {
+      "rgba_sha256": "8954dc45259e1a774b4f62f611e651428b7d8eed032394566fd4e7fb9d7cd9d8",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "tilt/light/hand/48/192/2": {
+      "rgba_sha256": "c9cc0525a2d4a55d4e4c97f35070b85d7cbe4ac840b10879c4a081aeafc6ffb1",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "tilt/light/hand/48/192/3": {
+      "rgba_sha256": "52b15e1d1c7fe68ca78ab4a70486f456bfa55124a45c3104e3771e53afa098f3",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "tilt/light/hand/48/192/4": {
+      "rgba_sha256": "1c261ad78d7b8b5a845205b9213ea4d68d6071081c320d69b1e92a5149e099e3",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "tilt/light/hand/64/96/0": {
+      "rgba_sha256": "acf8b04a252e287122cb8f375e7bc1f126e77dd802d77c7e04a688248d7f5039",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "tilt/light/hand/64/96/1": {
+      "rgba_sha256": "0bcf101e6ab0a2ec88459a8bbd16c1103e56c05112a5baa6371fcbf93716ff06",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "tilt/light/hand/64/96/2": {
+      "rgba_sha256": "dea92d5d0a2cc4780f63db5d3396e578cc438bde852faf85abe6aa237a559927",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "tilt/light/hand/64/96/3": {
+      "rgba_sha256": "cb59cc1edee7303aa0ab5ca91523f960cc37c1dd69a613d95afad516552128ea",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "tilt/light/hand/64/96/4": {
+      "rgba_sha256": "288e6f824c26bfb729bbd9d073ad1a6a50c9a5ea9dbe604fd13201c45a2d6125",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "tilt/light/hand/64/192/0": {
+      "rgba_sha256": "3b3d207d6c4e39804a3c7a19b070db556bc4845dcfd80635a56233260cfcee78",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "tilt/light/hand/64/192/1": {
+      "rgba_sha256": "0b5aca4b4c039fe6f10d585cdd1b7d94f2514342eebf55df4889c9ad1d19f048",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "tilt/light/hand/64/192/2": {
+      "rgba_sha256": "ad2eedc8465881c1c5a92cf9c05e66866f36e53a81d6412c8cae3d19fe239197",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "tilt/light/hand/64/192/3": {
+      "rgba_sha256": "984fcf9b7ea4437c504748aa90b5e75209f00775449d2bbb9d3ebd9b226bda9a",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "tilt/light/hand/64/192/4": {
+      "rgba_sha256": "bd7966cc84d5d423628876c2f6ea636699583e8e21361d3735ae75aec7c5ec10",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "tilt/dark/arrow/24/96/0": {
+      "rgba_sha256": "5b617c546ff229639e1479be6b7804c882ff4f8862a70433cce461c6a2e3e8a2",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "tilt/dark/arrow/24/96/1": {
+      "rgba_sha256": "767f0643478a9a65b5cb6e8bb148fe4f2a48dc1d69f2150e45cb109f9bceac83",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "tilt/dark/arrow/24/96/2": {
+      "rgba_sha256": "a601f5f3789d388931558d4901ffdffd626c6cfaa010e7c6e1d28c1b4e9b71fe",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "tilt/dark/arrow/24/96/3": {
+      "rgba_sha256": "bd296b7f7731afb7fb3cb065dbf999f296b6e8b385c3da5a09c2f3d1845c6a62",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "tilt/dark/arrow/24/96/4": {
+      "rgba_sha256": "633b46dfec0845fcd54fb406d3207b4652182cf9c581134ee8d39af9eeb781d6",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "tilt/dark/arrow/24/192/0": {
+      "rgba_sha256": "37f77d23df622d04e023d42cb4e5c1e84f486df8bd24d3a8ade6b3188133f878",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "tilt/dark/arrow/24/192/1": {
+      "rgba_sha256": "dcd4809cdff60c557ce725e7c76b54d864e0636e2353700f1c72b831f5ca7275",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "tilt/dark/arrow/24/192/2": {
+      "rgba_sha256": "3ad44239d1d96c08e98a519df1a9ebf63284cab50371e273314facc5767e4558",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "tilt/dark/arrow/24/192/3": {
+      "rgba_sha256": "0e4169ed08787c14f7516d11892d673d8197b1faa49a773de1ea20deadb7e2b8",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "tilt/dark/arrow/24/192/4": {
+      "rgba_sha256": "6eef0723fdc6468745c2eae1667ff8df28079f6385ab2d7739f84b217df871f2",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "tilt/dark/arrow/32/96/0": {
+      "rgba_sha256": "eaaad7107dcde5cc6e3f9f229c36ed765489306f11c17b31e404abba922935d6",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "tilt/dark/arrow/32/96/1": {
+      "rgba_sha256": "1da3c51c92fc7fefb392b4ccb3e0fbe18b5b30f3a0c6e8bf262474988a5313c8",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "tilt/dark/arrow/32/96/2": {
+      "rgba_sha256": "ecb5c30e4d147ddedc073eb3023d97a72db009ccea8adf8ebb784343e1a9bd8f",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "tilt/dark/arrow/32/96/3": {
+      "rgba_sha256": "9ec5ce515c0ef7bcc320bbc02486c661299faa51b206db5b0ea3c1031678894c",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "tilt/dark/arrow/32/96/4": {
+      "rgba_sha256": "cc12f3e3d305457c21e4b9f3acf5fc39ab5421a9dc1be8711686f010fc3dc204",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "tilt/dark/arrow/32/192/0": {
+      "rgba_sha256": "932de32d08514d6e6c772e3186302970b48eb73d0664b5cab0ba64e925881811",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "tilt/dark/arrow/32/192/1": {
+      "rgba_sha256": "0640e476fc2070caaae81663f104289222dfbcfffbb5c81f7b907c764c590230",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "tilt/dark/arrow/32/192/2": {
+      "rgba_sha256": "3bcff537a9adb4d17bb2c9f3e3ecef542c762c7ee70717fe9b4cdf59cdab2d33",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "tilt/dark/arrow/32/192/3": {
+      "rgba_sha256": "08e126b76c57b5f3969d32dcfaef774eca359d9ed372f9a06012e9f95cb4d285",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "tilt/dark/arrow/32/192/4": {
+      "rgba_sha256": "7321101237b36f6e9ce489dff69bb7d54250f4bc1e57db4f3818375000949e67",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "tilt/dark/arrow/48/96/0": {
+      "rgba_sha256": "39f382cc314231c391fe94b682c9470e7280169ca39c5b08c736bd022b7efe3c",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "tilt/dark/arrow/48/96/1": {
+      "rgba_sha256": "c77a7f4d728bc2f4222bf7a10b1acf72c16c75cf1269d34fe72ba00247ebcca3",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "tilt/dark/arrow/48/96/2": {
+      "rgba_sha256": "368d35ab3ed1cb09e2e035bd8ffc5f1ec48caf13afe7c009b4aff401f28bb548",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "tilt/dark/arrow/48/96/3": {
+      "rgba_sha256": "5a7e809077dd38a8ca6cece9939bcd1b800eb84f766ea97c2c7a6e9e36c3a70c",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "tilt/dark/arrow/48/96/4": {
+      "rgba_sha256": "c7754b156fd36135a25058fb8a3cdde92235f505539c12ae6a01be48bcfc154d",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "tilt/dark/arrow/48/192/0": {
+      "rgba_sha256": "266aa3bb0d111fb2978e0d4b3e156495426a579f7e5fb75d490bb7b7beecc5b1",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "tilt/dark/arrow/48/192/1": {
+      "rgba_sha256": "a83d928738e0ee701fc64ec6d688cd0844551a03e92574a06fb1e3e63bb7af82",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "tilt/dark/arrow/48/192/2": {
+      "rgba_sha256": "8513508e6edee434332835f3c74752d7666126de7dc2ac5481a368dbe4bbe0de",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "tilt/dark/arrow/48/192/3": {
+      "rgba_sha256": "9e5f3e7b98c8e21132d66e985e20b9efcb02b55756a867f0494df4dfdf52266a",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "tilt/dark/arrow/48/192/4": {
+      "rgba_sha256": "3b52cd019a1bfa6cde4d32070c9fda1918e4d70a6392fcf4c7d831cbd0913fa3",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "tilt/dark/arrow/64/96/0": {
+      "rgba_sha256": "7cbe2d412ef4035d6b8bc513788ed9c4b935abe4c87117a500b13f55ca6d0ff6",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "tilt/dark/arrow/64/96/1": {
+      "rgba_sha256": "e04b996c441d64ec772552e2e74938d5d0732163cf90e0e87dfe970d08e37664",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "tilt/dark/arrow/64/96/2": {
+      "rgba_sha256": "042fb15dc773c782048bbbc8c7e8815bebaec4320b5720730d73473d10f9826d",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "tilt/dark/arrow/64/96/3": {
+      "rgba_sha256": "718ec7d054e95575b0b310858d73d6bff146eb1c727acafe29dd11aa05bfb76d",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "tilt/dark/arrow/64/96/4": {
+      "rgba_sha256": "8834de92a97f0f1edc459b3bf3ee000038fc79baf4a55bee59ba158eefc2bec3",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "tilt/dark/arrow/64/192/0": {
+      "rgba_sha256": "1f9640311ab1a5e870e6df8416102905775369860662ec4e5645d88a7633754d",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "tilt/dark/arrow/64/192/1": {
+      "rgba_sha256": "a8d9be35ce234571809c1f092ea6421b7f9a977a76faec291a883cecfd7a608c",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "tilt/dark/arrow/64/192/2": {
+      "rgba_sha256": "cb136ee8d9b526d2ad98cf16a0e724b5670aa554934f0eaa82654789484bfd40",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "tilt/dark/arrow/64/192/3": {
+      "rgba_sha256": "7d393097bba00478195b8d640747c63e94dc42c66e65cb40e10f6854a62b6cc9",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "tilt/dark/arrow/64/192/4": {
+      "rgba_sha256": "487c1a584339967ce1d9def3988c6b604e7f8c9c0eb7ae8883cdb08287143577",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "tilt/dark/hand/24/96/0": {
+      "rgba_sha256": "c5e81f56ee871409109bd1f0086428ac2aced2d6c5524e184f327311140e266d",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "tilt/dark/hand/24/96/1": {
+      "rgba_sha256": "9de4f5de0f7a7f7da5274e4c4aa1b32c5d3b68712dd427e187e5c69eab8ba341",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "tilt/dark/hand/24/96/2": {
+      "rgba_sha256": "ec634baf206fbb3f5fff5051725e6df1c016fc71287c9366d43bcba0dfaa305a",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "tilt/dark/hand/24/96/3": {
+      "rgba_sha256": "3f26d6dd708093fe5d8dfd91f12ff1c9b7e92f5d8fe17257a7abedcf096d678a",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "tilt/dark/hand/24/96/4": {
+      "rgba_sha256": "7073e9e734ae23d12163561214383e6c78279cf7411f7121970bff1f9843e942",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "tilt/dark/hand/24/192/0": {
+      "rgba_sha256": "3d9b78ec7c72321a82b307934cf00e30692bd4f0e5911a987b7de3ab1fa1c91c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "tilt/dark/hand/24/192/1": {
+      "rgba_sha256": "d64f9faf4ae41d9693e10133c6df4780e90f430e88b19cf5745c7cbde466af34",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "tilt/dark/hand/24/192/2": {
+      "rgba_sha256": "42a9bf909923c5192a17d946f3d633c1a566499052a7fbc67a3a7bf6fe9514b6",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "tilt/dark/hand/24/192/3": {
+      "rgba_sha256": "ef954eb1f90401de2384afc43d9397a98c52c75092f13fd825e1587d6b6bb44d",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "tilt/dark/hand/24/192/4": {
+      "rgba_sha256": "37bc4235ee39dfc580f4fb398871017127f5b59a246a23d99553308c9d3029f2",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "tilt/dark/hand/32/96/0": {
+      "rgba_sha256": "c0c71e997671fb37b68e209d575e0b143577b8cbd76125d711cbcb38e5da47b3",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "tilt/dark/hand/32/96/1": {
+      "rgba_sha256": "2a89bf83075147f9eb2ae6e76fb1fe08fbad4c2c337f7c7d1d81993b9796c999",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "tilt/dark/hand/32/96/2": {
+      "rgba_sha256": "8f3491e442b899fde411b3bfe5340ea9986eb978ee2e51ab86c4318aa9d1e315",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "tilt/dark/hand/32/96/3": {
+      "rgba_sha256": "3658464e587b8e19cece8c1dc8b1c974ba7a57421ba0db1cc926a4eb23ea30f4",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "tilt/dark/hand/32/96/4": {
+      "rgba_sha256": "eff6cac3567d4ef680b9e7ab5f61ec0d8b10f6ae8909b45983e82a8a1651d4da",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "tilt/dark/hand/32/192/0": {
+      "rgba_sha256": "26959ef3f9c6123a069f726f20e750fea444143461915f63be953305099870dd",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "tilt/dark/hand/32/192/1": {
+      "rgba_sha256": "095e636a68834127eea9566eb7e8d01b7a40ea3517885e2f0bfd94da4b13d11b",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "tilt/dark/hand/32/192/2": {
+      "rgba_sha256": "847765ebfeeaceb04115ee03d9967a403d24389473fe32cd6f92b5cc09165989",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "tilt/dark/hand/32/192/3": {
+      "rgba_sha256": "72d689a95513ba60f3f5270401f4835fdae7fa8186c4017ace0cee59782dbdbf",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "tilt/dark/hand/32/192/4": {
+      "rgba_sha256": "01918403fb7cc3f49072329b563756f6f856abc93dd12aa08531ca5f46a7e14c",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "tilt/dark/hand/48/96/0": {
+      "rgba_sha256": "5aa3a5cb47ea63d07d8569f1603ffba2334f62000fe92ff293a7f6b621a8dce0",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "tilt/dark/hand/48/96/1": {
+      "rgba_sha256": "3f4ee05ed994f8a0e74a705d5c18f82494031472025cbd08e744ff88f3dc4ac2",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "tilt/dark/hand/48/96/2": {
+      "rgba_sha256": "be8612703ba2574c980141ec5754991e0cc7fc908bb0519d6de365b90653a53c",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "tilt/dark/hand/48/96/3": {
+      "rgba_sha256": "9d85c7e7b8d0ade99acf05a9dc7ebc087bee79a96db43b2880f0d0aed4b87abf",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "tilt/dark/hand/48/96/4": {
+      "rgba_sha256": "cd1a4dec3907bdec2961aae96b5702191d0ef443f909dbfd28cae6c15e65e3f9",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "tilt/dark/hand/48/192/0": {
+      "rgba_sha256": "d7b30c8ce106a55460e377317c8d20c1fec77b1431d531f63300cb1c4f359bb3",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "tilt/dark/hand/48/192/1": {
+      "rgba_sha256": "a6906c06aec6a218eb6686d9a2bdc5e5d4346b57a84c00e8513adfff57d048c3",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "tilt/dark/hand/48/192/2": {
+      "rgba_sha256": "48e23cdfa43d300badcdb8c07ec76b10120a70353e7b39e6e4831ac72fa4b76c",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "tilt/dark/hand/48/192/3": {
+      "rgba_sha256": "3065638acde3d42bccd7c6e3975ac39a6baaab42707663fb1b9e7824f71bfb45",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "tilt/dark/hand/48/192/4": {
+      "rgba_sha256": "55defd49f319aaed2442b7b04db2bfb8b7f1df6af6e288ac8e16415debc4cfe4",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "tilt/dark/hand/64/96/0": {
+      "rgba_sha256": "60cec8b7ba503fa528362f722c08a991ef94facbc209cf728f547b7df82d9300",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "tilt/dark/hand/64/96/1": {
+      "rgba_sha256": "81214862726bc935a8720a4cd32cd4fa26f3057833f8e36dc3d915526d51f930",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "tilt/dark/hand/64/96/2": {
+      "rgba_sha256": "b5f74f3255b45b307ddfda5377e73af61354b5b083b7bb645d364d618167271c",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "tilt/dark/hand/64/96/3": {
+      "rgba_sha256": "fd68d37864c881c7571511eb3ff7b7547d57a27de17ceacedd9afa5d61a25d45",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "tilt/dark/hand/64/96/4": {
+      "rgba_sha256": "5c36aa4c84996b8388b7bddc0cb256b95ed32f8cdd0677fcd6396b4030746ee0",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "tilt/dark/hand/64/192/0": {
+      "rgba_sha256": "673463dbd2ea4b3dbc89015940b7960bc76452fe11c0d1f14b7c597a67827d29",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "tilt/dark/hand/64/192/1": {
+      "rgba_sha256": "6b3cf9f480f0a3af09a67141d0ec0d0bb67c7b031e2cb8116d72643646f1cf80",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "tilt/dark/hand/64/192/2": {
+      "rgba_sha256": "01a5e4de7ff35dfcbb9e2d01e658eb4a82553bfb4f7b3dc5f875f7d48385c2a0",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "tilt/dark/hand/64/192/3": {
+      "rgba_sha256": "5d5aec6f7f6ff860383069ef3a8d5d568029c87baf365d3100b567026b6a1d92",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "tilt/dark/hand/64/192/4": {
+      "rgba_sha256": "feb0271a8f8327d4d9b9b75afdbb4ca00f8aa40184aa3ec3c98b6e0d092e308b",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "shrink/light/arrow/24/96/0": {
+      "rgba_sha256": "d71aef2a24692ce50f31ae141d59c638b7223bf7f19e3a02e6b66dc2078d83b9",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "shrink/light/arrow/24/96/1": {
+      "rgba_sha256": "813315f850923942fdeba8499c581e211536428bc984d9b503cd1f39f152c609",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "shrink/light/arrow/24/96/2": {
+      "rgba_sha256": "871e5592dbae6b22983e83005c1d719f6c6cf5bcc4156638040dd834cffc7076",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "shrink/light/arrow/24/96/3": {
+      "rgba_sha256": "a9e9a03629f6a475173debdc9ec0e2a8adadc821d39bd5058db185cb7f59290b",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "shrink/light/arrow/24/96/4": {
+      "rgba_sha256": "b47c12c3b1118cb43b30218553610ab09eb9a3ecc7b23757af13dfcfb1d7d5cb",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "shrink/light/arrow/24/192/0": {
+      "rgba_sha256": "ce580bc1e1a7a799023892f1bf7a306f0b0beb7d4b8d91fbd08b1a6a1e2fb76d",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "shrink/light/arrow/24/192/1": {
+      "rgba_sha256": "6892534470fa397bb04c37f27f64712dd184fe6c1a3cb4b596723d27f07e970b",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "shrink/light/arrow/24/192/2": {
+      "rgba_sha256": "aa8494b433873487b456aa214c7b7802031535ae78ae53fa766e35f63ded7eb5",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "shrink/light/arrow/24/192/3": {
+      "rgba_sha256": "e8209944dbe2d2d9601605e8f7c169886fcb70bbbe9b6451924702cf8a8280d1",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "shrink/light/arrow/24/192/4": {
+      "rgba_sha256": "77bd9ae9bee61562a50e0ca85c1a3136192823f918ddede80493584c3b35bfde",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "shrink/light/arrow/32/96/0": {
+      "rgba_sha256": "b6416b0ecf2fdefa11ea305c4ee85316efc0cb888f02bf7c154a0504fa6a52a3",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "shrink/light/arrow/32/96/1": {
+      "rgba_sha256": "ab3a06459538cb0fafafd042d879649e80ad3c465f74bfce2a7856ae9a88238c",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "shrink/light/arrow/32/96/2": {
+      "rgba_sha256": "b19b8b2587e3a4837abe619ef180dd1f5916836fdbcf9614843b0061e4ef6d1b",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "shrink/light/arrow/32/96/3": {
+      "rgba_sha256": "571041d44e91474a1a12d5786e6432e5a2a902b595e15dd33f570385cdae046b",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "shrink/light/arrow/32/96/4": {
+      "rgba_sha256": "fee8ab0c1a668eae4b58852669f5adf5423cbc9c384cdab5c1c6040395496e8c",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "shrink/light/arrow/32/192/0": {
+      "rgba_sha256": "bf2433d82b4682bfb163356b5dd64cb2b9c50d3783e6280446516bd013dc283e",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "shrink/light/arrow/32/192/1": {
+      "rgba_sha256": "19624d5c1cba341b4f3df1a1caf0e20e9fdfaa48efaba0b621e31b5e5951ec76",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "shrink/light/arrow/32/192/2": {
+      "rgba_sha256": "81fbd690886c29f8ac1e42f5cd93f07b4e0bf7623d9c6d2ed3d0d5da655674c0",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "shrink/light/arrow/32/192/3": {
+      "rgba_sha256": "7425a7b9d793ab832855bef2520cb610adea7d90ddf1e18760c58b2ac9ce1fbe",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "shrink/light/arrow/32/192/4": {
+      "rgba_sha256": "1d700b6e2fb42922478e4f8b0a5fb876245d057172b014addf093101d0561061",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "shrink/light/arrow/48/96/0": {
+      "rgba_sha256": "85a28f4d430cd80031bb72675f5e31200193e62caec045f78f6d721fe237e779",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "shrink/light/arrow/48/96/1": {
+      "rgba_sha256": "4cadb0f4f35ab6ba0129fe060f2d482d80a1c2a128d9e28943557337294ae6ab",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "shrink/light/arrow/48/96/2": {
+      "rgba_sha256": "045796716e24ade3110f4a013ef6e22e23a6407b6bfd186a2c23ed8f7d8f31e8",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "shrink/light/arrow/48/96/3": {
+      "rgba_sha256": "f07dd53d39ec933b138e55bbeb73f11b86edf559ac0098056a906c6206948583",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "shrink/light/arrow/48/96/4": {
+      "rgba_sha256": "57d90c11621e07a6f6ba15283caa5392961c691801f1880fbb643c2970218235",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "shrink/light/arrow/48/192/0": {
+      "rgba_sha256": "39619554e5799b140f5344ef660c27df82db85164cbbd8776f9cc2a780fcd0c7",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "shrink/light/arrow/48/192/1": {
+      "rgba_sha256": "16c3f14b780c3be62bae50c98e874564c14aac12e970aead457fd08a50e28a73",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "shrink/light/arrow/48/192/2": {
+      "rgba_sha256": "45524dbc7d0384f1d82b52898e863831f2e2b84426ef9cfdbb0162714d3010d3",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "shrink/light/arrow/48/192/3": {
+      "rgba_sha256": "c32632c02fb7affdfc616b6a1f3f4744ac2f804c2fc06a9ac66830992c5c8b5d",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "shrink/light/arrow/48/192/4": {
+      "rgba_sha256": "3a238b46149dc370c372a9f46a3d8205b23a9c9095a34b8fb54d87c90be76bec",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "shrink/light/arrow/64/96/0": {
+      "rgba_sha256": "874c9813e794aa7d4ddc2ff93510c325bdd93f7b86cb9e1f6b49b8d3d09d30a2",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "shrink/light/arrow/64/96/1": {
+      "rgba_sha256": "f838d38b18a06db2dddd83cd3cf17ce64d07e3967388864abc74015b4a472e8c",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "shrink/light/arrow/64/96/2": {
+      "rgba_sha256": "ec50a2897300e8d26a82b5fe34e48f33c9ebf305376d4b939b8b32f3918d53df",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "shrink/light/arrow/64/96/3": {
+      "rgba_sha256": "2e66f3d91b1906f0051ce58eec8d86328eddf89ed0086dcba40e565d95811a55",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "shrink/light/arrow/64/96/4": {
+      "rgba_sha256": "3c8215d652aa6d653560a6e912d04c01440bad52a8abf7855dba51f1cace1d10",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "shrink/light/arrow/64/192/0": {
+      "rgba_sha256": "6888b864afd82cbd8b4c7b2241a97d597e426758f36d6b0bbd78ad190d9360fc",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "shrink/light/arrow/64/192/1": {
+      "rgba_sha256": "b0d9e4b5c8b4222808c9f212a36e255c41d05703ae2b203c1659e9edcc360fa8",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "shrink/light/arrow/64/192/2": {
+      "rgba_sha256": "0b32b08ab7fecb86018a0aeb7f145c6dabd07eb14d188b2d3402b19604807416",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "shrink/light/arrow/64/192/3": {
+      "rgba_sha256": "e3bcdf6c0db2a504206d2db9b9fe80db7ed2b7bcf09322f423ea8bc697cace24",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "shrink/light/arrow/64/192/4": {
+      "rgba_sha256": "2bb0f14aa538362ad86ba1f5c8bd83e2d684d26f15f0c08a5508a950e376c6e6",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "shrink/light/hand/24/96/0": {
+      "rgba_sha256": "50fc435ea6590dccb218d51f3350af9bb5abf20d096de3eea3f69a63252e79f1",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "shrink/light/hand/24/96/1": {
+      "rgba_sha256": "d0740090084cff9438482c54a7acbfb12d61ae473176790b85df5f3d6dd6a63e",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "shrink/light/hand/24/96/2": {
+      "rgba_sha256": "3d77e76de08ee31c9bcbf97a2e0301d4a2a5442b47fd492aed4fd1f08548cdbf",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "shrink/light/hand/24/96/3": {
+      "rgba_sha256": "87b06a712d5678c0966398a542089fc17589489ba6d462931c8cac9a55d783d2",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "shrink/light/hand/24/96/4": {
+      "rgba_sha256": "daa0185f6710ecec2cea43fc57e0242dcfdeeb7663a27f8b550e671572fb802f",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "shrink/light/hand/24/192/0": {
+      "rgba_sha256": "2c57c85558878f3b60097b4102816b421ca225444581691a686dd6eeb59ffa8c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "shrink/light/hand/24/192/1": {
+      "rgba_sha256": "049d6197c9f32c93d9f25592c8037f11c29b245d061a3f25fee8406aeebc609d",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "shrink/light/hand/24/192/2": {
+      "rgba_sha256": "cae692f29444d76cf2b1d00fe0ed1f4c85cd1af82ef2fa0e50a17470694a39f7",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "shrink/light/hand/24/192/3": {
+      "rgba_sha256": "712ebb5bec2aa4e7e6f19292801509e1db816dc5679121dbcf20a60f90481dd3",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "shrink/light/hand/24/192/4": {
+      "rgba_sha256": "5cbdc1b564f126685f07be1e1eb2080fda152dd92fea1b14a0101151b0b8899f",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "shrink/light/hand/32/96/0": {
+      "rgba_sha256": "65193c475bc70af0e57296fa243e7cc95ffb20eabb5039c341e2fbe500749b83",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "shrink/light/hand/32/96/1": {
+      "rgba_sha256": "c1869f30a39e96f91d1f3277b22140289bdd771d467658dcd837b78029c2c64b",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "shrink/light/hand/32/96/2": {
+      "rgba_sha256": "49449c8bd58c4bb40018f3b7b0f64f3df68e34c3560ab6c30992818db51bfab9",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "shrink/light/hand/32/96/3": {
+      "rgba_sha256": "d066fb1f9f3a3bc8ca79cb1cd34e4ac2c1abe2ae744d550d820bc7ec46bce914",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "shrink/light/hand/32/96/4": {
+      "rgba_sha256": "6359b3f0f40765dc6fa9603481186fdf62e4fb91cbc870cf798d092120736e23",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "shrink/light/hand/32/192/0": {
+      "rgba_sha256": "b22040338c06c4777a51dfd5fc38fbc920afd2c5bf4bcfce23a91f32e06cc5a8",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "shrink/light/hand/32/192/1": {
+      "rgba_sha256": "43866144b95754641a9b872c1cb63877cbd4bf431540e73b7ee0de195b7c94c0",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "shrink/light/hand/32/192/2": {
+      "rgba_sha256": "d35cbb69b4685258e2811b255f25f48cfd2fe863142b866e9edb91e85b38c7a3",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "shrink/light/hand/32/192/3": {
+      "rgba_sha256": "20a5c1f404ae280e91f29f7101264e5431d1324c6448a84ea7b1c74a1830d514",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "shrink/light/hand/32/192/4": {
+      "rgba_sha256": "4933d1c682c3f243e61513626c5d131c953105c4e256117bc61f138c7ed6a614",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "shrink/light/hand/48/96/0": {
+      "rgba_sha256": "5e900b12bb100c64bb52713c247fb596797502763620c3ddf0428276d9e16c4e",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "shrink/light/hand/48/96/1": {
+      "rgba_sha256": "10ea9dcad953da2ba673e181905a21ecc5ac176e13d3dde85fcf16d21f0265c9",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "shrink/light/hand/48/96/2": {
+      "rgba_sha256": "b44a960712e4ca363919f102e092eb651c8dcd2ab3e6187ef6945af78b708403",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "shrink/light/hand/48/96/3": {
+      "rgba_sha256": "96892b9e101d14e0092cc15bf475feec16ee2caed06afce2443c647b0dd3d484",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "shrink/light/hand/48/96/4": {
+      "rgba_sha256": "8614692b0423997efa3c3d6e54948f0dca57143d958dc08069f2692ba5675a1e",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "shrink/light/hand/48/192/0": {
+      "rgba_sha256": "1c4edc86225260a234c30c368f672fc2124926fc41466c383c9157df6bc0aa93",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "shrink/light/hand/48/192/1": {
+      "rgba_sha256": "5ada661086448a40180623a9e0f95a87d475b987b15175a65c2b69bf3e5e4b39",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "shrink/light/hand/48/192/2": {
+      "rgba_sha256": "f7f2a4ab0462a1bacfb54eab5a2b7026874470d77d711852a2bf0cec0fe1a8ef",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "shrink/light/hand/48/192/3": {
+      "rgba_sha256": "de09d7661c7da61fe9f6399992d7f8b7bf022f863d2ae4343f9bfab91a5bf23d",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "shrink/light/hand/48/192/4": {
+      "rgba_sha256": "a757d3a8b619c4ec049bfe248a83599693bb0a56f0fdb1eaabccdb038acabb83",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "shrink/light/hand/64/96/0": {
+      "rgba_sha256": "acf8b04a252e287122cb8f375e7bc1f126e77dd802d77c7e04a688248d7f5039",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "shrink/light/hand/64/96/1": {
+      "rgba_sha256": "f2b1b4cb40c82a2813d1736a9747e7bd048ca1ea75cc1289f10657e92421d110",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "shrink/light/hand/64/96/2": {
+      "rgba_sha256": "d2f419f74a2c9dc5f18115f2f84c4a15fd5d00ad0db6a5e00b04d67e9c453789",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "shrink/light/hand/64/96/3": {
+      "rgba_sha256": "32caed1921ec29935c68f8ed6406bc1469bb910ce77ff75aea0c618644fa84f0",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "shrink/light/hand/64/96/4": {
+      "rgba_sha256": "a30ec82b2ff0eb52023e6fcef294f22d65f83f75de1110c79d0c6212003f7863",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "shrink/light/hand/64/192/0": {
+      "rgba_sha256": "3b3d207d6c4e39804a3c7a19b070db556bc4845dcfd80635a56233260cfcee78",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "shrink/light/hand/64/192/1": {
+      "rgba_sha256": "70643b42be64b1080f1b55181990622508983c564f9c532e73ef60503766cb03",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "shrink/light/hand/64/192/2": {
+      "rgba_sha256": "b2c56edf1ee4313ceb8b872bca787fbfc8cfc49816742e227e4d6f7474480306",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "shrink/light/hand/64/192/3": {
+      "rgba_sha256": "093f742137a8c0fdec8f74c71727f97cee8bdcf25b00286062832b32350c0310",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "shrink/light/hand/64/192/4": {
+      "rgba_sha256": "291e4c78d31824d858f2e4f55d4dda30074c65a620e9df92ee3f9558f4cc59a1",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "shrink/dark/arrow/24/96/0": {
+      "rgba_sha256": "5b617c546ff229639e1479be6b7804c882ff4f8862a70433cce461c6a2e3e8a2",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "shrink/dark/arrow/24/96/1": {
+      "rgba_sha256": "386185f27a3fff3d6f18ee89bf1f9a7de3338d376d8496174882e5218576bcb4",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "shrink/dark/arrow/24/96/2": {
+      "rgba_sha256": "3f07d8c354518cfd2a7d1199d2df763b0c9eaf5fc490ccea642e3eaf382434ad",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "shrink/dark/arrow/24/96/3": {
+      "rgba_sha256": "3fc7aed64e8a9bc6e88363bfbb15896dd5002fe29df6b3f5d2e6f81d0c4a81c7",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "shrink/dark/arrow/24/96/4": {
+      "rgba_sha256": "ee8cb71f774889de3a936a0a93a4cf1bdbf1fa687b581bd1218409ace3f64912",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "shrink/dark/arrow/24/192/0": {
+      "rgba_sha256": "37f77d23df622d04e023d42cb4e5c1e84f486df8bd24d3a8ade6b3188133f878",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "shrink/dark/arrow/24/192/1": {
+      "rgba_sha256": "19fc775e6c21923188a4b71e37038f9ef6a36f1cc81ea7067fc52d1d3245eb1d",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "shrink/dark/arrow/24/192/2": {
+      "rgba_sha256": "d10125555e4f9e8d50c3d9078d8cda22e5651027848148946010abb356c06579",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "shrink/dark/arrow/24/192/3": {
+      "rgba_sha256": "b4da145b2d3389062d2646a4df922260bacb50da09552aa05bb9fb6f76bf6d9a",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "shrink/dark/arrow/24/192/4": {
+      "rgba_sha256": "b5273f3fbc8486a338cfe85f75575fb02f86c2da518b8b05b7a9d8cd3bb9e9c1",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "shrink/dark/arrow/32/96/0": {
+      "rgba_sha256": "eaaad7107dcde5cc6e3f9f229c36ed765489306f11c17b31e404abba922935d6",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "shrink/dark/arrow/32/96/1": {
+      "rgba_sha256": "f9b4071ac79aa6cc343824d9210ffafced4e37747a0a6619c7bca65d5ec2241e",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "shrink/dark/arrow/32/96/2": {
+      "rgba_sha256": "55ab7c00117892515f2dd5ecec944d9d76127dd0864b6c11d2587803f39e81f0",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "shrink/dark/arrow/32/96/3": {
+      "rgba_sha256": "1a4b2c0586d29f2e33f0dcda80fa7b5094fe0d24ab177328eec4d0df6eeedc49",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "shrink/dark/arrow/32/96/4": {
+      "rgba_sha256": "aa96a4ba7056e92a82023846005f9c90037bef056921ab03081475c0e2fd5775",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "shrink/dark/arrow/32/192/0": {
+      "rgba_sha256": "932de32d08514d6e6c772e3186302970b48eb73d0664b5cab0ba64e925881811",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "shrink/dark/arrow/32/192/1": {
+      "rgba_sha256": "2efcb1b7dc7418499e7fe1e0f4a85234eff2cd7853f45901af187a5d59ec75d1",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "shrink/dark/arrow/32/192/2": {
+      "rgba_sha256": "005f44ab9792776d40a74f6826016d07600e5ab14e2dcdb0fbd5f7369a0393d6",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "shrink/dark/arrow/32/192/3": {
+      "rgba_sha256": "624bae688c51d79eb16125115433edd2eb4772e389c32b1407ea6e9e5570b75e",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "shrink/dark/arrow/32/192/4": {
+      "rgba_sha256": "438bec14ecc98f14eb81746df60f67503cc7206cdb9c29cfa0f9b3713dd643fd",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "shrink/dark/arrow/48/96/0": {
+      "rgba_sha256": "39f382cc314231c391fe94b682c9470e7280169ca39c5b08c736bd022b7efe3c",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "shrink/dark/arrow/48/96/1": {
+      "rgba_sha256": "6f325558c313fec1c76d9cf0d543d33e0f7d16f8a7af143f578da916b95df1de",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "shrink/dark/arrow/48/96/2": {
+      "rgba_sha256": "f7303d3a449d6680268b0864733404f95a7e6416f616dc4390b379a9771be3be",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "shrink/dark/arrow/48/96/3": {
+      "rgba_sha256": "970caf9600b3356a2c26c907a8ceed6f7803491d0127b2ff06b35c8ad8c944f6",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "shrink/dark/arrow/48/96/4": {
+      "rgba_sha256": "7483af625c5d33bda888f1d7bcc336c25ce09e5b23d8ce95f85408de578945cd",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "shrink/dark/arrow/48/192/0": {
+      "rgba_sha256": "266aa3bb0d111fb2978e0d4b3e156495426a579f7e5fb75d490bb7b7beecc5b1",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "shrink/dark/arrow/48/192/1": {
+      "rgba_sha256": "82d617cafe92ecddf38a3d0562474f8fe5de483067059bc034e7d2db26c31283",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "shrink/dark/arrow/48/192/2": {
+      "rgba_sha256": "25ed75eaabf552c469b814eff11bb1c3dba8e2eaea41ed9ace881ec58843db2e",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "shrink/dark/arrow/48/192/3": {
+      "rgba_sha256": "8d38a47eaa0bc6257b93fe9e3253d7b3e42b3759f777a414ccd311ff55dc6537",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "shrink/dark/arrow/48/192/4": {
+      "rgba_sha256": "d5154be36baeaf6fe4c003097202c76da6da1d08a6f3c6c41e9812c635d06c14",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "shrink/dark/arrow/64/96/0": {
+      "rgba_sha256": "7cbe2d412ef4035d6b8bc513788ed9c4b935abe4c87117a500b13f55ca6d0ff6",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "shrink/dark/arrow/64/96/1": {
+      "rgba_sha256": "34a89af34647758480ffe787ab97d5d8329dcbb4767a1479cb3c5ffbdb4bcbea",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "shrink/dark/arrow/64/96/2": {
+      "rgba_sha256": "c1d7225727544cb67b315e23a2a6982a8cf8d64b471b80882c5d6e8675f5e77a",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "shrink/dark/arrow/64/96/3": {
+      "rgba_sha256": "2ddaa458c087eba20973b1801341f63faee912630434e7dbed2ec2ebab8d0556",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "shrink/dark/arrow/64/96/4": {
+      "rgba_sha256": "3c63fd9d7aab9248cf60a11bf999e96cc4bcdd710b6c23a05805481983f9045c",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "shrink/dark/arrow/64/192/0": {
+      "rgba_sha256": "1f9640311ab1a5e870e6df8416102905775369860662ec4e5645d88a7633754d",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "shrink/dark/arrow/64/192/1": {
+      "rgba_sha256": "95b885d457cd2781f7c7d88b258d814b51871b8d83ba3a0602e675b0bd5c088c",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "shrink/dark/arrow/64/192/2": {
+      "rgba_sha256": "08daf1533d9142eb56deaf092b61d46d8cd9010c3d0165db9ff5e4a43dd61c0e",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "shrink/dark/arrow/64/192/3": {
+      "rgba_sha256": "681d29f85a14c480276a39fcf0f2586df4dcf4c08fb521fd498e415f33a3d906",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "shrink/dark/arrow/64/192/4": {
+      "rgba_sha256": "8c5b203f9b9865b4593f84bafbfa7d2c8bd321cc56e83be192f4e193dc25c78a",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "shrink/dark/hand/24/96/0": {
+      "rgba_sha256": "c5e81f56ee871409109bd1f0086428ac2aced2d6c5524e184f327311140e266d",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "shrink/dark/hand/24/96/1": {
+      "rgba_sha256": "e641415060f977f8045659f18715d4e85cf6ac3b57b9ae401f4bad26d7a95e28",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "shrink/dark/hand/24/96/2": {
+      "rgba_sha256": "148c1efa84fd8acade9c2252168d87ba75c2b4e1e6cdd0553549a58ab5e572be",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "shrink/dark/hand/24/96/3": {
+      "rgba_sha256": "365c6c0360918cd5b52f2ecb6dd361aab5577d3cd3bac1c20b2a2bbf9e44f065",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "shrink/dark/hand/24/96/4": {
+      "rgba_sha256": "7c3911dde8647731e31a6baf18c3f09a9bd9dea98a34001c1a3c7bcf773ad513",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "shrink/dark/hand/24/192/0": {
+      "rgba_sha256": "3d9b78ec7c72321a82b307934cf00e30692bd4f0e5911a987b7de3ab1fa1c91c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "shrink/dark/hand/24/192/1": {
+      "rgba_sha256": "e5da456b7ee8933f3253f45b4737a973d7a0e3d29800c0aaa0dacfb8f1e148c7",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "shrink/dark/hand/24/192/2": {
+      "rgba_sha256": "9ed0fa052260474a56d355ae49e7cdfe3d436a5a23f8b769249d316ea4fb7f0c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "shrink/dark/hand/24/192/3": {
+      "rgba_sha256": "644afa128ba4020e58d986ce69892b39c9dace9cf541d27f9438cbeb5332b825",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "shrink/dark/hand/24/192/4": {
+      "rgba_sha256": "94ebbfda51c018ed48a4655e3253af57cb0c4820b55ae6aeb811b9b72676e0a7",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "shrink/dark/hand/32/96/0": {
+      "rgba_sha256": "c0c71e997671fb37b68e209d575e0b143577b8cbd76125d711cbcb38e5da47b3",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "shrink/dark/hand/32/96/1": {
+      "rgba_sha256": "031c64fa2f418a8bc411fa5f0ad62f7cb2bbe76e594e58ad6277fff49965ac64",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "shrink/dark/hand/32/96/2": {
+      "rgba_sha256": "d8f375303094fdb45136a0eea92f1e64e355a228cdac0f744540b021cf6220de",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "shrink/dark/hand/32/96/3": {
+      "rgba_sha256": "dddfbf504c4a04d141ba6838b43eb48a7b0c57e18a968acc5f932f22681da664",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "shrink/dark/hand/32/96/4": {
+      "rgba_sha256": "cc84cf28d537625692d982a403ca9361380d318ffc2b28a8ea355ddfe1136dbf",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "shrink/dark/hand/32/192/0": {
+      "rgba_sha256": "26959ef3f9c6123a069f726f20e750fea444143461915f63be953305099870dd",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "shrink/dark/hand/32/192/1": {
+      "rgba_sha256": "d1cd83ec1f23c091f3fad9d01d1e8fbef09352013e53b8f54600ce8633e02a07",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "shrink/dark/hand/32/192/2": {
+      "rgba_sha256": "c91e5fd585900a2d7782499e89358a241547671194caedc292b77ab6efac41ef",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "shrink/dark/hand/32/192/3": {
+      "rgba_sha256": "a51a2011ebc5f9afb32148f5fd306f8640711a956ad98b91602eb714c9ffd09b",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "shrink/dark/hand/32/192/4": {
+      "rgba_sha256": "53832d7d7451c8a6fadb2a26dc573cf3b327cff5254518e4deff190a035cce27",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "shrink/dark/hand/48/96/0": {
+      "rgba_sha256": "5aa3a5cb47ea63d07d8569f1603ffba2334f62000fe92ff293a7f6b621a8dce0",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "shrink/dark/hand/48/96/1": {
+      "rgba_sha256": "e50e3a0cb547d5fdb8bdedfa167483c1917454711184732916ca8b6d979e6930",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "shrink/dark/hand/48/96/2": {
+      "rgba_sha256": "8bef2fc12b940efbf09daae79bd2fd5332ab033bf392cef5248b4a15d4b87056",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "shrink/dark/hand/48/96/3": {
+      "rgba_sha256": "5c86453ef0f1ea58c2b5b8de91f3c55198b0374ec28b6a2dc4b49061e4277e27",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "shrink/dark/hand/48/96/4": {
+      "rgba_sha256": "af74485c1747baa86f812fef27a88ce188068487c70585708a3034361b8397aa",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "shrink/dark/hand/48/192/0": {
+      "rgba_sha256": "d7b30c8ce106a55460e377317c8d20c1fec77b1431d531f63300cb1c4f359bb3",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "shrink/dark/hand/48/192/1": {
+      "rgba_sha256": "8a6b1eb6777a980fcad3c0c99174ba1a35b1ee3102256731c16c0e3b193ecdea",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "shrink/dark/hand/48/192/2": {
+      "rgba_sha256": "6717d2e2bb861d6e6bf978fcf506886b1327c8bc71606f190d0113173cf04e16",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "shrink/dark/hand/48/192/3": {
+      "rgba_sha256": "65e7a23ec80cb6c1e186a0e1816cb0c12d0852e4e1679fa1e728ffb486ee424a",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "shrink/dark/hand/48/192/4": {
+      "rgba_sha256": "b887a0ef94d4b002284348966247d9ee4e93780afce297846b3f26bb7a1b54f7",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "shrink/dark/hand/64/96/0": {
+      "rgba_sha256": "60cec8b7ba503fa528362f722c08a991ef94facbc209cf728f547b7df82d9300",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "shrink/dark/hand/64/96/1": {
+      "rgba_sha256": "0cf06926c0a90700b57a08a39fc6380ca8711a33bd5b35db958748a84fd17575",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "shrink/dark/hand/64/96/2": {
+      "rgba_sha256": "06fe3608e6cfcbb10d03e166f9f473420586f53f297eac39943c4310cb289d7f",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "shrink/dark/hand/64/96/3": {
+      "rgba_sha256": "b6fc2a10c3544a26682782fa3cb6c03d3e62020bbc3e03fbaef5b9222cd6b75a",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "shrink/dark/hand/64/96/4": {
+      "rgba_sha256": "61730be9e557b5871a80c617d516e29942ea1b5ca7edf74c0b79272ef7d850c1",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "shrink/dark/hand/64/192/0": {
+      "rgba_sha256": "673463dbd2ea4b3dbc89015940b7960bc76452fe11c0d1f14b7c597a67827d29",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "shrink/dark/hand/64/192/1": {
+      "rgba_sha256": "b167b50e3d51d8d52d857739bb3bb22d9d1ba5d715a81311fa6a0e2b7538d483",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "shrink/dark/hand/64/192/2": {
+      "rgba_sha256": "0269ef5afd8b99a0112894acc6c0b8dd7adf5a983fa5875999c9f7510e24236d",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "shrink/dark/hand/64/192/3": {
+      "rgba_sha256": "0f858b6896894128d0e9b16ed276cfe1b79b2ac5f2a6e1c509e8770b80524394",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "shrink/dark/hand/64/192/4": {
+      "rgba_sha256": "22cfbf0e0ba922199371ec5e4eb2aa351358ba5c268471899e67450acf874c87",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "spring/light/arrow/24/96/0": {
+      "rgba_sha256": "d71aef2a24692ce50f31ae141d59c638b7223bf7f19e3a02e6b66dc2078d83b9",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "spring/light/arrow/24/96/1": {
+      "rgba_sha256": "014772e18ada4a2cae5df111549006fd42571719a6ad53e579aa41e219d82aaa",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "spring/light/arrow/24/96/2": {
+      "rgba_sha256": "16863a9cba006165e7c1a4f651eba6b67c2853fe80567a9a2c035237528ebb15",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "spring/light/arrow/24/96/3": {
+      "rgba_sha256": "e9bf6ceef819ee16e0eee813dd232b3eced59f1bb91ed41396539283441b596f",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "spring/light/arrow/24/96/4": {
+      "rgba_sha256": "618136c8967c466fd9916c0c56ffa59c80ec8c1ee6596429000e83bd6e058cef",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "spring/light/arrow/24/192/0": {
+      "rgba_sha256": "ce580bc1e1a7a799023892f1bf7a306f0b0beb7d4b8d91fbd08b1a6a1e2fb76d",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "spring/light/arrow/24/192/1": {
+      "rgba_sha256": "bbb9b01040815b2a2083f4ab55f62da161b8bdb48cc547adc710fd4eb0590080",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "spring/light/arrow/24/192/2": {
+      "rgba_sha256": "d05df1f51b2403d68d64ae3a536b7b7abbe69e3f4798ae37db4882beab1e3ddc",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "spring/light/arrow/24/192/3": {
+      "rgba_sha256": "2509c586c3c1cf0c8a03990c2c8f3685e3b9fde8ad4ace9e692b78ab8e88bdc6",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "spring/light/arrow/24/192/4": {
+      "rgba_sha256": "1851083b12be502d307c6ba32b689f6c7cbb99dd70c86a7d97c72f3484a397d8",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "spring/light/arrow/32/96/0": {
+      "rgba_sha256": "b6416b0ecf2fdefa11ea305c4ee85316efc0cb888f02bf7c154a0504fa6a52a3",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "spring/light/arrow/32/96/1": {
+      "rgba_sha256": "ba15024635bab015b4ef59deed2e571dcc011f6c26f6fcf313fc2b04b795826e",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "spring/light/arrow/32/96/2": {
+      "rgba_sha256": "27571c92cc64340bc4c1c6752a891de847eecb2076a7b67de310bd5e91a9b578",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "spring/light/arrow/32/96/3": {
+      "rgba_sha256": "f16a8c915055b3c7d5860d1f4e321c3a9def99b3ca59b4d775f55920e8d75204",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "spring/light/arrow/32/96/4": {
+      "rgba_sha256": "81644fa0e42c5b52f7ad468fdc1973df9acbc2559f559f0626f045448e7f72a2",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "spring/light/arrow/32/192/0": {
+      "rgba_sha256": "bf2433d82b4682bfb163356b5dd64cb2b9c50d3783e6280446516bd013dc283e",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "spring/light/arrow/32/192/1": {
+      "rgba_sha256": "96c7d15b648180b515d866506c6c98fdd1013760529a051eadbf48f3b42cb0a8",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "spring/light/arrow/32/192/2": {
+      "rgba_sha256": "f854a3d2d867e8986714fc8ccf530b66984fc9e0c2dc6a6d282337e8fa4bd509",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "spring/light/arrow/32/192/3": {
+      "rgba_sha256": "5134c642aefc9cb172cb097864a36e57c23bbf7b142ed1eb11bd9e367b5369d2",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "spring/light/arrow/32/192/4": {
+      "rgba_sha256": "0bd8d02f36ad99df55cefe078c05144d9bd7231a63056ae8ec84c70e923bcd03",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "spring/light/arrow/48/96/0": {
+      "rgba_sha256": "85a28f4d430cd80031bb72675f5e31200193e62caec045f78f6d721fe237e779",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "spring/light/arrow/48/96/1": {
+      "rgba_sha256": "49803a12fe82065616b56fa32ed8afc612155e296a6f37f3d0aebb64355c06d0",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "spring/light/arrow/48/96/2": {
+      "rgba_sha256": "d3ee4a399522485edcb8801fb25553c34f6889159c5d7e6eca63cbf68ab0fec8",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "spring/light/arrow/48/96/3": {
+      "rgba_sha256": "1b33c35ff37151673b933fe2dc57c2dc0963b05ce8f2a2de65acac3ef790aaa8",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "spring/light/arrow/48/96/4": {
+      "rgba_sha256": "f81397c9d4a12f15e722866e8640ae72b58c68bcdf188c154d8585aba45b7d4b",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "spring/light/arrow/48/192/0": {
+      "rgba_sha256": "39619554e5799b140f5344ef660c27df82db85164cbbd8776f9cc2a780fcd0c7",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "spring/light/arrow/48/192/1": {
+      "rgba_sha256": "cb76482a30317c465d1c9a430ba77bbc1281c950d09b7c6f259fe8c83b5e0460",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "spring/light/arrow/48/192/2": {
+      "rgba_sha256": "0769f4f3ed324e379944b9998a209ead4ad4784ff635f425e1f0e4eb2b56ac04",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "spring/light/arrow/48/192/3": {
+      "rgba_sha256": "30778400924f5c75ff4437dbe36e6bad2ed15707daf8538ad459f7037049d18b",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "spring/light/arrow/48/192/4": {
+      "rgba_sha256": "9bbc243b470d5637ce7f2be610b0cb7e8304d142c6f71b9d1c575bb2bf144bf2",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "spring/light/arrow/64/96/0": {
+      "rgba_sha256": "874c9813e794aa7d4ddc2ff93510c325bdd93f7b86cb9e1f6b49b8d3d09d30a2",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "spring/light/arrow/64/96/1": {
+      "rgba_sha256": "47d452b820ed29adf78734f1f8f5a4d45abbe2e6bd643ee73409f076cf31ba38",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "spring/light/arrow/64/96/2": {
+      "rgba_sha256": "59c2becea3d3c24762c5d36c5d952a9fa097314e3edd7500183c43f4a4fa6847",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "spring/light/arrow/64/96/3": {
+      "rgba_sha256": "afafa80dcd1f3a0c7d78bf33dafc327552e85a99b1076e9bfc14229de9f667f7",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "spring/light/arrow/64/96/4": {
+      "rgba_sha256": "312b674dc5aaa6384defc4d28493c251eb00a5e0aee747266af07509831e1cc4",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "spring/light/arrow/64/192/0": {
+      "rgba_sha256": "6888b864afd82cbd8b4c7b2241a97d597e426758f36d6b0bbd78ad190d9360fc",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "spring/light/arrow/64/192/1": {
+      "rgba_sha256": "b120de71f7743de29da510be2f514540394f5778ae534210ad4638bb696b7458",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "spring/light/arrow/64/192/2": {
+      "rgba_sha256": "47fe03a85c08446397963f9301d275ad261db17abf68f20e0f6fea063248b110",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "spring/light/arrow/64/192/3": {
+      "rgba_sha256": "1bf2daf94b7370b1d564e15523c365dfeb7d71ebf5425ffe1525f41a478be310",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "spring/light/arrow/64/192/4": {
+      "rgba_sha256": "272d039ee268b16cf951995e70d9a57d5450024a79031e04a52d23328da4de29",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "spring/light/hand/24/96/0": {
+      "rgba_sha256": "50fc435ea6590dccb218d51f3350af9bb5abf20d096de3eea3f69a63252e79f1",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "spring/light/hand/24/96/1": {
+      "rgba_sha256": "5e07094d76359ae4fa0a34c26974ecbec8ad5c536d58870670c9bfb51100b0df",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "spring/light/hand/24/96/2": {
+      "rgba_sha256": "daa0185f6710ecec2cea43fc57e0242dcfdeeb7663a27f8b550e671572fb802f",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "spring/light/hand/24/96/3": {
+      "rgba_sha256": "faa4df4340fc3aa53ec1b077d94d04046d02eab3856293909823513e854b7a03",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "spring/light/hand/24/96/4": {
+      "rgba_sha256": "74159095a377883e23f0afa8c990e2077e93a145f4e5369014b898cfbcabaa8e",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "spring/light/hand/24/192/0": {
+      "rgba_sha256": "2c57c85558878f3b60097b4102816b421ca225444581691a686dd6eeb59ffa8c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "spring/light/hand/24/192/1": {
+      "rgba_sha256": "753bee902064a4f3f20e4573a51c9a3fefb2f32e766861259a6eb02000f0cb07",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "spring/light/hand/24/192/2": {
+      "rgba_sha256": "5cbdc1b564f126685f07be1e1eb2080fda152dd92fea1b14a0101151b0b8899f",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "spring/light/hand/24/192/3": {
+      "rgba_sha256": "980ac3c5f39077a201f7e66fe989b15a4bd9dc577103a828853bdab21bf53a08",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "spring/light/hand/24/192/4": {
+      "rgba_sha256": "abb4a38ea2207605f09f73e514532b115974631dd56211bc87fc6e8e5f6def68",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "spring/light/hand/32/96/0": {
+      "rgba_sha256": "65193c475bc70af0e57296fa243e7cc95ffb20eabb5039c341e2fbe500749b83",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "spring/light/hand/32/96/1": {
+      "rgba_sha256": "823413a5943c235a42840f687fa77d720c609c96da7c13ebd0a71c776a13bb57",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "spring/light/hand/32/96/2": {
+      "rgba_sha256": "6359b3f0f40765dc6fa9603481186fdf62e4fb91cbc870cf798d092120736e23",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "spring/light/hand/32/96/3": {
+      "rgba_sha256": "b8c468b6dd2a48b107053e29f790440085df72781877bd091c4e70e084f8871c",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "spring/light/hand/32/96/4": {
+      "rgba_sha256": "5de2df60e6ac8a9b43c9fe0eb55c480ac6e77bf4d2e4cfa1b9c5bdb771fbdf66",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "spring/light/hand/32/192/0": {
+      "rgba_sha256": "b22040338c06c4777a51dfd5fc38fbc920afd2c5bf4bcfce23a91f32e06cc5a8",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "spring/light/hand/32/192/1": {
+      "rgba_sha256": "0f3bdfb90c894119f53d554fd68afda2e70e555e6897e2827456925cde445bfa",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "spring/light/hand/32/192/2": {
+      "rgba_sha256": "4933d1c682c3f243e61513626c5d131c953105c4e256117bc61f138c7ed6a614",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "spring/light/hand/32/192/3": {
+      "rgba_sha256": "00d54b09dbd93e7e31592e6c1280fe4900600d8d9f9ac220223c77ab38d0f270",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "spring/light/hand/32/192/4": {
+      "rgba_sha256": "100f6f43da680d5b76d58ba11e4c8f13d8729621527bf272ce42ed3d7dc03423",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "spring/light/hand/48/96/0": {
+      "rgba_sha256": "5e900b12bb100c64bb52713c247fb596797502763620c3ddf0428276d9e16c4e",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "spring/light/hand/48/96/1": {
+      "rgba_sha256": "e8202c226a2bd7b1b10097f981c82a0f2a29c7d29e564e44e4505688a72b2166",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "spring/light/hand/48/96/2": {
+      "rgba_sha256": "8614692b0423997efa3c3d6e54948f0dca57143d958dc08069f2692ba5675a1e",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "spring/light/hand/48/96/3": {
+      "rgba_sha256": "f3f34f8704bf181553608fbbd8732bfdafbd8700ae67a771245929139be1c21c",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "spring/light/hand/48/96/4": {
+      "rgba_sha256": "6426e19c6570995db4deb464ec8b6fd10aaf74c5bd8f836735c475f0a8cd7bcb",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "spring/light/hand/48/192/0": {
+      "rgba_sha256": "1c4edc86225260a234c30c368f672fc2124926fc41466c383c9157df6bc0aa93",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "spring/light/hand/48/192/1": {
+      "rgba_sha256": "8f7b577819bbebe01940a1931672db3ebaa170337fe24ef76dc05bba6c229603",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "spring/light/hand/48/192/2": {
+      "rgba_sha256": "a757d3a8b619c4ec049bfe248a83599693bb0a56f0fdb1eaabccdb038acabb83",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "spring/light/hand/48/192/3": {
+      "rgba_sha256": "c4d7b621a92354659e7a2409e7d24eb6077c1a1593139dea6159de27fc4663e3",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "spring/light/hand/48/192/4": {
+      "rgba_sha256": "e1bd760f17b70e830953ab720820cc92ee5bd71d7b5da3de3ea734888a514883",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "spring/light/hand/64/96/0": {
+      "rgba_sha256": "acf8b04a252e287122cb8f375e7bc1f126e77dd802d77c7e04a688248d7f5039",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "spring/light/hand/64/96/1": {
+      "rgba_sha256": "479ddf64883dddc717befef06c59ba542baa17623628c621addaa4c29ee3cc9b",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "spring/light/hand/64/96/2": {
+      "rgba_sha256": "a30ec82b2ff0eb52023e6fcef294f22d65f83f75de1110c79d0c6212003f7863",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "spring/light/hand/64/96/3": {
+      "rgba_sha256": "889d4477b10888ddfab01e03ffc6ef7759e49c755aa91ca69e8cd256d5ca6423",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "spring/light/hand/64/96/4": {
+      "rgba_sha256": "45633c5f26a866bc31cd2886b24af8d62a7cde41d1518d5aed642bf31bbf58f1",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "spring/light/hand/64/192/0": {
+      "rgba_sha256": "3b3d207d6c4e39804a3c7a19b070db556bc4845dcfd80635a56233260cfcee78",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "spring/light/hand/64/192/1": {
+      "rgba_sha256": "8c2f7a6faa51952f808da48d08e504fbe1bfcb78d69ffa6ccbeb1f6f59a6ec39",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "spring/light/hand/64/192/2": {
+      "rgba_sha256": "291e4c78d31824d858f2e4f55d4dda30074c65a620e9df92ee3f9558f4cc59a1",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "spring/light/hand/64/192/3": {
+      "rgba_sha256": "008e783ba3c6b1926edce193eeac5a071ee84e4351b5f7c20aa66a2817738d6c",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "spring/light/hand/64/192/4": {
+      "rgba_sha256": "dec8a8ab0d3d5c95daf35802c51650ff2fcc1653b8977c5bba0e4530e2c84e27",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "spring/dark/arrow/24/96/0": {
+      "rgba_sha256": "5b617c546ff229639e1479be6b7804c882ff4f8862a70433cce461c6a2e3e8a2",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "spring/dark/arrow/24/96/1": {
+      "rgba_sha256": "a4361dfcae746979f9823b8755d66bdcf9da19d81f994fea9a589724e00d4b7f",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "spring/dark/arrow/24/96/2": {
+      "rgba_sha256": "47e7808c8129e8113e145b2f1a398fc87ab293bc9c74bb7e76e7b1f7156edd93",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "spring/dark/arrow/24/96/3": {
+      "rgba_sha256": "477a0ca1b32fe896b35fc55a72e55be32723bb9edad3ea67f8db066c4451f104",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "spring/dark/arrow/24/96/4": {
+      "rgba_sha256": "a601f5f3789d388931558d4901ffdffd626c6cfaa010e7c6e1d28c1b4e9b71fe",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "spring/dark/arrow/24/192/0": {
+      "rgba_sha256": "37f77d23df622d04e023d42cb4e5c1e84f486df8bd24d3a8ade6b3188133f878",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "spring/dark/arrow/24/192/1": {
+      "rgba_sha256": "99dac445a1c96dcd3822976d79642cb40dce984e68553fa73542bd46291b7970",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "spring/dark/arrow/24/192/2": {
+      "rgba_sha256": "3b27c0bebaf9f0c28894f8d3e11e0e5518013e72e033f63616b267816bcc0bfc",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "spring/dark/arrow/24/192/3": {
+      "rgba_sha256": "95f86fcc907b245e319d93f3c3b91726e7f2f2250cfb81e3f635c14600dc8ac4",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "spring/dark/arrow/24/192/4": {
+      "rgba_sha256": "3ad44239d1d96c08e98a519df1a9ebf63284cab50371e273314facc5767e4558",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "spring/dark/arrow/32/96/0": {
+      "rgba_sha256": "eaaad7107dcde5cc6e3f9f229c36ed765489306f11c17b31e404abba922935d6",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "spring/dark/arrow/32/96/1": {
+      "rgba_sha256": "4277f942d9d26ee67d58548833a6bda4e69a23e24d3e41a6ab4ea653aca5d3f0",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "spring/dark/arrow/32/96/2": {
+      "rgba_sha256": "ef4912b1ca71077fed4921ade3171a9c3bc1d5bc9a95a2def3bd8da0849a452a",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "spring/dark/arrow/32/96/3": {
+      "rgba_sha256": "115a8e90556b90b4ec8da41ebfda6a64ba9be8c9af4f83af3eeeb1e5624e1696",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "spring/dark/arrow/32/96/4": {
+      "rgba_sha256": "ecb5c30e4d147ddedc073eb3023d97a72db009ccea8adf8ebb784343e1a9bd8f",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "spring/dark/arrow/32/192/0": {
+      "rgba_sha256": "932de32d08514d6e6c772e3186302970b48eb73d0664b5cab0ba64e925881811",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "spring/dark/arrow/32/192/1": {
+      "rgba_sha256": "ac1954ef78abc13cd8795e3ee8181b625bbc3673ad5ac32e246086a4086aaf27",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "spring/dark/arrow/32/192/2": {
+      "rgba_sha256": "6bf7191bfb014ea45801105da2364f01f261106dd3195c63f30f59b94e3b3a02",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "spring/dark/arrow/32/192/3": {
+      "rgba_sha256": "6b00461eb3a4a510daad4605158256a039dd921b384ec764775071d0f662b2bb",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "spring/dark/arrow/32/192/4": {
+      "rgba_sha256": "3bcff537a9adb4d17bb2c9f3e3ecef542c762c7ee70717fe9b4cdf59cdab2d33",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "spring/dark/arrow/48/96/0": {
+      "rgba_sha256": "39f382cc314231c391fe94b682c9470e7280169ca39c5b08c736bd022b7efe3c",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "spring/dark/arrow/48/96/1": {
+      "rgba_sha256": "e32983acba51c8fd3780b6d260fdd0ff0bc551e687551ad24c9ebd0b182179d4",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "spring/dark/arrow/48/96/2": {
+      "rgba_sha256": "a10f7fa1f2cd8f26514c69c8f20754188db97beacd745f06842816d71d0f4041",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "spring/dark/arrow/48/96/3": {
+      "rgba_sha256": "5e4762a14700dced572099849a576a0314161d4bac960e3020cc83f06eb37a5f",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "spring/dark/arrow/48/96/4": {
+      "rgba_sha256": "368d35ab3ed1cb09e2e035bd8ffc5f1ec48caf13afe7c009b4aff401f28bb548",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "spring/dark/arrow/48/192/0": {
+      "rgba_sha256": "266aa3bb0d111fb2978e0d4b3e156495426a579f7e5fb75d490bb7b7beecc5b1",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "spring/dark/arrow/48/192/1": {
+      "rgba_sha256": "dad5b4c582e73066ac1126d9b43fb1599bba4523fe877d61c48dc165cd680a61",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "spring/dark/arrow/48/192/2": {
+      "rgba_sha256": "aed5d17b2dd4e86981aa1357c914de8d2df7a5a069a97445e306e13b58950a50",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "spring/dark/arrow/48/192/3": {
+      "rgba_sha256": "5c5c7f9a3d5c80b06619d7cc253f0048590bfcf46ee14c610d83b381c1a587df",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "spring/dark/arrow/48/192/4": {
+      "rgba_sha256": "8513508e6edee434332835f3c74752d7666126de7dc2ac5481a368dbe4bbe0de",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "spring/dark/arrow/64/96/0": {
+      "rgba_sha256": "7cbe2d412ef4035d6b8bc513788ed9c4b935abe4c87117a500b13f55ca6d0ff6",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "spring/dark/arrow/64/96/1": {
+      "rgba_sha256": "0f37a94caff68da848aeca09d95581fb99ecc9839a7303a4a8bdd805a38ff25f",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "spring/dark/arrow/64/96/2": {
+      "rgba_sha256": "22c4118f22a528fc14b66c730618e27bb40c3459d561d9f0689ab3f568001493",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "spring/dark/arrow/64/96/3": {
+      "rgba_sha256": "9bb5754c131fb6771b376ee16541b4345aff99e3c4ee0ab77472b5f21d270720",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "spring/dark/arrow/64/96/4": {
+      "rgba_sha256": "042fb15dc773c782048bbbc8c7e8815bebaec4320b5720730d73473d10f9826d",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "spring/dark/arrow/64/192/0": {
+      "rgba_sha256": "1f9640311ab1a5e870e6df8416102905775369860662ec4e5645d88a7633754d",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "spring/dark/arrow/64/192/1": {
+      "rgba_sha256": "d9485cb36c87a3dae2d6298ec637c7f9357ce1839fe55de15666c4f49e792813",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "spring/dark/arrow/64/192/2": {
+      "rgba_sha256": "26005dd0f5e89267bddcf01faa5790a028e39ffc196b611a9b97bb947baf8bd9",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "spring/dark/arrow/64/192/3": {
+      "rgba_sha256": "724f034edad4c7ea818cf3006528f9c91643fb57ae90adf4044a9e43e8375703",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "spring/dark/arrow/64/192/4": {
+      "rgba_sha256": "cb136ee8d9b526d2ad98cf16a0e724b5670aa554934f0eaa82654789484bfd40",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "spring/dark/hand/24/96/0": {
+      "rgba_sha256": "c5e81f56ee871409109bd1f0086428ac2aced2d6c5524e184f327311140e266d",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "spring/dark/hand/24/96/1": {
+      "rgba_sha256": "9c3164fa1e97a9b01e498549549cc7a03803ec5e9a548a62675deb0560ea2be1",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "spring/dark/hand/24/96/2": {
+      "rgba_sha256": "7c3911dde8647731e31a6baf18c3f09a9bd9dea98a34001c1a3c7bcf773ad513",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "spring/dark/hand/24/96/3": {
+      "rgba_sha256": "1d9ef8017b09a187182007d218b9eb9453f160faed081333b341a868b51a7992",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "spring/dark/hand/24/96/4": {
+      "rgba_sha256": "ae13017816a64ba74f316889687a43b8c84074ef6200912e292c698df835d224",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "spring/dark/hand/24/192/0": {
+      "rgba_sha256": "3d9b78ec7c72321a82b307934cf00e30692bd4f0e5911a987b7de3ab1fa1c91c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "spring/dark/hand/24/192/1": {
+      "rgba_sha256": "30713cf65c08c11fae99601101385e2b508ad2422074ebe57ce4e2f404e75a7f",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "spring/dark/hand/24/192/2": {
+      "rgba_sha256": "94ebbfda51c018ed48a4655e3253af57cb0c4820b55ae6aeb811b9b72676e0a7",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "spring/dark/hand/24/192/3": {
+      "rgba_sha256": "2364f87959da2e0158dd0d24b444b81a2ce224ed4dc387fac2c15c0c58fb245c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "spring/dark/hand/24/192/4": {
+      "rgba_sha256": "0c7a71abb1dc6bed85fc918fbc9152624a379f1b2680b1d04d3474382c84ba61",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "spring/dark/hand/32/96/0": {
+      "rgba_sha256": "c0c71e997671fb37b68e209d575e0b143577b8cbd76125d711cbcb38e5da47b3",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "spring/dark/hand/32/96/1": {
+      "rgba_sha256": "6c7134ae5515db852fb649da26ac77dae63689fbe59a0017c96d8209c72a8a23",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "spring/dark/hand/32/96/2": {
+      "rgba_sha256": "cc84cf28d537625692d982a403ca9361380d318ffc2b28a8ea355ddfe1136dbf",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "spring/dark/hand/32/96/3": {
+      "rgba_sha256": "2c22488b4ae656793d565f01b8577a8f290976f0e3b0e99d6ca209cdaf0a5f28",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "spring/dark/hand/32/96/4": {
+      "rgba_sha256": "d842ff25d90052b24fdf1f460b30117f2934d2217785e563e61171f2add07cac",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "spring/dark/hand/32/192/0": {
+      "rgba_sha256": "26959ef3f9c6123a069f726f20e750fea444143461915f63be953305099870dd",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "spring/dark/hand/32/192/1": {
+      "rgba_sha256": "787fe9606d596f32c235a49f75c8d3783d3a606578c1d67f2eb7bca152c36f41",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "spring/dark/hand/32/192/2": {
+      "rgba_sha256": "53832d7d7451c8a6fadb2a26dc573cf3b327cff5254518e4deff190a035cce27",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "spring/dark/hand/32/192/3": {
+      "rgba_sha256": "89b91e804ffed884778c148be04d18e030a9f4315c5aa3e29f777b25642f33df",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "spring/dark/hand/32/192/4": {
+      "rgba_sha256": "78ff4c504c61fd3831c1cc418601e5315efb4d866ac6d7e2f3eeed18a8a7b795",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "spring/dark/hand/48/96/0": {
+      "rgba_sha256": "5aa3a5cb47ea63d07d8569f1603ffba2334f62000fe92ff293a7f6b621a8dce0",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "spring/dark/hand/48/96/1": {
+      "rgba_sha256": "ad1a4d4fad0cb9b6cf4e3444e4077c8a5128adf8bff51ec7518e780e9eb3c127",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "spring/dark/hand/48/96/2": {
+      "rgba_sha256": "af74485c1747baa86f812fef27a88ce188068487c70585708a3034361b8397aa",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "spring/dark/hand/48/96/3": {
+      "rgba_sha256": "d6cd8dbbe3c080f9118df448c2f55ecc2bbd5f48d34738845fe2ee856a8117c2",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "spring/dark/hand/48/96/4": {
+      "rgba_sha256": "89a3c7ea22da2aee08ad97fbb808f3007fdc4eaed17073a9e7b0aa72faa1441b",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "spring/dark/hand/48/192/0": {
+      "rgba_sha256": "d7b30c8ce106a55460e377317c8d20c1fec77b1431d531f63300cb1c4f359bb3",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "spring/dark/hand/48/192/1": {
+      "rgba_sha256": "63aca8213d4aaa3d72fa28e86c53d8936f53a17bd07911dc6f9ad5e6482b7013",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "spring/dark/hand/48/192/2": {
+      "rgba_sha256": "b887a0ef94d4b002284348966247d9ee4e93780afce297846b3f26bb7a1b54f7",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "spring/dark/hand/48/192/3": {
+      "rgba_sha256": "79ef323d9b3d7ce93329110e3cfef38e1ccda063a6189391f7b1ea16ed0dfa0c",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "spring/dark/hand/48/192/4": {
+      "rgba_sha256": "75a5687bb04e9819a4f6afd3b89ee36210c4ea21bdc63e830f22457f0fcb5765",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "spring/dark/hand/64/96/0": {
+      "rgba_sha256": "60cec8b7ba503fa528362f722c08a991ef94facbc209cf728f547b7df82d9300",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "spring/dark/hand/64/96/1": {
+      "rgba_sha256": "4609c23caac243f01f91ae139d0a1caff875083e31d383cb73383b496f632cb6",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "spring/dark/hand/64/96/2": {
+      "rgba_sha256": "61730be9e557b5871a80c617d516e29942ea1b5ca7edf74c0b79272ef7d850c1",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "spring/dark/hand/64/96/3": {
+      "rgba_sha256": "1c1d77e78a90e9e4fb717782dc3fa62ff79b7fc083a43dec1c7a18fecca6cc08",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "spring/dark/hand/64/96/4": {
+      "rgba_sha256": "d3dbfd6c42672bd5980ad3d8e5718d7aa76374ee3c7ac434fa5f3d12a5bdd31b",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "spring/dark/hand/64/192/0": {
+      "rgba_sha256": "673463dbd2ea4b3dbc89015940b7960bc76452fe11c0d1f14b7c597a67827d29",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "spring/dark/hand/64/192/1": {
+      "rgba_sha256": "a2c162d0a70aabdc1250c601190efe36806aae42ec6624ea9c3eec944918ed59",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "spring/dark/hand/64/192/2": {
+      "rgba_sha256": "22cfbf0e0ba922199371ec5e4eb2aa351358ba5c268471899e67450acf874c87",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "spring/dark/hand/64/192/3": {
+      "rgba_sha256": "1523b2670174b9c97a0d9caf6c56e17032df25ccb355ce57d5bb69ea1cfb07bf",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "spring/dark/hand/64/192/4": {
+      "rgba_sha256": "eae41e61e1015fa16fc7b0ecf3d50948e340f4807d847f8a6f0541f2e94cfd21",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "off/light/arrow/24/96/0": {
+      "rgba_sha256": "d71aef2a24692ce50f31ae141d59c638b7223bf7f19e3a02e6b66dc2078d83b9",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "off/light/arrow/24/96/1": {
+      "rgba_sha256": "d71aef2a24692ce50f31ae141d59c638b7223bf7f19e3a02e6b66dc2078d83b9",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "off/light/arrow/24/96/2": {
+      "rgba_sha256": "d71aef2a24692ce50f31ae141d59c638b7223bf7f19e3a02e6b66dc2078d83b9",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "off/light/arrow/24/96/3": {
+      "rgba_sha256": "d71aef2a24692ce50f31ae141d59c638b7223bf7f19e3a02e6b66dc2078d83b9",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "off/light/arrow/24/96/4": {
+      "rgba_sha256": "d71aef2a24692ce50f31ae141d59c638b7223bf7f19e3a02e6b66dc2078d83b9",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "off/light/arrow/24/192/0": {
+      "rgba_sha256": "ce580bc1e1a7a799023892f1bf7a306f0b0beb7d4b8d91fbd08b1a6a1e2fb76d",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "off/light/arrow/24/192/1": {
+      "rgba_sha256": "ce580bc1e1a7a799023892f1bf7a306f0b0beb7d4b8d91fbd08b1a6a1e2fb76d",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "off/light/arrow/24/192/2": {
+      "rgba_sha256": "ce580bc1e1a7a799023892f1bf7a306f0b0beb7d4b8d91fbd08b1a6a1e2fb76d",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "off/light/arrow/24/192/3": {
+      "rgba_sha256": "ce580bc1e1a7a799023892f1bf7a306f0b0beb7d4b8d91fbd08b1a6a1e2fb76d",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "off/light/arrow/24/192/4": {
+      "rgba_sha256": "ce580bc1e1a7a799023892f1bf7a306f0b0beb7d4b8d91fbd08b1a6a1e2fb76d",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "off/light/arrow/32/96/0": {
+      "rgba_sha256": "b6416b0ecf2fdefa11ea305c4ee85316efc0cb888f02bf7c154a0504fa6a52a3",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "off/light/arrow/32/96/1": {
+      "rgba_sha256": "b6416b0ecf2fdefa11ea305c4ee85316efc0cb888f02bf7c154a0504fa6a52a3",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "off/light/arrow/32/96/2": {
+      "rgba_sha256": "b6416b0ecf2fdefa11ea305c4ee85316efc0cb888f02bf7c154a0504fa6a52a3",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "off/light/arrow/32/96/3": {
+      "rgba_sha256": "b6416b0ecf2fdefa11ea305c4ee85316efc0cb888f02bf7c154a0504fa6a52a3",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "off/light/arrow/32/96/4": {
+      "rgba_sha256": "b6416b0ecf2fdefa11ea305c4ee85316efc0cb888f02bf7c154a0504fa6a52a3",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "off/light/arrow/32/192/0": {
+      "rgba_sha256": "bf2433d82b4682bfb163356b5dd64cb2b9c50d3783e6280446516bd013dc283e",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "off/light/arrow/32/192/1": {
+      "rgba_sha256": "bf2433d82b4682bfb163356b5dd64cb2b9c50d3783e6280446516bd013dc283e",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "off/light/arrow/32/192/2": {
+      "rgba_sha256": "bf2433d82b4682bfb163356b5dd64cb2b9c50d3783e6280446516bd013dc283e",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "off/light/arrow/32/192/3": {
+      "rgba_sha256": "bf2433d82b4682bfb163356b5dd64cb2b9c50d3783e6280446516bd013dc283e",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "off/light/arrow/32/192/4": {
+      "rgba_sha256": "bf2433d82b4682bfb163356b5dd64cb2b9c50d3783e6280446516bd013dc283e",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "off/light/arrow/48/96/0": {
+      "rgba_sha256": "85a28f4d430cd80031bb72675f5e31200193e62caec045f78f6d721fe237e779",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "off/light/arrow/48/96/1": {
+      "rgba_sha256": "85a28f4d430cd80031bb72675f5e31200193e62caec045f78f6d721fe237e779",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "off/light/arrow/48/96/2": {
+      "rgba_sha256": "85a28f4d430cd80031bb72675f5e31200193e62caec045f78f6d721fe237e779",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "off/light/arrow/48/96/3": {
+      "rgba_sha256": "85a28f4d430cd80031bb72675f5e31200193e62caec045f78f6d721fe237e779",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "off/light/arrow/48/96/4": {
+      "rgba_sha256": "85a28f4d430cd80031bb72675f5e31200193e62caec045f78f6d721fe237e779",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "off/light/arrow/48/192/0": {
+      "rgba_sha256": "39619554e5799b140f5344ef660c27df82db85164cbbd8776f9cc2a780fcd0c7",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "off/light/arrow/48/192/1": {
+      "rgba_sha256": "39619554e5799b140f5344ef660c27df82db85164cbbd8776f9cc2a780fcd0c7",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "off/light/arrow/48/192/2": {
+      "rgba_sha256": "39619554e5799b140f5344ef660c27df82db85164cbbd8776f9cc2a780fcd0c7",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "off/light/arrow/48/192/3": {
+      "rgba_sha256": "39619554e5799b140f5344ef660c27df82db85164cbbd8776f9cc2a780fcd0c7",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "off/light/arrow/48/192/4": {
+      "rgba_sha256": "39619554e5799b140f5344ef660c27df82db85164cbbd8776f9cc2a780fcd0c7",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "off/light/arrow/64/96/0": {
+      "rgba_sha256": "874c9813e794aa7d4ddc2ff93510c325bdd93f7b86cb9e1f6b49b8d3d09d30a2",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "off/light/arrow/64/96/1": {
+      "rgba_sha256": "874c9813e794aa7d4ddc2ff93510c325bdd93f7b86cb9e1f6b49b8d3d09d30a2",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "off/light/arrow/64/96/2": {
+      "rgba_sha256": "874c9813e794aa7d4ddc2ff93510c325bdd93f7b86cb9e1f6b49b8d3d09d30a2",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "off/light/arrow/64/96/3": {
+      "rgba_sha256": "874c9813e794aa7d4ddc2ff93510c325bdd93f7b86cb9e1f6b49b8d3d09d30a2",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "off/light/arrow/64/96/4": {
+      "rgba_sha256": "874c9813e794aa7d4ddc2ff93510c325bdd93f7b86cb9e1f6b49b8d3d09d30a2",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "off/light/arrow/64/192/0": {
+      "rgba_sha256": "6888b864afd82cbd8b4c7b2241a97d597e426758f36d6b0bbd78ad190d9360fc",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "off/light/arrow/64/192/1": {
+      "rgba_sha256": "6888b864afd82cbd8b4c7b2241a97d597e426758f36d6b0bbd78ad190d9360fc",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "off/light/arrow/64/192/2": {
+      "rgba_sha256": "6888b864afd82cbd8b4c7b2241a97d597e426758f36d6b0bbd78ad190d9360fc",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "off/light/arrow/64/192/3": {
+      "rgba_sha256": "6888b864afd82cbd8b4c7b2241a97d597e426758f36d6b0bbd78ad190d9360fc",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "off/light/arrow/64/192/4": {
+      "rgba_sha256": "6888b864afd82cbd8b4c7b2241a97d597e426758f36d6b0bbd78ad190d9360fc",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "off/light/hand/24/96/0": {
+      "rgba_sha256": "50fc435ea6590dccb218d51f3350af9bb5abf20d096de3eea3f69a63252e79f1",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "off/light/hand/24/96/1": {
+      "rgba_sha256": "50fc435ea6590dccb218d51f3350af9bb5abf20d096de3eea3f69a63252e79f1",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "off/light/hand/24/96/2": {
+      "rgba_sha256": "50fc435ea6590dccb218d51f3350af9bb5abf20d096de3eea3f69a63252e79f1",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "off/light/hand/24/96/3": {
+      "rgba_sha256": "50fc435ea6590dccb218d51f3350af9bb5abf20d096de3eea3f69a63252e79f1",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "off/light/hand/24/96/4": {
+      "rgba_sha256": "50fc435ea6590dccb218d51f3350af9bb5abf20d096de3eea3f69a63252e79f1",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "off/light/hand/24/192/0": {
+      "rgba_sha256": "2c57c85558878f3b60097b4102816b421ca225444581691a686dd6eeb59ffa8c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "off/light/hand/24/192/1": {
+      "rgba_sha256": "2c57c85558878f3b60097b4102816b421ca225444581691a686dd6eeb59ffa8c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "off/light/hand/24/192/2": {
+      "rgba_sha256": "2c57c85558878f3b60097b4102816b421ca225444581691a686dd6eeb59ffa8c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "off/light/hand/24/192/3": {
+      "rgba_sha256": "2c57c85558878f3b60097b4102816b421ca225444581691a686dd6eeb59ffa8c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "off/light/hand/24/192/4": {
+      "rgba_sha256": "2c57c85558878f3b60097b4102816b421ca225444581691a686dd6eeb59ffa8c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "off/light/hand/32/96/0": {
+      "rgba_sha256": "65193c475bc70af0e57296fa243e7cc95ffb20eabb5039c341e2fbe500749b83",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "off/light/hand/32/96/1": {
+      "rgba_sha256": "65193c475bc70af0e57296fa243e7cc95ffb20eabb5039c341e2fbe500749b83",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "off/light/hand/32/96/2": {
+      "rgba_sha256": "65193c475bc70af0e57296fa243e7cc95ffb20eabb5039c341e2fbe500749b83",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "off/light/hand/32/96/3": {
+      "rgba_sha256": "65193c475bc70af0e57296fa243e7cc95ffb20eabb5039c341e2fbe500749b83",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "off/light/hand/32/96/4": {
+      "rgba_sha256": "65193c475bc70af0e57296fa243e7cc95ffb20eabb5039c341e2fbe500749b83",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "off/light/hand/32/192/0": {
+      "rgba_sha256": "b22040338c06c4777a51dfd5fc38fbc920afd2c5bf4bcfce23a91f32e06cc5a8",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "off/light/hand/32/192/1": {
+      "rgba_sha256": "b22040338c06c4777a51dfd5fc38fbc920afd2c5bf4bcfce23a91f32e06cc5a8",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "off/light/hand/32/192/2": {
+      "rgba_sha256": "b22040338c06c4777a51dfd5fc38fbc920afd2c5bf4bcfce23a91f32e06cc5a8",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "off/light/hand/32/192/3": {
+      "rgba_sha256": "b22040338c06c4777a51dfd5fc38fbc920afd2c5bf4bcfce23a91f32e06cc5a8",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "off/light/hand/32/192/4": {
+      "rgba_sha256": "b22040338c06c4777a51dfd5fc38fbc920afd2c5bf4bcfce23a91f32e06cc5a8",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "off/light/hand/48/96/0": {
+      "rgba_sha256": "5e900b12bb100c64bb52713c247fb596797502763620c3ddf0428276d9e16c4e",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "off/light/hand/48/96/1": {
+      "rgba_sha256": "5e900b12bb100c64bb52713c247fb596797502763620c3ddf0428276d9e16c4e",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "off/light/hand/48/96/2": {
+      "rgba_sha256": "5e900b12bb100c64bb52713c247fb596797502763620c3ddf0428276d9e16c4e",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "off/light/hand/48/96/3": {
+      "rgba_sha256": "5e900b12bb100c64bb52713c247fb596797502763620c3ddf0428276d9e16c4e",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "off/light/hand/48/96/4": {
+      "rgba_sha256": "5e900b12bb100c64bb52713c247fb596797502763620c3ddf0428276d9e16c4e",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "off/light/hand/48/192/0": {
+      "rgba_sha256": "1c4edc86225260a234c30c368f672fc2124926fc41466c383c9157df6bc0aa93",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "off/light/hand/48/192/1": {
+      "rgba_sha256": "1c4edc86225260a234c30c368f672fc2124926fc41466c383c9157df6bc0aa93",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "off/light/hand/48/192/2": {
+      "rgba_sha256": "1c4edc86225260a234c30c368f672fc2124926fc41466c383c9157df6bc0aa93",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "off/light/hand/48/192/3": {
+      "rgba_sha256": "1c4edc86225260a234c30c368f672fc2124926fc41466c383c9157df6bc0aa93",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "off/light/hand/48/192/4": {
+      "rgba_sha256": "1c4edc86225260a234c30c368f672fc2124926fc41466c383c9157df6bc0aa93",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "off/light/hand/64/96/0": {
+      "rgba_sha256": "acf8b04a252e287122cb8f375e7bc1f126e77dd802d77c7e04a688248d7f5039",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "off/light/hand/64/96/1": {
+      "rgba_sha256": "acf8b04a252e287122cb8f375e7bc1f126e77dd802d77c7e04a688248d7f5039",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "off/light/hand/64/96/2": {
+      "rgba_sha256": "acf8b04a252e287122cb8f375e7bc1f126e77dd802d77c7e04a688248d7f5039",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "off/light/hand/64/96/3": {
+      "rgba_sha256": "acf8b04a252e287122cb8f375e7bc1f126e77dd802d77c7e04a688248d7f5039",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "off/light/hand/64/96/4": {
+      "rgba_sha256": "acf8b04a252e287122cb8f375e7bc1f126e77dd802d77c7e04a688248d7f5039",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "off/light/hand/64/192/0": {
+      "rgba_sha256": "3b3d207d6c4e39804a3c7a19b070db556bc4845dcfd80635a56233260cfcee78",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "off/light/hand/64/192/1": {
+      "rgba_sha256": "3b3d207d6c4e39804a3c7a19b070db556bc4845dcfd80635a56233260cfcee78",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "off/light/hand/64/192/2": {
+      "rgba_sha256": "3b3d207d6c4e39804a3c7a19b070db556bc4845dcfd80635a56233260cfcee78",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "off/light/hand/64/192/3": {
+      "rgba_sha256": "3b3d207d6c4e39804a3c7a19b070db556bc4845dcfd80635a56233260cfcee78",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "off/light/hand/64/192/4": {
+      "rgba_sha256": "3b3d207d6c4e39804a3c7a19b070db556bc4845dcfd80635a56233260cfcee78",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "off/dark/arrow/24/96/0": {
+      "rgba_sha256": "5b617c546ff229639e1479be6b7804c882ff4f8862a70433cce461c6a2e3e8a2",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "off/dark/arrow/24/96/1": {
+      "rgba_sha256": "5b617c546ff229639e1479be6b7804c882ff4f8862a70433cce461c6a2e3e8a2",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "off/dark/arrow/24/96/2": {
+      "rgba_sha256": "5b617c546ff229639e1479be6b7804c882ff4f8862a70433cce461c6a2e3e8a2",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "off/dark/arrow/24/96/3": {
+      "rgba_sha256": "5b617c546ff229639e1479be6b7804c882ff4f8862a70433cce461c6a2e3e8a2",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "off/dark/arrow/24/96/4": {
+      "rgba_sha256": "5b617c546ff229639e1479be6b7804c882ff4f8862a70433cce461c6a2e3e8a2",
+      "hotspot": [
+        14,
+        14
+      ]
+    },
+    "off/dark/arrow/24/192/0": {
+      "rgba_sha256": "37f77d23df622d04e023d42cb4e5c1e84f486df8bd24d3a8ade6b3188133f878",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "off/dark/arrow/24/192/1": {
+      "rgba_sha256": "37f77d23df622d04e023d42cb4e5c1e84f486df8bd24d3a8ade6b3188133f878",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "off/dark/arrow/24/192/2": {
+      "rgba_sha256": "37f77d23df622d04e023d42cb4e5c1e84f486df8bd24d3a8ade6b3188133f878",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "off/dark/arrow/24/192/3": {
+      "rgba_sha256": "37f77d23df622d04e023d42cb4e5c1e84f486df8bd24d3a8ade6b3188133f878",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "off/dark/arrow/24/192/4": {
+      "rgba_sha256": "37f77d23df622d04e023d42cb4e5c1e84f486df8bd24d3a8ade6b3188133f878",
+      "hotspot": [
+        28,
+        28
+      ]
+    },
+    "off/dark/arrow/32/96/0": {
+      "rgba_sha256": "eaaad7107dcde5cc6e3f9f229c36ed765489306f11c17b31e404abba922935d6",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "off/dark/arrow/32/96/1": {
+      "rgba_sha256": "eaaad7107dcde5cc6e3f9f229c36ed765489306f11c17b31e404abba922935d6",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "off/dark/arrow/32/96/2": {
+      "rgba_sha256": "eaaad7107dcde5cc6e3f9f229c36ed765489306f11c17b31e404abba922935d6",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "off/dark/arrow/32/96/3": {
+      "rgba_sha256": "eaaad7107dcde5cc6e3f9f229c36ed765489306f11c17b31e404abba922935d6",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "off/dark/arrow/32/96/4": {
+      "rgba_sha256": "eaaad7107dcde5cc6e3f9f229c36ed765489306f11c17b31e404abba922935d6",
+      "hotspot": [
+        18,
+        18
+      ]
+    },
+    "off/dark/arrow/32/192/0": {
+      "rgba_sha256": "932de32d08514d6e6c772e3186302970b48eb73d0664b5cab0ba64e925881811",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "off/dark/arrow/32/192/1": {
+      "rgba_sha256": "932de32d08514d6e6c772e3186302970b48eb73d0664b5cab0ba64e925881811",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "off/dark/arrow/32/192/2": {
+      "rgba_sha256": "932de32d08514d6e6c772e3186302970b48eb73d0664b5cab0ba64e925881811",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "off/dark/arrow/32/192/3": {
+      "rgba_sha256": "932de32d08514d6e6c772e3186302970b48eb73d0664b5cab0ba64e925881811",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "off/dark/arrow/32/192/4": {
+      "rgba_sha256": "932de32d08514d6e6c772e3186302970b48eb73d0664b5cab0ba64e925881811",
+      "hotspot": [
+        36,
+        36
+      ]
+    },
+    "off/dark/arrow/48/96/0": {
+      "rgba_sha256": "39f382cc314231c391fe94b682c9470e7280169ca39c5b08c736bd022b7efe3c",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "off/dark/arrow/48/96/1": {
+      "rgba_sha256": "39f382cc314231c391fe94b682c9470e7280169ca39c5b08c736bd022b7efe3c",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "off/dark/arrow/48/96/2": {
+      "rgba_sha256": "39f382cc314231c391fe94b682c9470e7280169ca39c5b08c736bd022b7efe3c",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "off/dark/arrow/48/96/3": {
+      "rgba_sha256": "39f382cc314231c391fe94b682c9470e7280169ca39c5b08c736bd022b7efe3c",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "off/dark/arrow/48/96/4": {
+      "rgba_sha256": "39f382cc314231c391fe94b682c9470e7280169ca39c5b08c736bd022b7efe3c",
+      "hotspot": [
+        26,
+        26
+      ]
+    },
+    "off/dark/arrow/48/192/0": {
+      "rgba_sha256": "266aa3bb0d111fb2978e0d4b3e156495426a579f7e5fb75d490bb7b7beecc5b1",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "off/dark/arrow/48/192/1": {
+      "rgba_sha256": "266aa3bb0d111fb2978e0d4b3e156495426a579f7e5fb75d490bb7b7beecc5b1",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "off/dark/arrow/48/192/2": {
+      "rgba_sha256": "266aa3bb0d111fb2978e0d4b3e156495426a579f7e5fb75d490bb7b7beecc5b1",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "off/dark/arrow/48/192/3": {
+      "rgba_sha256": "266aa3bb0d111fb2978e0d4b3e156495426a579f7e5fb75d490bb7b7beecc5b1",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "off/dark/arrow/48/192/4": {
+      "rgba_sha256": "266aa3bb0d111fb2978e0d4b3e156495426a579f7e5fb75d490bb7b7beecc5b1",
+      "hotspot": [
+        53,
+        53
+      ]
+    },
+    "off/dark/arrow/64/96/0": {
+      "rgba_sha256": "7cbe2d412ef4035d6b8bc513788ed9c4b935abe4c87117a500b13f55ca6d0ff6",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "off/dark/arrow/64/96/1": {
+      "rgba_sha256": "7cbe2d412ef4035d6b8bc513788ed9c4b935abe4c87117a500b13f55ca6d0ff6",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "off/dark/arrow/64/96/2": {
+      "rgba_sha256": "7cbe2d412ef4035d6b8bc513788ed9c4b935abe4c87117a500b13f55ca6d0ff6",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "off/dark/arrow/64/96/3": {
+      "rgba_sha256": "7cbe2d412ef4035d6b8bc513788ed9c4b935abe4c87117a500b13f55ca6d0ff6",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "off/dark/arrow/64/96/4": {
+      "rgba_sha256": "7cbe2d412ef4035d6b8bc513788ed9c4b935abe4c87117a500b13f55ca6d0ff6",
+      "hotspot": [
+        34,
+        34
+      ]
+    },
+    "off/dark/arrow/64/192/0": {
+      "rgba_sha256": "1f9640311ab1a5e870e6df8416102905775369860662ec4e5645d88a7633754d",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "off/dark/arrow/64/192/1": {
+      "rgba_sha256": "1f9640311ab1a5e870e6df8416102905775369860662ec4e5645d88a7633754d",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "off/dark/arrow/64/192/2": {
+      "rgba_sha256": "1f9640311ab1a5e870e6df8416102905775369860662ec4e5645d88a7633754d",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "off/dark/arrow/64/192/3": {
+      "rgba_sha256": "1f9640311ab1a5e870e6df8416102905775369860662ec4e5645d88a7633754d",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "off/dark/arrow/64/192/4": {
+      "rgba_sha256": "1f9640311ab1a5e870e6df8416102905775369860662ec4e5645d88a7633754d",
+      "hotspot": [
+        68,
+        68
+      ]
+    },
+    "off/dark/hand/24/96/0": {
+      "rgba_sha256": "c5e81f56ee871409109bd1f0086428ac2aced2d6c5524e184f327311140e266d",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "off/dark/hand/24/96/1": {
+      "rgba_sha256": "c5e81f56ee871409109bd1f0086428ac2aced2d6c5524e184f327311140e266d",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "off/dark/hand/24/96/2": {
+      "rgba_sha256": "c5e81f56ee871409109bd1f0086428ac2aced2d6c5524e184f327311140e266d",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "off/dark/hand/24/96/3": {
+      "rgba_sha256": "c5e81f56ee871409109bd1f0086428ac2aced2d6c5524e184f327311140e266d",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "off/dark/hand/24/96/4": {
+      "rgba_sha256": "c5e81f56ee871409109bd1f0086428ac2aced2d6c5524e184f327311140e266d",
+      "hotspot": [
+        22,
+        14
+      ]
+    },
+    "off/dark/hand/24/192/0": {
+      "rgba_sha256": "3d9b78ec7c72321a82b307934cf00e30692bd4f0e5911a987b7de3ab1fa1c91c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "off/dark/hand/24/192/1": {
+      "rgba_sha256": "3d9b78ec7c72321a82b307934cf00e30692bd4f0e5911a987b7de3ab1fa1c91c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "off/dark/hand/24/192/2": {
+      "rgba_sha256": "3d9b78ec7c72321a82b307934cf00e30692bd4f0e5911a987b7de3ab1fa1c91c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "off/dark/hand/24/192/3": {
+      "rgba_sha256": "3d9b78ec7c72321a82b307934cf00e30692bd4f0e5911a987b7de3ab1fa1c91c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "off/dark/hand/24/192/4": {
+      "rgba_sha256": "3d9b78ec7c72321a82b307934cf00e30692bd4f0e5911a987b7de3ab1fa1c91c",
+      "hotspot": [
+        45,
+        28
+      ]
+    },
+    "off/dark/hand/32/96/0": {
+      "rgba_sha256": "c0c71e997671fb37b68e209d575e0b143577b8cbd76125d711cbcb38e5da47b3",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "off/dark/hand/32/96/1": {
+      "rgba_sha256": "c0c71e997671fb37b68e209d575e0b143577b8cbd76125d711cbcb38e5da47b3",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "off/dark/hand/32/96/2": {
+      "rgba_sha256": "c0c71e997671fb37b68e209d575e0b143577b8cbd76125d711cbcb38e5da47b3",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "off/dark/hand/32/96/3": {
+      "rgba_sha256": "c0c71e997671fb37b68e209d575e0b143577b8cbd76125d711cbcb38e5da47b3",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "off/dark/hand/32/96/4": {
+      "rgba_sha256": "c0c71e997671fb37b68e209d575e0b143577b8cbd76125d711cbcb38e5da47b3",
+      "hotspot": [
+        29,
+        18
+      ]
+    },
+    "off/dark/hand/32/192/0": {
+      "rgba_sha256": "26959ef3f9c6123a069f726f20e750fea444143461915f63be953305099870dd",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "off/dark/hand/32/192/1": {
+      "rgba_sha256": "26959ef3f9c6123a069f726f20e750fea444143461915f63be953305099870dd",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "off/dark/hand/32/192/2": {
+      "rgba_sha256": "26959ef3f9c6123a069f726f20e750fea444143461915f63be953305099870dd",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "off/dark/hand/32/192/3": {
+      "rgba_sha256": "26959ef3f9c6123a069f726f20e750fea444143461915f63be953305099870dd",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "off/dark/hand/32/192/4": {
+      "rgba_sha256": "26959ef3f9c6123a069f726f20e750fea444143461915f63be953305099870dd",
+      "hotspot": [
+        58,
+        36
+      ]
+    },
+    "off/dark/hand/48/96/0": {
+      "rgba_sha256": "5aa3a5cb47ea63d07d8569f1603ffba2334f62000fe92ff293a7f6b621a8dce0",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "off/dark/hand/48/96/1": {
+      "rgba_sha256": "5aa3a5cb47ea63d07d8569f1603ffba2334f62000fe92ff293a7f6b621a8dce0",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "off/dark/hand/48/96/2": {
+      "rgba_sha256": "5aa3a5cb47ea63d07d8569f1603ffba2334f62000fe92ff293a7f6b621a8dce0",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "off/dark/hand/48/96/3": {
+      "rgba_sha256": "5aa3a5cb47ea63d07d8569f1603ffba2334f62000fe92ff293a7f6b621a8dce0",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "off/dark/hand/48/96/4": {
+      "rgba_sha256": "5aa3a5cb47ea63d07d8569f1603ffba2334f62000fe92ff293a7f6b621a8dce0",
+      "hotspot": [
+        43,
+        26
+      ]
+    },
+    "off/dark/hand/48/192/0": {
+      "rgba_sha256": "d7b30c8ce106a55460e377317c8d20c1fec77b1431d531f63300cb1c4f359bb3",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "off/dark/hand/48/192/1": {
+      "rgba_sha256": "d7b30c8ce106a55460e377317c8d20c1fec77b1431d531f63300cb1c4f359bb3",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "off/dark/hand/48/192/2": {
+      "rgba_sha256": "d7b30c8ce106a55460e377317c8d20c1fec77b1431d531f63300cb1c4f359bb3",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "off/dark/hand/48/192/3": {
+      "rgba_sha256": "d7b30c8ce106a55460e377317c8d20c1fec77b1431d531f63300cb1c4f359bb3",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "off/dark/hand/48/192/4": {
+      "rgba_sha256": "d7b30c8ce106a55460e377317c8d20c1fec77b1431d531f63300cb1c4f359bb3",
+      "hotspot": [
+        86,
+        53
+      ]
+    },
+    "off/dark/hand/64/96/0": {
+      "rgba_sha256": "60cec8b7ba503fa528362f722c08a991ef94facbc209cf728f547b7df82d9300",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "off/dark/hand/64/96/1": {
+      "rgba_sha256": "60cec8b7ba503fa528362f722c08a991ef94facbc209cf728f547b7df82d9300",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "off/dark/hand/64/96/2": {
+      "rgba_sha256": "60cec8b7ba503fa528362f722c08a991ef94facbc209cf728f547b7df82d9300",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "off/dark/hand/64/96/3": {
+      "rgba_sha256": "60cec8b7ba503fa528362f722c08a991ef94facbc209cf728f547b7df82d9300",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "off/dark/hand/64/96/4": {
+      "rgba_sha256": "60cec8b7ba503fa528362f722c08a991ef94facbc209cf728f547b7df82d9300",
+      "hotspot": [
+        56,
+        34
+      ]
+    },
+    "off/dark/hand/64/192/0": {
+      "rgba_sha256": "673463dbd2ea4b3dbc89015940b7960bc76452fe11c0d1f14b7c597a67827d29",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "off/dark/hand/64/192/1": {
+      "rgba_sha256": "673463dbd2ea4b3dbc89015940b7960bc76452fe11c0d1f14b7c597a67827d29",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "off/dark/hand/64/192/2": {
+      "rgba_sha256": "673463dbd2ea4b3dbc89015940b7960bc76452fe11c0d1f14b7c597a67827d29",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "off/dark/hand/64/192/3": {
+      "rgba_sha256": "673463dbd2ea4b3dbc89015940b7960bc76452fe11c0d1f14b7c597a67827d29",
+      "hotspot": [
+        112,
+        68
+      ]
+    },
+    "off/dark/hand/64/192/4": {
+      "rgba_sha256": "673463dbd2ea4b3dbc89015940b7960bc76452fe11c0d1f14b7c597a67827d29",
+      "hotspot": [
+        112,
+        68
+      ]
+    }
+  }
+}

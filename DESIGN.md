@@ -1,6 +1,6 @@
 # Pointer UI design direction
 
-Status: B / Cursor family composition approved by the user on 2026-10-06: “B · 光标家族 可以，在此基础上继续更新迭代美感与设计”. Preserve B's topology and continue aesthetic refinement. No return to composition selection. UI redesign implementation has not begun; the loading-ring renderer and ANI resources were repaired following the user's separate artifact feedback.
+Status: DEV version 1.3.0-beta.2 uses the user-approved Material workspace as its desktop entry. Navigation, rounded content, the fixed Apply footer and original motion baseline are preserved. Sidebar opacity and native host-backdrop Gaussian blur are independent, with an opaque fallback. The latest controls use a light slider treatment and an explicit light/dark theme selector. See [release validation](docs/releases/1.3.0-beta.2.md) for actual evidence and remaining limits. The dual-workspace and earlier vertical candidates below are design history; publication is gated by the Windows release workflow.
 
 ## Visual world — Liquid Focus
 

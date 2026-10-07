@@ -18,7 +18,7 @@ QT_APP = QApplication.instance() or QApplication([])
 class RedesignTests(unittest.TestCase):
     def setUp(self):
         self.application = Mock()
-        self.application.settings.return_value = CursorSettings()
+        self.application.settings.return_value = CursorSettings(tray_enabled=False, auto_check_update=False)
         self.application.backend.snapshot.return_value = {'running': True, 'startup_enabled': False}
         self.window = MainWindow(self.application)
 
@@ -37,7 +37,7 @@ class RedesignTests(unittest.TestCase):
     def test_appearance_preset_selection_updates_draft_colors(self):
         page = self.window.pages[0]
         self.assertIsInstance(page, AppearancePage)
-        self.assertEqual(len(page.preset_buttons), 4)
+        self.assertEqual(len(page.preset_buttons), 8)
 
         # Test applying Aurora preset
         aurora_preset = next(p for p in PRESETS if p['id'] == 'aurora')
@@ -157,7 +157,7 @@ class RedesignTests(unittest.TestCase):
             dark_body='#FFFFFF',
             dark_outline='#000000'
         )
-        self.assertIn('2px solid #2cb6ad', classic_btn.styleSheet())
+        self.assertTrue(classic_btn.isChecked())
 
     def test_motion_sliders_disabled_and_styled_when_off(self):
         self.window.select_page(1)

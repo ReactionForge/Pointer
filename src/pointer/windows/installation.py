@@ -279,7 +279,7 @@ def install():
                 json.loads((DATA_ROOT/'settings.json').read_text(encoding='utf-8')).get('startup',False)}
 
 
-def apply_portable(settings):
+def apply_portable(settings, *, preserve_runtime=False):
     from pointer.cursor.settings import _write_json
     if not (INSTALL_ROOT/'PACKAGE.json').exists() or package_files(ROOT) != package_files(INSTALL_ROOT):
         install()
@@ -287,7 +287,10 @@ def apply_portable(settings):
     desired, report = DATA_ROOT/f'portable-{token}.json', DATA_ROOT/f'portable-{token}-report.json'
     _write_json(desired,settings.to_dict())
     try:
-        return _execute(INSTALL_ROOT/'Pointer.exe',['--apply','--settings-file',str(desired)],report)
+        arguments = ['--apply', '--settings-file', str(desired)]
+        if preserve_runtime:
+            arguments.append('--preserve-runtime')
+        return _execute(INSTALL_ROOT/'Pointer.exe', arguments, report)
     finally:
         desired.unlink(missing_ok=True)
         report.unlink(missing_ok=True)

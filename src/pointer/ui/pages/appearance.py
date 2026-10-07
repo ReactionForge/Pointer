@@ -5,6 +5,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QColor, QIcon, QPixmap, QPainter, QPen
 from ..theme import card, SettingsRow, HairlineDivider
+from ..input_controls import ChoiceComboBox, DragSlider
+
 
 CORE_PRESETS = [
     {
@@ -86,6 +88,24 @@ TRENDY_PRESETS = [
 
 PRESETS = CORE_PRESETS + TRENDY_PRESETS
 
+# Keep legacy preset data unchanged for imported/saved user configurations.
+WORKSPACE_PRESETS = [CORE_PRESETS[0],
+    {'id': 'slate', 'name': '雾蓝', 'light_body': '#526575', 'light_outline': '#ffffff',
+     'dark_body': '#bcc8d2', 'dark_outline': '#202124'},
+    {'id': 'stone', 'name': '暖灰', 'light_body': '#6a625a', 'light_outline': '#ffffff',
+     'dark_body': '#d8cfc3', 'dark_outline': '#202124'},
+    {'id': 'sage', 'name': '鼠尾草', 'light_body': '#4f695d', 'light_outline': '#ffffff',
+     'dark_body': '#bbcec2', 'dark_outline': '#202124'},
+    {'id': 'clay', 'name': '陶土', 'light_body': '#855b4d', 'light_outline': '#ffffff',
+     'dark_body': '#dfc2b4', 'dark_outline': '#202124'},
+    {'id': 'mauve', 'name': '灰紫', 'light_body': '#70617c', 'light_outline': '#ffffff',
+     'dark_body': '#cec2db', 'dark_outline': '#202124'},
+    {'id': 'ocean', 'name': '深海', 'light_body': '#365c70', 'light_outline': '#ffffff',
+     'dark_body': '#a9cbdc', 'dark_outline': '#202124'},
+    {'id': 'rose', 'name': '烟粉', 'light_body': '#805d68', 'light_outline': '#ffffff',
+     'dark_body': '#ddc2cc', 'dark_outline': '#202124'},
+]
+
 
 class AppearancePage(QWidget):
     """Grand cursor appearance workshop with live presets, styles, and custom dual-state palette."""
@@ -166,7 +186,7 @@ class AppearancePage(QWidget):
         frame, inner = card('形态、微光与参数精调', '4 款几何形态发生器，依据背景亮度实时动态自适应，兼具呼吸微光与高分缩放。')
 
         # Geometric Style
-        self.style = QComboBox()
+        self.style = ChoiceComboBox()
         self.style.setObjectName('styleCombo')
         self.style.setMinimumWidth(260)
         for label, val in [
@@ -182,7 +202,7 @@ class AppearancePage(QWidget):
         inner.addWidget(HairlineDivider())
 
         # Appearance Strategy
-        self.appearance = QComboBox()
+        self.appearance = ChoiceComboBox()
         self.appearance.setObjectName('appearanceCombo')
         self.appearance.setMinimumWidth(260)
         for text, value in [
@@ -219,7 +239,7 @@ class AppearancePage(QWidget):
         inner.addWidget(HairlineDivider())
 
         # Size
-        self.size = QComboBox()
+        self.size = ChoiceComboBox()
         self.size.setObjectName('sizeCombo')
         self.size.setMinimumWidth(260)
         for size in (24, 32, 40, 48, 64):

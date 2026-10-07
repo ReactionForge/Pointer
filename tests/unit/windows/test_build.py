@@ -7,6 +7,12 @@ from scripts import build_release
 
 
 class BuildTests(unittest.TestCase):
+    def test_output_root_cli_forwards_an_isolated_candidate_directory(self):
+        with patch.object(sys, 'argv', ['build_release', '--skip-installer', '--output-root', '.local/release-test']), \
+             patch.object(build_release, 'build_release', return_value={}) as builder:
+            build_release.main()
+        self.assertEqual(builder.call_args.args[3], Path('.local/release-test'))
+
     def test_background_runtime_hook_skips_qt_import_without_affecting_gui(self):
         hook=Path(__file__).resolve().parents[3]/'packaging/windows/headless_runtime.py'
         self.assertTrue(hook.exists(),'Headless runtime hook missing')

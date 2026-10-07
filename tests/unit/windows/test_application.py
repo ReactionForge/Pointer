@@ -44,6 +44,33 @@ class ApplicationTests(unittest.TestCase):
         self.assertTrue(self.app.profile_path.exists())
         self.backend.set_startup.assert_not_called()
 
+    def test_gui_apply_preserves_paused_runtime_and_original_backup(self):
+        self.backend.snapshot.return_value = {'running': False, 'startup_enabled': True}
+        backup = self.app.store.root / 'original-cursor-settings.json'
+        backup.write_bytes(b'original backup bytes')
+        desired = replace(self.old, light_outline='#123456')
+        result = self.app.apply(desired, preserve_runtime=True)
+        self.assertFalse(result['running'])
+        self.assertEqual(self.app.store.load(), desired)
+        self.assertEqual(backup.read_bytes(), b'original backup bytes')
+        self.backend.start.assert_not_called()
+        self.backend.set_startup.assert_not_called()
+
+    def test_gui_apply_keeps_a_running_service_running(self):
+        result = self.app.apply(replace(self.old, light_outline='#123456'), preserve_runtime=True)
+        self.assertTrue(result['running'])
+        self.backend.start.assert_called_once()
+
+    def test_paused_apply_failure_rolls_back_without_starting_service(self):
+        self.backend.snapshot.return_value = {'running': False, 'startup_enabled': True}
+        self.backend.apply.side_effect = RuntimeError('not ready')
+        before = self.app.store.path.read_bytes()
+        with self.assertRaisesRegex(RuntimeError, 'not ready'):
+            self.app.apply(replace(self.old, light_outline='#123456'), preserve_runtime=True)
+        self.assertEqual(self.app.store.path.read_bytes(), before)
+        self.backend.start.assert_not_called()
+        self.backend.restore.assert_called_once_with(self.backend.snapshot.return_value)
+
     def test_pause_does_not_change_startup_or_preferences(self):
         before = self.app.store.path.read_bytes()
         self.app.pause()

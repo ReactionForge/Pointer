@@ -8,7 +8,7 @@ import uuid
 
 MAX_JSON_BYTES = 65536
 SIZES = (24, 32, 40, 48, 64)
-STYLES = ('sequoia', 'precision', 'falcon', 'pixel')
+STYLES = ('sequoia', 'quill', 'facet', 'lance', 'droplet', 'rectilinear', 'outline', 'precision', 'falcon', 'pixel')
 MOTIONS = ('tilt', 'shrink', 'spring', 'pulse', 'trail', 'off')
 
 
@@ -161,4 +161,3 @@ class SettingsStore:
             raise ValueError('主题包缺少配置数据')
         metadata = raw.get('metadata') if isinstance(raw.get('metadata'), dict) else {}
         return CursorSettings.from_dict(settings_dict), metadata
-

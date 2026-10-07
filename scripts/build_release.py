@@ -33,12 +33,18 @@ def parse_version(version):
     return numeric, version
 
 
-def build_release(version, compiler=None, skip_installer=False):
+def build_release(version, compiler=None, skip_installer=False, output_root=None):
     version_tuple, version = parse_version(version)
     if version != (ROOT / "VERSION").read_text().strip():
         raise ValueError("Update VERSION before building a different version")
-    version_file = ROOT / "build" / "version-info.txt"
-    version_file.parent.mkdir(exist_ok=True)
+    destination = ROOT if output_root is None else Path(output_root).resolve()
+    if not destination.is_relative_to(ROOT.resolve()):
+        raise ValueError('Build outputs must remain inside the Pointer project')
+    if output_root is not None and not skip_installer:
+        raise ValueError('Isolated candidate builds must skip the installer')
+    build_dir, dist_dir = destination / 'build', destination / 'dist'
+    version_file = build_dir / "version-info.txt"
+    version_file.parent.mkdir(parents=True, exist_ok=True)
     version_file.write_text(f"""VSVersionInfo(
   ffi=FixedFileInfo(filevers={version_tuple!r}, prodvers={version_tuple!r},
     mask=0x3f, flags=0, OS=0x40004, fileType=0x1, subtype=0, date=(0, 0)),
@@ -58,11 +64,17 @@ def build_release(version, compiler=None, skip_installer=False):
                     '--exclude-module','PySide6.QtQml','--exclude-module','PySide6.QtQuick',
                     '--exclude-module','PySide6.QtWebEngineCore','--exclude-module','PySide6.QtTest',
                     "--version-file", str(version_file),
-                    "--name", "Pointer", "--distpath", str(ROOT / "dist"),
-                    "--workpath", str(ROOT / "build"), "--specpath", str(ROOT / "build"),
+                    "--name", "Pointer", "--distpath", str(dist_dir),
+                    "--workpath", str(build_dir), "--specpath", str(build_dir),
                     "--paths", str(ROOT / "src"),
                     str(ROOT / "packaging" / "windows" / "entrypoint.py")], cwd=ROOT, check=True,env=clean_build_environment())
-    output = ROOT / "dist" / "Pointer"
+    output = dist_dir / "Pointer"
+    # Compile on the builder; downloaded clients never require csc or sources.
+    from pointer.windows.composition_host import prepare_helper, BUNDLED_HELPER
+    helper = prepare_helper(build_dir / 'composition-cache')
+    helper_target = output / BUNDLED_HELPER
+    helper_target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(helper, helper_target)
     # Qt Widgets uses the Windows platform and native style, not browser/QML plugins.
     plugins = output/'_internal/PySide6/plugins'
     if plugins.exists():
@@ -105,7 +117,7 @@ def build_release(version, compiler=None, skip_installer=False):
     files = {path.relative_to(output).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
              for path in sorted(output.rglob("*")) if path.is_file() and path.name != "PACKAGE.json"}
     (output / "PACKAGE.json").write_text(json.dumps({"version": version, "files": files}, indent=2), encoding="utf-8")
-    archive = ROOT / "dist" / f"Pointer-v{version}-windows-x64.zip"
+    archive = dist_dir / f"Pointer-v{version}-windows-x64.zip"
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as package:
         for path in sorted(output.rglob("*")):
             if path.is_file():
@@ -130,8 +142,9 @@ def main():
     parser.add_argument('--version',default=(ROOT/'VERSION').read_text().strip())
     parser.add_argument('--compiler',type=Path)
     parser.add_argument('--skip-installer',action='store_true',help='Developer ZIP build only')
+    parser.add_argument('--output-root', type=Path, help='Isolated project output directory; requires --skip-installer')
     args=parser.parse_args()
-    print(json.dumps(build_release(args.version,args.compiler,args.skip_installer)))
+    print(json.dumps(build_release(args.version,args.compiler,args.skip_installer,args.output_root)))
 
 
 if __name__ == "__main__":

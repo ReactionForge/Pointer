@@ -33,14 +33,14 @@ class Application:
             settings = CursorSettings.from_dict(settings.to_dict())
         return prepare_resources(settings, self.data_root / 'cursor-cache')
 
-    def apply(self, settings):
+    def apply(self, settings, *, preserve_runtime=False):
         settings = CursorSettings.from_dict(settings.to_dict())
         # A supplied draft cannot silently replace a damaged persisted file.
         self.settings()
         from .paths import FROZEN, ROOT
         if FROZEN and ROOT.resolve() != self.install_root.resolve():
             from .windows.installation import apply_portable
-            return apply_portable(settings)
+            return apply_portable(settings, preserve_runtime=preserve_runtime)
         with self._lock:
             bundle = prepare_resources(settings, self.data_root / 'cursor-cache')
             before = self.backend.snapshot()
@@ -59,8 +59,9 @@ class Application:
                 self.backend.apply(bundle, settings.appearance)
                 if self.backend.startup_enabled() != settings.startup:
                     self.backend.set_startup(settings.startup)
-                state = self.backend.start()
-                if not state.get('running'):
+                should_start = not preserve_runtime or bool(before.get('running'))
+                state = self.backend.start() if should_start else {**before, 'running': False}
+                if should_start and not state.get('running'):
                     raise RuntimeError('后台服务未就绪')
                 return {**state, 'startup_enabled': settings.startup,
                         'settings': settings.to_dict(), 'last_error': None}

@@ -5,6 +5,8 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPus
 from pointer.cursor.resources import RenderRequest, render_cursor
 from pointer.cursor.motion import ClickMotion
 from .theme import card
+from .input_controls import ChoiceComboBox, DragSlider
+
 
 
 class PreviewSurface(QWidget):
@@ -171,7 +173,7 @@ class PreviewPanel(QWidget):
         role_lbl.setStyleSheet('color: #86868b; font-weight: 500; font-size: 12px;')
         role_box.addWidget(role_lbl)
 
-        self.role = QComboBox()
+        self.role = ChoiceComboBox()
         for label, role in [
             ('标准箭头 (Arrow)', 'arrow'),
             ('链接手型 (Hand)', 'hand'),
