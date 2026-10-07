@@ -1,6 +1,6 @@
 # Pointer UI design direction
 
-Status: DEV version 1.3.0-beta.2 uses the user-approved Material workspace as its desktop entry. Navigation, rounded content, the fixed Apply footer and original motion baseline are preserved. Sidebar opacity and native host-backdrop Gaussian blur are independent, with an opaque fallback. The latest controls use a light slider treatment and an explicit light/dark theme selector. See [release validation](docs/releases/1.3.0-beta.2.md) for actual evidence and remaining limits. The dual-workspace and earlier vertical candidates below are design history; publication is gated by the Windows release workflow.
+Status: DEV version 1.3.0-beta.3 uses the user-approved Material workspace as its desktop entry. Navigation, rounded content, the fixed Apply footer and original motion baseline are preserved. Sidebar opacity and native host-backdrop Gaussian blur are independent, with an opaque fallback. The latest controls use a light slider treatment and an explicit light/dark theme selector. See [release validation](docs/releases/1.3.0-beta.3.md) for actual evidence and remaining limits. The dual-workspace and earlier vertical candidates below are design history; publication is gated by the Windows release workflow.
 
 ## Visual world — Liquid Focus
 

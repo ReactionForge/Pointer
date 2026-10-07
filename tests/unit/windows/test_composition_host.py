@@ -10,7 +10,7 @@ os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 import unittest
 from unittest.mock import patch
 from PySide6.QtCore import QObject, QProcess, Signal
-from PySide6.QtTest import QTest
+from PySide6.QtTest import QTest, QSignalSpy
 from PySide6.QtWidgets import QApplication
 
 
@@ -215,14 +215,16 @@ class CompositionHostTests(unittest.TestCase):
     def test_close_is_idempotent_and_only_kills_its_own_process_after_grace_period(self):
         self.host.start(12345)
         self.ready()
+        finished = QSignalSpy(self.process.finished)
         self.host.close()
         self.host.close()
         self.assertFalse(self.host.ready)
         self.assertEqual(self.process.messages(), [dict(command='quit')])
         self.assertTrue(self.process.eof_sent)
         self.assertEqual(self.process.kills, 0)
-        QTest.qWait(40)
+        self.assertTrue(finished.wait(1000), 'Owned process never finished after the grace period')
         self.assertEqual(self.process.kills, 1)
+        self.assertEqual(finished.count(), 1)
         self.assertEqual(self.failures, [])
 
     def test_shutdown_waits_for_graceful_exit_before_returning(self):
@@ -306,18 +308,26 @@ class CompositionHostTests(unittest.TestCase):
 
     def test_handshake_timeout_fails_asynchronously(self):
         self.host._handshake_timer.setInterval(5)
+        failed = QSignalSpy(self.host.failed)
         self.host.start(12345)
-        QTest.qWait(20)
+        self.assertEqual(self.failures, [])
+        self.assertTrue(failed.wait(1000), 'Handshake timeout signal was not delivered')
         self.assertFalse(self.host.ready)
-        self.assertTrue(self.failures)
+        self.assertEqual(failed.count(), 1)
+        self.assertIn('ready timeout', self.host.last_error)
+        self.assertEqual(self.process.messages(), [dict(command='quit')])
+        self.assertTrue(self.process.eof_sent)
 
     def test_missing_apply_ack_fails_asynchronously(self):
         self.host._apply_timer.setInterval(5)
+        failed = QSignalSpy(self.host.failed)
         self.host.start(12345)
         self.ready()
         self.host.update(self.state)
-        QTest.qWait(20)
+        self.assertEqual(self.failures, [])
+        self.assertTrue(failed.wait(1000), 'Apply timeout signal was not delivered')
         self.assertFalse(self.host.ready)
+        self.assertEqual(failed.count(), 1)
         self.assertIn('apply timeout', self.host.last_error)
 
     def test_prepare_cache_reuses_the_binary_until_helper_sources_change(self):
