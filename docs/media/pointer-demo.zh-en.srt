@@ -1,0 +1,29 @@
+1
+00:00:00,000 --> 00:00:06,000
+让每一次指向，都清晰一点。
+A clearer cursor. A more personal desktop.
+
+2
+00:00:06,000 --> 00:00:14,000
+浅色、深色，都看得清。
+Adaptive contrast for light and dark backgrounds.
+
+3
+00:00:14,000 --> 00:00:24,000
+你的桌面，你的光标。
+Preview shape, color and size before applying.
+
+4
+00:00:24,000 --> 00:00:32,000
+点击，也有轻巧的回应。
+Press, hold, release. Adjustable click motion.
+
+5
+00:00:32,000 --> 00:00:42,000
+先预览，再应用。随时回到原样。
+Local settings. Original cursor backup. Pause and restore.
+
+6
+00:00:42,000 --> 00:00:50,000
+从一个小细节，重新喜欢你的桌面。
+Try Pointer for Windows 10 / 11 x64.

@@ -1,0 +1,34 @@
+name: 问题反馈 / Bug report
+description: 提交可复现、已脱敏的 Windows 问题
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        安全漏洞请按 SECURITY.md 私密报告。请勿上传完整用户数据、原光标备份、私人路径或凭据。
+  - type: input
+    id: version
+    attributes:
+      label: Pointer 版本与下载来源
+      placeholder: 1.3.0-beta.6 / GitHub EXE 或 ZIP
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Windows 与显示环境
+      description: Windows 版本、屏幕数量与缩放比例；不要填写机器用户名。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现步骤、预期与实际结果
+      description: 请说明是否只出现在软件自绘光标中，以及是否已点击应用更改。
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 脱敏截图或诊断片段（可选）
+      description: 先检查附件，移除用户名、私人路径、通知与无关机器信息。
