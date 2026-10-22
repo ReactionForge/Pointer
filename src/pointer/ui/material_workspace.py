@@ -3,14 +3,16 @@ import sys
 from dataclasses import replace
 from .family_workspace import cursor_pixmap, DPI_VARIANTS
 from pointer.cursor.resources import canvas_size
-from PySide6.QtCore import Qt, QEvent, QPoint, QPointF, QRect, QRectF, QSize, QTimer
-from PySide6.QtGui import QShortcut, QKeySequence, QPainter, QColor, QPen
+from PySide6.QtCore import Qt, QEvent, QPoint, QPointF, QRect, QRectF, QSize, QTimer, Slot
+from PySide6.QtGui import QShortcut, QKeySequence, QPainter, QColor, QPen, QLinearGradient, QRadialGradient
 from PySide6.QtWidgets import QWidget, QFrame, QLabel, QPushButton, QAbstractButton, QAbstractSlider, QAbstractSpinBox, QComboBox, QLineEdit, QTextEdit, QPlainTextEdit, QMenu, QVBoxLayout, QHBoxLayout, QSizePolicy
 from .dual_workspace import DualWindow, ObservationSurface
 from .approved_workspace import approved_colors
 from .sidebar_settings import SidebarAppearance, SidebarControls
 from .confirmations import ask_confirmation
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox, QApplication, QProgressBar
+from .operation_feedback import FeedbackLabel, FeedbackDetails
+from .theme import scrollbar_style
 
 
 def transparency_policy():
@@ -97,6 +99,18 @@ class RoundedMaterialShell(QWidget):
         self.owner = owner
         self.setObjectName('materialWrapper')
 
+    @property
+    def is_fallback(self):
+        owner = self.owner
+        if not getattr(owner, 'sidebar_transparent', False) or not getattr(owner, 'material_active', False):
+            return True
+        if getattr(owner, '_composition_error', None):
+            return True
+        policy = getattr(owner, 'material_policy', None) or {}
+        if not policy.get('supported', True) or policy.get('high_contrast', False):
+            return True
+        return False
+
     def paintEvent(self, event):
         owner = self.owner
         if not owner._material_ready:
@@ -106,18 +120,85 @@ class RoundedMaterialShell(QWidget):
         painter.setPen(Qt.PenStyle.NoPen)
         radius = 0 if owner.isMaximized() else 20
         bounds = QRectF(self.rect())
-        rail = owner.material_sidebar.width()
-        alpha = (owner.sidebar_appearance.dark_alpha if owner.ui_dark else owner.sidebar_appearance.light_alpha) if owner.sidebar_transparent and owner.material_active else 255
-        tint = QColor('#242a34' if owner.ui_dark else '#e3e8f0')
-        tint.setAlpha(alpha)
-        painter.save()
-        painter.setClipRect(QRectF(0, 0, rail, self.height()))
-        painter.setBrush(tint)
-        painter.drawRoundedRect(bounds, radius, radius)
-        painter.restore()
-        painter.setClipRect(QRectF(rail, 0, self.width()-rail, self.height()))
-        painter.setBrush(QColor(approved_colors(owner.ui_dark)['canvas']))
-        painter.drawRoundedRect(bounds, radius, radius)
+        full_window = getattr(owner, 'full_window_backdrop', False)
+        fallback = self.is_fallback
+
+        if full_window:
+            if fallback:
+                # 100% opaque fluid gradient fallback (#141221 -> #161a29 -> #0e131f)
+                gradient = QLinearGradient(0, 0, self.width(), self.height())
+                if owner.ui_dark:
+                    gradient.setColorAt(0.0, QColor('#141221'))
+                    gradient.setColorAt(0.5, QColor('#161a29'))
+                    gradient.setColorAt(1.0, QColor('#0e131f'))
+                else:
+                    gradient.setColorAt(0.0, QColor('#edf1f7'))
+                    gradient.setColorAt(0.5, QColor('#e2e7f2'))
+                    gradient.setColorAt(1.0, QColor('#d8dfed'))
+                painter.setBrush(gradient)
+                painter.drawRoundedRect(bounds, radius, radius)
+            else:
+                # Translucent dark wash base with diffuse violet/cyan glows when active
+                if owner.sidebar_appearance is not None:
+                    alpha = owner.sidebar_appearance.dark_alpha if owner.ui_dark else owner.sidebar_appearance.light_alpha
+                else:
+                    alpha = 184 if owner.ui_dark else 208
+                if owner.ui_dark:
+                    wash = QColor(13, 11, 26, alpha)
+                    painter.setBrush(wash)
+                    painter.drawRoundedRect(bounds, radius, radius)
+
+                    # Diffuse violet glow (top-left)
+                    violet_radius = max(self.width(), self.height()) * 0.75
+                    violet_glow = QRadialGradient(0, 0, violet_radius)
+                    violet_glow.setColorAt(0.0, QColor(139, 92, 246, 55))
+                    violet_glow.setColorAt(0.5, QColor(124, 58, 237, 22))
+                    violet_glow.setColorAt(1.0, QColor(124, 58, 237, 0))
+                    painter.setBrush(violet_glow)
+                    painter.drawRoundedRect(bounds, radius, radius)
+
+                    # Diffuse cyan glow (bottom-right)
+                    cyan_radius = max(self.width(), self.height()) * 0.75
+                    cyan_glow = QRadialGradient(self.width(), self.height(), cyan_radius)
+                    cyan_glow.setColorAt(0.0, QColor(6, 182, 212, 45))
+                    cyan_glow.setColorAt(0.5, QColor(6, 182, 212, 18))
+                    cyan_glow.setColorAt(1.0, QColor(6, 182, 212, 0))
+                    painter.setBrush(cyan_glow)
+                    painter.drawRoundedRect(bounds, radius, radius)
+                else:
+                    wash = QColor(237, 241, 247, alpha)
+                    painter.setBrush(wash)
+                    painter.drawRoundedRect(bounds, radius, radius)
+
+                    glow_radius = max(self.width(), self.height()) * 0.75
+                    top_glow = QRadialGradient(0, 0, glow_radius)
+                    top_glow.setColorAt(0.0, QColor(167, 139, 250, 35))
+                    top_glow.setColorAt(1.0, QColor(167, 139, 250, 0))
+                    painter.setBrush(top_glow)
+                    painter.drawRoundedRect(bounds, radius, radius)
+
+                    bottom_glow = QRadialGradient(self.width(), self.height(), glow_radius)
+                    bottom_glow.setColorAt(0.0, QColor(56, 189, 248, 25))
+                    bottom_glow.setColorAt(1.0, QColor(56, 189, 248, 0))
+                    painter.setBrush(bottom_glow)
+                    painter.drawRoundedRect(bounds, radius, radius)
+        else:
+            # Partition mode: sidebar rail + opaque canvas
+            rail = owner.material_sidebar.width()
+            if owner.sidebar_appearance is not None:
+                alpha = (owner.sidebar_appearance.dark_alpha if owner.ui_dark else owner.sidebar_appearance.light_alpha) if not fallback else 255
+            else:
+                alpha = (184 if owner.ui_dark else 208) if not fallback else 255
+            tint = QColor('#242a34' if owner.ui_dark else '#e3e8f0')
+            tint.setAlpha(alpha)
+            painter.save()
+            painter.setClipRect(QRectF(0, 0, rail, self.height()))
+            painter.setBrush(tint)
+            painter.drawRoundedRect(bounds, radius, radius)
+            painter.restore()
+            painter.setClipRect(QRectF(rail, 0, self.width()-rail, self.height()))
+            painter.setBrush(QColor(approved_colors(owner.ui_dark)['canvas']))
+            painter.drawRoundedRect(bounds, radius, radius)
         painter.end()
 
 
@@ -212,7 +293,7 @@ class MaterialTitleBar(QFrame):
 
     def eventFilter(self, watched, event):
         if watched is self.controls.parentWidget() and event.type() in (QEvent.Type.Resize, QEvent.Type.LayoutRequest):
-            QTimer.singleShot(0, self._position_controls)
+            QTimer.singleShot(0, self, self._position_controls)
         return super().eventFilter(watched, event)
 
     def resizeEvent(self, event):
@@ -240,8 +321,17 @@ class MaterialTitleBar(QFrame):
 
 class MaterialWindow(DualWindow):
     def __init__(self, backend, policy=None, sidebar_store=None, composition_helper=None,
-                 composition_error=None, backdrop_host=None):
+                 composition_error=None, backdrop_host=None, full_window_backdrop=False):
         self._material_ready = False
+        self._feedback_retry = None
+        self._feedback_retry_text = ''
+        self._feedback_dialog = None
+        self._cursor_apply_requested = False
+        self._operation_cursor_apply = False
+        self._operation_retry = None
+        self._failure_text = ''
+        self._combined_apply_saved = False
+        self.full_window_backdrop = bool(full_window_backdrop)
         self._composition_helper = composition_helper
         self._composition_error = composition_error
         self._backdrop_host = backdrop_host
@@ -308,6 +398,23 @@ class MaterialWindow(DualWindow):
             for button in combo.choice_buttons: button.setMinimumHeight(38)
         for field in self.pages[0].color_fields.values(): field.setMinimumHeight(34)
         self._build_material_footer()
+        self.pages[2].navigate_requested.connect(self._navigate_test_context)
+        self.page_shortcuts = []
+        for index, button in enumerate(self.navigation):
+            shortcut = QShortcut(QKeySequence(f'Ctrl+{index + 1}'), self)
+            shortcut.setContext(Qt.ShortcutContext.WindowShortcut)
+            shortcut.setAutoRepeat(False)
+            shortcut.activated.connect(lambda index=index: self._activate_page_shortcut(index))
+            self.page_shortcuts.append(shortcut)
+            button.setToolTip(f'{button.text()} · Ctrl+{index + 1}')
+        self.primary_shortcuts = []
+        for sequence in ('Ctrl+Return', 'Ctrl+Enter'):
+            shortcut = QShortcut(QKeySequence(sequence), self)
+            shortcut.setContext(Qt.ShortcutContext.WindowShortcut)
+            shortcut.setAutoRepeat(False)
+            shortcut.activated.connect(self._activate_primary_shortcut)
+            self.primary_shortcuts.append(shortcut)
+        self.apply_button.setToolTip('执行当前主操作 · Ctrl+Enter')
         self.system_menu = QMenu(self)
         for text, action in [('还原',self.showNormal),('移动',lambda:self.begin_keyboard_operation('move')),('调整大小',lambda:self.begin_keyboard_operation('resize')),('最小化',self.showMinimized),('最大化',self.showMaximized),('关闭',self.close)]:
             self.system_menu.addAction(text, action)
@@ -367,6 +474,46 @@ class MaterialWindow(DualWindow):
         self._composition_error = reason
         self._backdrop_ready_changed(False)
 
+    def set_full_window_backdrop(self, enabled=True):
+        self.full_window_backdrop = bool(enabled)
+        if hasattr(self, 'material_shell') and self.material_shell is not None:
+            self.material_shell.update()
+        self._sync_sidebar_backdrop()
+
+    def _backdrop_native_rect(self, full_window=None):
+        """Map client area to physical desktop coordinates under all DPI scalings."""
+        use_full = self.full_window_backdrop if full_window is None else bool(full_window)
+        if not use_full:
+            return self._sidebar_native_rect()
+        from PySide6.QtWidgets import QApplication
+        scale = 1.0
+        origin_x = origin_y = 0
+        phys_width = max(1, self.width())
+        phys_height = max(1, self.height())
+        if sys.platform == 'win32' and QApplication.platformName() == 'windows':
+            import ctypes
+            from ctypes import wintypes
+            user = ctypes.WinDLL('user32', use_last_error=True)
+            user.GetClientRect.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.RECT)]
+            user.GetClientRect.restype = wintypes.BOOL
+            user.ClientToScreen.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.POINT)]
+            user.ClientToScreen.restype = wintypes.BOOL
+            rect, origin = wintypes.RECT(), wintypes.POINT()
+            hwnd = int(self.winId())
+            if not user.GetClientRect(hwnd, ctypes.byref(rect)) or not user.ClientToScreen(hwnd, ctypes.byref(origin)):
+                raise OSError(ctypes.get_last_error(), 'Cannot locate the Pointer client window')
+            scale = (rect.right - rect.left) / max(1, self.width())
+            origin_x, origin_y = origin.x, origin.y
+            phys_width = max(1, rect.right - rect.left)
+            phys_height = max(1, rect.bottom - rect.top)
+        else:
+            phys_width = max(1, round(self.width() * scale))
+            phys_height = max(1, round(self.height() * scale))
+        return dict(x=origin_x, y=origin_y,
+                    width=phys_width,
+                    height=phys_height,
+                    radius=0 if self.isMaximized() else round(20 * scale))
+
     def _sidebar_native_rect(self):
         from PySide6.QtWidgets import QApplication
         point = self.material_sidebar.mapTo(self, QPoint())
@@ -397,7 +544,8 @@ class MaterialWindow(DualWindow):
         if not self._material_ready or host is None or self._backdrop_closing or self._composition_error:
             return
         try:
-            state = dict(self._sidebar_native_rect(), sigma=self.sidebar_appearance.blur,
+            state = dict(self._backdrop_native_rect(), sigma=self.sidebar_appearance.blur,
+                         mode='full_window' if self.full_window_backdrop else 'sidebar',
                          visible=bool(self.blur_available and self.sidebar_transparent and self.material_active
                                       and self.isVisible() and not self.isMinimized() and self.sidebar_appearance.blur > 0))
         except OSError as error:
@@ -407,6 +555,9 @@ class MaterialWindow(DualWindow):
         if state != self._last_backdrop_state:
             self._last_backdrop_state = state
             host.update(state)
+
+    def _sync_backdrop(self):
+        self._sync_sidebar_backdrop()
 
     def _close_sidebar_backdrop(self):
         if not self._backdrop_closing:
@@ -433,11 +584,29 @@ class MaterialWindow(DualWindow):
         notes.setContentsMargins(0, 0, 0, 0)
         notes.setSpacing(2)
         self.draft_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-        self.feedback.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-        self.feedback.setWordWrap(False)
+        previous_feedback = self.feedback
+        self.feedback = FeedbackLabel(previous_feedback.text(), self)
+        previous_feedback.hide()
+        previous_feedback.deleteLater()
         notes.addWidget(self.draft_label)
         notes.addWidget(self.feedback)
         line.addWidget(summary, 1, Qt.AlignmentFlag.AlignVCenter)
+        self.feedback_progress = QProgressBar()
+        self.feedback_progress.setObjectName('materialOperationProgress')
+        self.feedback_progress.setRange(0, 0)
+        self.feedback_progress.setTextVisible(False)
+        self.feedback_progress.setFixedSize(40, 4)
+        self.feedback_progress.setAccessibleName('操作正在处理')
+        self.feedback_progress.hide()
+        line.addWidget(self.feedback_progress)
+        self.feedback_details = QPushButton('查看详情')
+        self.feedback_details.setObjectName('materialFeedbackDetails')
+        self.feedback_details.setFixedSize(80, 38)
+        self.feedback_details.setAccessibleName('查看完整操作说明、复制或重试')
+        self.feedback_details.clicked.connect(self.show_feedback_details)
+        self.feedback_details.hide()
+        line.addWidget(self.feedback_details)
+        self.feedback.text_changed.connect(self._sync_feedback_controls)
         self.discard.setText('取消')
         self.discard.setObjectName('materialCancel')
         self.discard.setAccessibleName('取消未应用的光标修改')
@@ -446,20 +615,211 @@ class MaterialWindow(DualWindow):
         line.addWidget(self.discard)
         line.addWidget(self.apply_button)
 
+    def _sync_feedback_controls(self):
+        if not hasattr(self, 'feedback_details'):
+            return
+        previous = getattr(self, '_failure_text', '')
+        if previous and self.feedback.text() not in (previous, '') and not self.feedback.text().startswith('后台错误：'):
+            self._failure_text = ''
+            self._feedback_retry = None
+            self._operation_retry = None
+        self.feedback_details.setVisible(bool(self.feedback.text()) and
+                                         (bool(self.feedback.property('error')) or self.feedback.is_elided()))
+        self.feedback_progress.setVisible(self.busy)
+
+    def _set_operation_feedback(self, text, *, error=False, retry=None, retry_text='重试'):
+        self._failure_text = text if error else ''
+        self._feedback_retry = retry
+        self._feedback_retry_text = retry_text
+        self.feedback.setProperty('error', error)
+        self.feedback.style().unpolish(self.feedback)
+        self.feedback.style().polish(self.feedback)
+        self.feedback.setText(text)
+        self._sync_feedback_controls()
+
+    def show_feedback_details(self):
+        if self._feedback_dialog is not None and self._feedback_dialog.isVisible():
+            self._feedback_dialog.raise_()
+            return
+        retry = self._feedback_retry if not self.busy else None
+        dialog = FeedbackDetails(self, self.feedback.text(), approved_colors(self.ui_dark),
+                                 self._feedback_retry_text if retry else '')
+        self._feedback_dialog = dialog
+        dialog.retry_action = retry
+        if retry is not None:
+            dialog.retry_requested.connect(self._retry_feedback)
+        dialog.finished.connect(self._close_feedback_details)
+        dialog.open()
+
+    @Slot(int)
+    def _close_feedback_details(self, result):
+        dialog = self.sender()
+        if self._feedback_dialog is dialog:
+            self._feedback_dialog = None
+        dialog.retry_action = None
+        dialog.deleteLater()
+
+    @Slot()
+    def _retry_feedback(self):
+        retry = self.sender().retry_action
+        if retry is not None and not self.busy and retry is self._feedback_retry:
+            self._commit_numeric_edit()
+            retry()
+
+    def _commit_numeric_edit(self):
+        widget = QApplication.focusWidget()
+        if widget is None or widget.window() is not self:
+            return
+        editor = widget
+        while editor is not None and not isinstance(editor, QAbstractSpinBox):
+            editor = editor.parentWidget()
+        if editor is not None:
+            editor.interpretText()
+            editor.clearFocus()
+
+    def _shortcut_allowed(self):
+        return bool(self._material_ready and not self.busy and self.isActiveWindow()
+                    and QApplication.activeModalWidget() is None
+                    and QApplication.activePopupWidget() is None)
+
+    def _activate_page_shortcut(self, index):
+        if self._shortcut_allowed():
+            self._commit_numeric_edit()
+            self.select_page(index)
+
+    def _activate_primary_shortcut(self):
+        if self._shortcut_allowed():
+            self._commit_numeric_edit()
+            self._sync_material_actions()
+            if self.apply_button.isEnabled():
+                self.apply_draft()
+
+    def _navigate_test_context(self, index):
+        if self.busy:
+            return
+        self.select_page(index)
+        if index == 3:
+            button = self.pages[3].pause_btn
+            self.stack.widget(3).ensureWidgetVisible(button, 0, 24)
+            button.setFocus(Qt.FocusReason.OtherFocusReason)
+
+    def _runtime_status_updated(self):
+        if not self._material_ready:
+            return
+        self.pages[2].set_context(getattr(self, '_last_runtime_state', None),
+                                 draft_dirty=self._draft != self.applied, busy=self.busy,
+                                 error=getattr(self, '_last_runtime_error', ''))
+        failure = getattr(self, '_failure_text', '')
+        if failure and self.feedback.text().startswith('后台错误：'):
+            self.feedback.setText(failure)
+        self._sync_feedback_controls()
+
+    def run_operation(self, operation, success, replace_draft=False):
+        if self.busy:
+            return
+        cursor_apply = self._cursor_apply_requested
+        self._operation_retry = self.apply_draft if cursor_apply else lambda: self.run_operation(operation, success, replace_draft)
+        self._operation_cursor_apply = cursor_apply
+        self._set_operation_feedback('正在处理，请稍候…')
+        super().run_operation(operation, success, replace_draft)
+        if cursor_apply and self._combined_apply_saved:
+            self.feedback.setText('外观已保存；正在应用光标，请稍候…')
+        self._runtime_status_updated()
+
+    @Slot(object)
+    def operation_done(self, result):
+        if self._combined_apply_saved and self._operation_cursor_apply:
+            self._operation_message = '外观已保存；光标配置已应用，效果已启动'
+        self._combined_apply_saved = False
+        self._failure_text = ''
+        self._feedback_retry = None
+        self._operation_retry = None
+        super().operation_done(result)
+        self._sync_feedback_controls()
+
+    @Slot(str)
+    def operation_failed(self, error):
+        combined = self._combined_apply_saved and self._operation_cursor_apply
+        self._combined_apply_saved = False
+        super().operation_failed(error)
+        if combined:
+            message = f'外观已保存；光标应用失败：{error}。光标草稿已保留，可重试应用或取消草稿。'
+        else:
+            message = self.feedback.text()
+        retry = self._operation_retry
+        self._operation_retry = None
+        label = '重试应用' if self._operation_cursor_apply else '重试操作'
+        self._set_operation_feedback(message, error=True, retry=retry, retry_text=label)
+        self._sync_material_actions()
+        self._runtime_status_updated()
+
     def _apply_reference_theme(self):
         super()._apply_reference_theme()
         if not self._material_ready: return
         c=approved_colors(self.ui_dark)
+        card_bg = 'rgba(255, 255, 255, 0.045)' if self.ui_dark else 'rgba(255, 255, 255, 0.65)'
+        card_border = 'rgba(255, 255, 255, 0.09)' if self.ui_dark else 'rgba(0, 0, 0, 0.08)'
+        card_top = 'rgba(255, 255, 255, 0.16)' if self.ui_dark else 'rgba(255, 255, 255, 0.90)'
+        card_hover_bg = 'rgba(255, 255, 255, 0.065)' if self.ui_dark else 'rgba(255, 255, 255, 0.85)'
+        card_hover_border = 'rgba(255, 255, 255, 0.16)' if self.ui_dark else 'rgba(0, 0, 0, 0.14)'
+        card_hover_top = 'rgba(255, 255, 255, 0.26)' if self.ui_dark else 'rgba(255, 255, 255, 1.00)'
         self.setStyleSheet(self.styleSheet()+f"""
             QMainWindow, #materialWrapper, #materialShell, #materialContent, #content {{ background: transparent; }}
             #materialPageTitle, #materialWindowControls {{ background: transparent; border: none; }}
             #referenceSidebar {{ background: transparent; border: none; }}
-            #navCapsule {{ background: transparent; border: none; }}
-            #navCapsule QPushButton {{ border-radius: 10px; min-height: 32px; max-height: 32px; }}
-            #navCapsule QPushButton:hover {{ background: {c['raised']}; }}
-            #navCapsule QPushButton:checked:hover {{ background: #3472c9; }}
-            #navCapsule QPushButton:pressed {{ background: #1e559e; }}
-            #approvedGroup, #referenceGroup {{ border-radius: 16px; }}
+            #navCapsule {{
+                background: transparent;
+                border: none;
+                border-radius: 14px;
+                padding: 4px;
+                margin: 4px 8px;
+            }}
+            #navCapsule QPushButton {{
+                border-radius: 10px;
+                min-height: 36px;
+                max-height: 42px;
+                padding: 6px 14px;
+                font-size: 13.5px;
+                text-align: left;
+                color: {'#b0b5c4' if self.ui_dark else '#515460'};
+                border: 1px solid transparent;
+            }}
+            #navCapsule QPushButton:hover {{
+                color: {c['text']};
+                background: {'rgba(255, 255, 255, 0.08)' if self.ui_dark else 'rgba(0, 0, 0, 0.05)'};
+                border: 1px solid {'rgba(255, 255, 255, 0.12)' if self.ui_dark else 'rgba(0, 0, 0, 0.06)'};
+            }}
+            #navCapsule QPushButton:checked {{
+                color: #ffffff;
+                background: {'qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(59, 130, 246, 0.82), stop:1 rgba(29, 78, 216, 0.88))' if self.ui_dark else 'qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #0062d2, stop:1 #004ba4)'};
+                border: 1px solid {'rgba(169, 206, 255, 0.45)' if self.ui_dark else '#0056b8'};
+                border-top: 1px solid {'rgba(255, 255, 255, 0.65)' if self.ui_dark else 'rgba(255, 255, 255, 0.45)'};
+                font-weight: 600;
+            }}
+            #navCapsule QPushButton:checked:hover {{
+                background: {'qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(70, 145, 255, 0.88), stop:1 rgba(37, 99, 235, 0.94))' if self.ui_dark else 'qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #0a6ee8, stop:1 #0056b8)'};
+                border-color: {'rgba(169, 206, 255, 0.65)' if self.ui_dark else '#0056b8'};
+            }}
+            #navCapsule QPushButton:pressed, #navCapsule QPushButton:checked:pressed {{
+                background: {'qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(30, 64, 175, 0.90), stop:1 rgba(23, 37, 84, 0.95))' if self.ui_dark else '#003e82'};
+                border-color: {'rgba(169, 206, 255, 0.35)' if self.ui_dark else '#003e82'};
+                color: #ffffff;
+            }}
+            #navCapsule QPushButton[keyboardFocus="true"]:focus {{
+                border: 2px solid {c['focus']};
+            }}
+            #approvedGroup, #referenceGroup, #referencePreview, QFrame#card {{
+                background-color: {card_bg};
+                border: 1px solid {card_border};
+                border-top: 1px solid {card_top};
+                border-radius: 14px;
+            }}
+            #approvedGroup:hover, #referenceGroup:hover, #referencePreview:hover, QFrame#card:hover {{
+                background-color: {card_hover_bg};
+                border-color: {card_hover_border};
+                border-top-color: {card_hover_top};
+            }}
+            #hairlineDivider {{ background: {'rgba(255, 255, 255, 0.06)' if self.ui_dark else 'rgba(0, 0, 0, 0.06)'}; border: none; }}
             QToolButton#approvedShape, QToolButton#paletteSpecimen {{ border-radius: 12px; padding: 8px 4px; }}
             QToolButton[segmented="true"] {{ border-radius: 9px; }}
             QPushButton, QComboBox, QLineEdit {{ border-radius: 9px; }}
@@ -471,6 +831,11 @@ class MaterialWindow(DualWindow):
             #materialShell QScrollBar::add-page:horizontal,
             #materialShell QScrollBar::sub-page:horizontal {{ background: transparent; border: none; }}
             #feedback {{ background: transparent; border: none; padding: 0; margin: 0; }}
+            QPushButton#materialFeedbackDetails {{ background: transparent; border: 1px solid {c['border']}; border-radius: 8px; color: {c['text']}; padding: 0; }}
+            QPushButton#materialFeedbackDetails:hover {{ background: {c['raised']}; }}
+            QPushButton#materialFeedbackDetails:focus {{ border-color: {c['focus']}; }}
+            QProgressBar#materialOperationProgress {{ background: {c['raised']}; border: none; border-radius: 2px; }}
+            QProgressBar#materialOperationProgress::chunk {{ background: {c['focus']}; border-radius: 2px; }}
             QPushButton#materialCancel {{ background: transparent; border: 1px solid transparent; color: {c['muted']}; }}
             QPushButton#materialCancel:hover {{ background: {c['raised']}; color: {c['text']}; }}
             QPushButton#materialCancel:disabled {{ color: {c['disabled_text']}; }}
@@ -481,7 +846,7 @@ class MaterialWindow(DualWindow):
             QMenu::item:disabled {{ color: {c['muted']}; }}
             QToolButton#approvedShape[keyboardFocus="true"]:focus,
             QToolButton#paletteSpecimen[keyboardFocus="true"]:focus {{ border: 2px solid {c['focus']}; }}
-        """)
+        """ + scrollbar_style(self.ui_dark))
         self.material_shell.update()
         for button in self.title_bar.buttons.values():
             button.update()
@@ -522,10 +887,17 @@ class MaterialWindow(DualWindow):
             self.apply_button.setText('保存并应用' if cursor_dirty else '保存外观')
         else:
             self.draft_label.setText('光标待应用' if cursor_dirty else '无待应用更改')
-            self.apply_button.setText('应用更改')
+            retrying_apply = (cursor_dirty and self._feedback_retry is not None
+                              and self._feedback_retry_text == '重试应用')
+            self.apply_button.setText('重试应用' if retrying_apply else '应用更改')
         if self.busy:
             self.apply_button.setText('处理中…')
         pending = cursor_dirty or appearance_dirty
+        drafts = (self._draft, self.sidebar_appearance)
+        if (pending and drafts != getattr(self, '_feedback_drafts', drafts)
+                and not self.busy and not self.feedback.property('error')):
+            self.feedback.setText('')
+        self._feedback_drafts = drafts
         color = ('#ffcf81' if self.ui_dark else '#9a4b00') if pending else approved_colors(self.ui_dark)['muted']
         style = f'color: {color}; font-weight: 600;'
         if self.draft_label.styleSheet() != style:
@@ -536,18 +908,33 @@ class MaterialWindow(DualWindow):
         self.discard.setAccessibleName('取消未保存的外观和未应用的光标修改')
 
     def discard_changes(self):
+        self._failure_text = ''
+        self._feedback_retry = None
+        self._operation_retry = None
         if self._material_ready:
             self.cancel_sidebar_settings()
         super().discard_changes()
 
     def apply_draft(self):
-        if self.busy or self.load_error or self.pages[0].invalid_fields:
+        if self.busy:
             return
-        if self.sidebar_dirty and not self.save_sidebar_settings():
+        self._commit_numeric_edit()
+        if self.load_error or self.pages[0].invalid_fields:
             return
-        super().apply_draft()
+        cursor_dirty = self._draft != self.applied
+        saved_appearance = self.sidebar_dirty
+        if saved_appearance and not self.save_sidebar_settings():
+            return
+        self._combined_apply_saved = saved_appearance and cursor_dirty
+        self._cursor_apply_requested = cursor_dirty
+        try:
+            super().apply_draft()
+        finally:
+            self._cursor_apply_requested = False
 
     def save_sidebar_settings(self):
+        if self.busy:
+            return False
         if self.sidebar_store is None:
             self.sidebar_controls.status.setText('此捕获窗口不保存外观，请使用安全预览入口。')
             return False
@@ -555,16 +942,17 @@ class MaterialWindow(DualWindow):
             self.sidebar_store.save(self.sidebar_appearance)
         except OSError as error:
             self.sidebar_controls.status.setText(f'外观保存失败：{error}。可重试或取消预览。')
-            self.feedback.setText(f'外观保存失败：{error}。可重试或取消。')
+            self._set_operation_feedback(f'外观保存失败：{error}。外观和光标草稿均已保留，可重试或取消。',
+                                         error=True, retry=self.apply_draft, retry_text='重试保存')
             return False
         self.sidebar_saved = self.sidebar_appearance
         self.sync()
         self.sidebar_controls.status.setText('侧栏外观已保存，下次启动恢复。')
-        self.feedback.setText('侧栏外观已保存')
+        self._set_operation_feedback('侧栏外观已保存')
         return True
 
     def closeEvent(self, event):
-        if self.busy:
+        if self.busy or self._threads:
             super().closeEvent(event)
             return
         if self.sidebar_dirty:
@@ -594,9 +982,9 @@ class MaterialWindow(DualWindow):
             from ctypes import wintypes
             native = ctypes.cast(int(message), ctypes.POINTER(wintypes.MSG)).contents
             if native.message in (0x001A, 0x031A, 0x031E):
-                QTimer.singleShot(0, self.refresh_material_policy)
+                QTimer.singleShot(0, self, self.refresh_material_policy)
             elif native.message in (0x0047, 0x02E0):
-                QTimer.singleShot(0, self._sync_sidebar_backdrop)
+                QTimer.singleShot(0, self, self._sync_sidebar_backdrop)
         return super().nativeEvent(event_type, message)
 
     def sync(self):
@@ -605,6 +993,7 @@ class MaterialWindow(DualWindow):
             self._sync_material_actions()
             self._fit_observation_height()
             self.sidebar_controls.sync()
+            self._runtime_status_updated()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -697,8 +1086,8 @@ class MaterialWindow(DualWindow):
             self.releaseMouse()
 
     def eventFilter(self, watched, event):
-        if self._material_ready and watched is self.feedback and event.type()==QEvent.Type.Paint:
-            self.feedback.setToolTip(self.feedback.text())
+        if self._material_ready and watched is self.feedback and event.type() == QEvent.Type.Paint:
+            self._sync_feedback_controls()
         if (self._material_ready and self._manual_move_offset is not None
                 and isinstance(watched, QWidget) and watched.window() is self):
             if event.type() == QEvent.Type.MouseMove:
@@ -750,7 +1139,7 @@ class MaterialWindow(DualWindow):
         if self._material_ready:
             self.material_active=self.isActiveWindow()
             self._refresh_sidebar_preview()
-            QTimer.singleShot(0, self._start_sidebar_backdrop)
+            QTimer.singleShot(0, self, self._start_sidebar_backdrop)
 
     def hideEvent(self, event):
         self._end_window_drag()

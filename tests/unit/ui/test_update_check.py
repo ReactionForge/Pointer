@@ -18,6 +18,13 @@ from shiboken6 import isValid
 
 
 APP = QApplication.instance() or QApplication([])
+INSTALL_INFO = {
+    'latest_version': '9.0.0', 'current_version': '1.0.0',
+    'download_url': 'https://invalid.example/Pointer-setup.exe',
+    'asset_name': 'Pointer-setup.exe', 'asset_size': 8,
+    'expected_sha256': 'a' * 64, 'can_auto_install': True,
+    'html_url': 'https://invalid.example/releases',
+}
 
 
 def wait_until(predicate, timeout=600):
@@ -33,6 +40,7 @@ class UpdateCheckTests(unittest.TestCase):
         self.backend.settings.return_value = CursorSettings(tray_enabled=False, auto_check_update=False)
         self.backend.backend.snapshot.return_value = {'running': False, 'startup_enabled': False}
         self.window = MainWindow(self.backend)
+        self.addCleanup(self.release_window, self.window)
         self.window.status_timer.stop()
         self.window._prewarm_timer.stop()
         self.window.preview.timer.stop()
@@ -42,10 +50,19 @@ class UpdateCheckTests(unittest.TestCase):
         APP.processEvents()
         self.page = self.window.pages[3]
 
+    def release_window(self, window):
+        if isValid(window):
+            deadline = time.monotonic() + 3
+            while window._threads and time.monotonic() < deadline:
+                QTest.qWait(10)
+            self.assertEqual(window._threads, [], 'Native operation thread did not finish')
+            window.discard_changes()
+            self.assertTrue(window.close())
+            window.deleteLater()
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+
     def tearDown(self):
-        if isValid(self.window):
-            self.window.discard_changes()
-            self.window.close()
+        self.release_window(self.window)
         APP.processEvents()
         for name in ('apply', 'pause', 'resume', 'restore', 'set_startup'):
             getattr(self.backend, name).assert_not_called()
@@ -206,7 +223,7 @@ class UpdateCheckTests(unittest.TestCase):
 
     def test_long_network_detail_keeps_material_settings_and_retry_button_in_viewport(self):
         from pointer.ui.material_workspace import MaterialWindow
-        self.window.close()
+        self.release_window(self.window)
         self.window = MaterialWindow(self.backend)
         self.window.status_timer.stop()
         self.window._prewarm_timer.stop()
@@ -236,17 +253,23 @@ class UpdateCheckTests(unittest.TestCase):
 
 
 class UpdateDialogCloseTests(unittest.TestCase):
-    def test_download_status_claims_checksum_verification_only_with_an_expected_digest(self):
-        for expected in (None, 'a' * 64):
-            with self.subTest(expected=expected):
-                dialog = UpdateDialog({'latest_version': '9.0.0', 'expected_sha256': expected})
-                statuses = []
-                def prevented_install(*args):
-                    statuses.append(dialog.status_lbl.text())
-                    raise RuntimeError('fixture prevents installation')
-                with patch('pointer.ui.update_dialog.trigger_silent_upgrade', side_effect=prevented_install):
-                    dialog._on_download_finished('mock installer path')
-                self.assertEqual('完整性校验通过' in statuses[0], expected is not None)
+    def tearDown(self):
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+
+    def test_incomplete_metadata_never_launches_or_downloads(self):
+        for overrides in ({'expected_sha256': None}, {'asset_size': 0}, {'asset_size': None},
+                          {'asset_size': True}, {'can_auto_install': False}, {'expected_sha256': 'bad'}):
+            with self.subTest(overrides=overrides):
+                dialog = UpdateDialog(dict(INSTALL_INFO, **overrides))
+                with patch('pointer.ui.update_dialog.download_update_package') as download, \
+                     patch('pointer.ui.update_dialog.trigger_silent_upgrade') as install, \
+                     patch('pointer.ui.update_dialog.QDesktopServices.openUrl', return_value=True) as browser:
+                    self.assertEqual(dialog.update_btn.text(), '手动下载')
+                    dialog._start_download()
+                    dialog._on_download_finished('unused installer')
+                    download.assert_not_called()
+                    install.assert_not_called()
+                    browser.assert_called_once()
                 dialog.close()
                 dialog.deleteLater()
 
@@ -261,7 +284,11 @@ class UpdateDialogCloseTests(unittest.TestCase):
                     release.wait(3)
                     # A completed read can race with cancellation; it must not install.
                     return 'fake checksum'
-                dialog = UpdateDialog({'latest_version': '9.0.0', 'download_url': 'https://invalid.example/update.exe'})
+                from PySide6.QtWidgets import QWidget
+                owner = QWidget()
+                owner._ready_for_upgrade = Mock(return_value=True)
+                owner._finish_upgrade = Mock()
+                dialog = UpdateDialog(INSTALL_INFO, parent=owner)
                 dialog.show()
                 APP.processEvents()
                 try:
@@ -287,7 +314,257 @@ class UpdateDialogCloseTests(unittest.TestCase):
                         wait_until(lambda: not dialog.worker.isRunning(), timeout=1000)
                         dialog.close()
                         dialog.deleteLater()
+                        owner.deleteLater()
                         APP.processEvents()
+
+
+class UpdateHandoffTests(unittest.TestCase):
+    def setUp(self):
+        import tempfile
+        from pathlib import Path
+        from pointer.cursor.settings import SettingsStore
+        self.temp = tempfile.TemporaryDirectory()
+        self.backend = Mock()
+        self.settings = CursorSettings(tray_enabled=False, auto_check_update=False, startup=True)
+        self.backend.store = SettingsStore(Path(self.temp.name))
+        self.backend.store.save(self.settings)
+        self.backend.settings.side_effect = self.backend.store.load
+        self.backend.runtime_status.return_value = {'running': True}
+        self.window = MainWindow(self.backend)
+        self.window.status_timer.stop()
+        self.window._prewarm_timer.stop()
+        self.window.preview.timer.stop()
+        self.dialog = UpdateDialog(INSTALL_INFO, self.backend, self.window)
+
+    def tearDown(self):
+        self.dialog.reject()
+        self.window.busy = False
+        self.window._draft = self.window.applied
+        self.window.close()
+        self.dialog.deleteLater()
+        self.window.deleteLater()
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+        APP.processEvents()
+        for name in ('apply', 'pause', 'resume', 'prepare_upgrade', 'restore', 'set_startup'):
+            getattr(self.backend, name).assert_not_called()
+        self.backend.backend.stop.assert_not_called()
+        self.temp.cleanup()
+
+    def test_cursor_sidebar_and_busy_block_handoff_without_runtime_mutation(self):
+        from dataclasses import replace
+        from pointer.ui.main_window import _ready_for_upgrade
+        for state, detail in (('cursor', '光标'), ('sidebar', '工作台外观'), ('busy', '当前操作')):
+            with self.subTest(state=state):
+                self.window.busy = state == 'busy'
+                self.window.sidebar_dirty = state == 'sidebar'
+                self.window._draft = replace(self.window.applied, size=48) if state == 'cursor' else self.window.applied
+                with patch('pointer.ui.update_dialog.trigger_silent_upgrade') as launch:
+                    self.dialog._on_download_finished('mock installer')
+                launch.assert_not_called()
+                self.assertFalse(_ready_for_upgrade(self.window))
+                self.assertEqual(self.dialog.stage, 'preflight')
+                self.assertIn(detail, self.dialog.error_details.toPlainText())
+                self.assertTrue(self.dialog.update_btn.isEnabled())
+        self.window.sidebar_dirty = False
+
+    def test_draft_busy_and_thread_cleanup_block_before_creating_download_worker(self):
+        from dataclasses import replace
+        try:
+            for state in ('cursor', 'sidebar', 'busy', 'cleanup'):
+                with self.subTest(state=state):
+                    self.window.busy = state == 'busy'
+                    self.window.sidebar_dirty = state == 'sidebar'
+                    self.window._threads = [(Mock(), Mock())] if state == 'cleanup' else []
+                    self.window._draft = replace(self.window.applied, size=48) if state == 'cursor' else self.window.applied
+                    with patch('pointer.ui.update_dialog.DownloadWorker') as worker, \
+                         patch('pointer.ui.update_dialog.trigger_silent_upgrade') as launch:
+                        self.dialog._start_download()
+                    worker.assert_not_called()
+                    launch.assert_not_called()
+                    self.assertIsNone(self.dialog.worker)
+                    self.assertEqual(self.dialog.stage, 'preflight')
+        finally:
+            self.window._threads = []
+            self.window.sidebar_dirty = False
+
+    def test_state_changes_during_download_are_checked_again_before_install(self):
+        from dataclasses import replace
+        for state in ('cursor', 'sidebar', 'busy'):
+            with self.subTest(state=state):
+                self.window.busy = self.window.sidebar_dirty = False
+                self.window._draft = self.window.applied
+                self.dialog._downloaded_installer = None
+                self.dialog.worker = None
+                with patch('pointer.ui.update_dialog.DownloadWorker') as worker, \
+                     patch('pointer.ui.update_dialog.trigger_silent_upgrade') as launch:
+                    worker.return_value.isRunning.return_value = False
+                    self.dialog._start_download()
+                    worker.return_value.start.assert_called_once()
+                    self.window.busy = state == 'busy'
+                    self.window.sidebar_dirty = state == 'sidebar'
+                    if state == 'cursor':
+                        self.window._draft = replace(self.window.applied, size=48)
+                    self.dialog._on_download_finished('mock installer')
+                    launch.assert_not_called()
+                self.assertEqual(self.dialog.stage, 'preflight')
+        self.window.sidebar_dirty = False
+
+    def test_launch_failure_is_not_download_failure_and_retries_same_package(self):
+        long_error = 'CreateProcess failed: ' + 'very_long_path_segment/' * 120
+        with patch('pointer.ui.update_dialog.trigger_silent_upgrade', side_effect=OSError(long_error)) as launch, \
+             patch.object(self.window, '_finish_upgrade') as finish:
+            self.dialog._on_download_finished('mock installer')
+        self.assertEqual(self.dialog.stage, 'launch')
+        self.assertIn('安装器启动失败', self.dialog.status_lbl.text())
+        self.assertNotIn('下载失败', self.dialog.status_lbl.text())
+        self.assertEqual(self.dialog.error_details.toPlainText(), long_error)
+        finish.assert_not_called()
+        launch.assert_called_once_with('mock installer', self.backend, expected_sha256='a' * 64, expected_size=8)
+        with patch('pointer.ui.update_dialog.trigger_silent_upgrade') as launch, \
+             patch('pointer.ui.update_dialog.DownloadWorker') as download, \
+             patch.object(self.window, '_finish_upgrade') as finish:
+            self.dialog._start_download()
+        download.assert_not_called()
+        launch.assert_called_once()
+        finish.assert_called_once()
+        self.assertTrue(self.dialog._closed)
+
+    def test_missing_cached_package_clears_install_retry_and_downloads_again(self):
+        from pathlib import Path
+        missing = Path(self.temp.name) / 'missing-installer.exe'
+        with patch('pointer.ui.update_dialog.trigger_silent_upgrade', side_effect=FileNotFoundError(str(missing))):
+            self.dialog._on_download_finished(str(missing))
+        self.assertEqual(self.dialog.stage, 'download')
+        self.assertIsNone(self.dialog._downloaded_installer)
+        self.assertEqual(self.dialog.update_btn.text(), '重试下载')
+        with patch('pointer.ui.update_dialog.DownloadWorker') as worker, \
+             patch('pointer.ui.update_dialog.trigger_silent_upgrade') as launch:
+            worker.return_value.isRunning.return_value = False
+            self.dialog._start_download()
+            worker.return_value.start.assert_called_once()
+            launch.assert_not_called()
+
+    def test_createprocess_file_not_found_keeps_existing_package_for_retry(self):
+        from pathlib import Path
+        package = Path(self.temp.name) / 'installer.exe'
+        package.write_bytes(b'verified')
+        with patch('pointer.ui.update_dialog.trigger_silent_upgrade', side_effect=FileNotFoundError('loader unavailable')):
+            self.dialog._on_download_finished(str(package))
+        self.assertEqual(self.dialog.stage, 'launch')
+        self.assertEqual(self.dialog._downloaded_installer, str(package))
+        self.assertEqual(self.dialog.update_btn.text(), '重试安装')
+        with patch('pointer.ui.update_dialog.DownloadWorker') as worker, \
+             patch('pointer.ui.update_dialog.trigger_silent_upgrade') as launch, \
+             patch.object(self.window, '_finish_upgrade') as finish:
+            self.dialog._start_download()
+            worker.assert_not_called()
+            launch.assert_called_once()
+            finish.assert_called_once()
+
+    def test_changed_local_package_is_verification_failure_and_requires_redownload(self):
+        from pointer.updater import ChecksumMismatchError
+        with patch('pointer.ui.update_dialog.trigger_silent_upgrade', side_effect=ChecksumMismatchError('changed bytes')):
+            self.dialog._on_download_finished('mock installer')
+        self.assertEqual(self.dialog.stage, 'verification')
+        self.assertIsNone(self.dialog._downloaded_installer)
+        self.assertEqual(self.dialog.update_btn.text(), '重试下载')
+
+    def test_skip_persists_only_version_and_keeps_cursor_and_startup_drafts(self):
+        from dataclasses import replace
+        self.window.change(size=48, startup=False, auto_check_update=True, tray_enabled=True)
+        draft = self.window.draft()
+        self.window._prewarm_timer.stop()
+        self.dialog._skip_version()
+        self.assertTrue(self.dialog._closed)
+        self.assertEqual(self.backend.store.load(), replace(self.settings, skip_update_version='9.0.0'))
+        self.assertEqual(self.window.draft(), replace(draft, skip_update_version='9.0.0'))
+        self.assertEqual(self.window.applied, replace(self.settings, skip_update_version='9.0.0'))
+        self.assertFalse(self.window._prewarm_timer.isActive())
+        reopened = MainWindow(self.backend)
+        reopened.status_timer.stop()
+        reopened._prewarm_timer.stop()
+        reopened._show_update_dialog = Mock()
+        reopened.show()
+        reopened._update_check_completed({'available': True, 'latest_version': '9.0.0'}, '', False)
+        reopened._show_update_dialog.assert_not_called()
+        reopened.close()
+        reopened.deleteLater()
+
+    def test_skip_save_failure_retains_drafts_and_can_retry(self):
+        self.window.change(size=48)
+        draft, applied = self.window.draft(), self.window.applied
+        with patch.object(self.backend.store, 'save', side_effect=OSError('settings write denied')):
+            self.dialog._skip_version()
+        self.assertFalse(self.dialog._closed)
+        self.assertEqual(self.dialog.stage, 'preference')
+        self.assertIn('settings write denied', self.dialog.error_details.toPlainText())
+        self.assertEqual((self.window.draft(), self.window.applied), (draft, applied))
+        self.dialog._skip_version()
+        self.assertTrue(self.dialog._closed)
+        self.assertEqual(self.window.draft().size, 48)
+
+    def test_skip_readback_failure_does_not_acknowledge_saved_state(self):
+        applied = self.window.applied
+        with patch.object(self.backend.store, 'load', side_effect=[self.settings, OSError('readback failed')]):
+            self.dialog._skip_version()
+        self.assertFalse(self.dialog._closed)
+        self.assertEqual(self.window.applied, applied)
+        self.assertIn('readback failed', self.dialog.error_details.toPlainText())
+        self.dialog._skip_version()
+        self.assertTrue(self.dialog._closed)
+
+    def test_corrupt_saved_preferences_are_not_overwritten_by_skip(self):
+        self.backend.store.path.write_text('{broken', encoding='utf-8')
+        self.dialog._skip_version()
+        self.assertFalse(self.dialog._closed)
+        self.assertEqual(self.backend.store.path.read_text(encoding='utf-8'), '{broken')
+        self.assertEqual(self.window.applied, self.settings)
+
+    def test_skip_while_busy_does_not_write(self):
+        self.window.busy = True
+        with patch.object(self.backend.store, 'save') as save:
+            self.dialog._skip_version()
+        save.assert_not_called()
+        self.assertFalse(self.dialog._closed)
+        self.assertIn('当前操作', self.dialog.error_details.toPlainText())
+
+    def test_download_passes_hash_and_size_to_worker(self):
+        with patch('pointer.ui.update_dialog.DownloadWorker') as worker:
+            self.dialog._start_download()
+        self.assertEqual(worker.call_args.kwargs, {'expected_sha256': 'a' * 64, 'expected_size': 8})
+        first_target = worker.call_args.args[1]
+        self.assertEqual(first_target.parts[-3:], ('updates', 'a' * 64, 'Pointer-setup.exe'))
+        self.assertEqual(self.dialog.later_btn.text(), '取消下载')
+        self.assertTrue(self.dialog.later_btn.isEnabled())
+        second = UpdateDialog(dict(INSTALL_INFO, expected_sha256='B' * 64), self.backend, self.window)
+        try:
+            with patch('pointer.ui.update_dialog.DownloadWorker') as worker:
+                second._start_download()
+            self.assertEqual(worker.call_args.args[1].parts[-3:], ('updates', 'b' * 64, 'Pointer-setup.exe'))
+            self.assertNotEqual(worker.call_args.args[1], first_target)
+        finally:
+            second.reject()
+            second.deleteLater()
+
+    def test_theme_and_long_details_do_not_force_dialog_beyond_viewport(self):
+        from PySide6.QtGui import QPalette
+        from pointer.ui.colors import theme_colors
+        for dark in (False, True):
+            self.window.ui_dark = dark
+            dialog = UpdateDialog(INSTALL_INFO, self.backend, self.window)
+            detail = '<raw error> ' + 'unbroken_' * 300
+            dialog._show_error('launch', '安装器启动失败', detail)
+            dialog.resize(480, 560)
+            dialog.show()
+            APP.processEvents()
+            self.assertEqual(dialog.palette().color(QPalette.ColorRole.Window).name(), theme_colors(dark)['canvas'])
+            self.assertEqual(dialog.error_details.toPlainText(), detail)
+            self.assertLessEqual(dialog.minimumSizeHint().width(), 480)
+            self.assertEqual(dialog.error_details.horizontalScrollBar().maximum(), 0)
+            self.assertTrue(dialog.rect().contains(dialog.update_btn.geometry()))
+            self.assertGreater(dialog.maximumWidth(), dialog.minimumWidth())
+            dialog.reject()
+            dialog.deleteLater()
 
 
 if __name__ == '__main__':

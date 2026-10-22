@@ -66,13 +66,17 @@ class SidecarScene : IDisposable {
         var factory=compositor.CreateEffectFactory(effect,new string[]{"Blur.StandardDeviation"}); brush=factory.CreateBrush(); brush.SetSourceParameter("Backdrop",compositor.CreateHostBackdropBrush()); sprite.Brush=brush;
         geometry=compositor.CreateRoundedRectangleGeometry(); sprite.Clip=compositor.CreateGeometricClip(geometry);
     }
-    public void Apply(IntPtr qt,bool visible,int x,int y,int width,int height,int radius,float sigma) {
+    public void Apply(IntPtr qt,bool visible,int x,int y,int width,int height,int radius,float sigma,bool fullWindow=false) {
         requestedVisible=visible;
         brush.Properties.InsertScalar("Blur.StandardDeviation",sigma); sprite.Size=new Vector2(width,height);
         float r=Math.Min(radius,Math.Min(width,height)/2.0f);
-        // Sidebar's right edge joins opaque Qt content. Place the right rounded
-        // corners outside the sprite while preserving the two outer left ones.
-        geometry.Size=new Vector2(width+2*r,height); geometry.CornerRadius=new Vector2(r,r);
+        if(fullWindow) {
+            // Full-window mode: 4-corner rounded rectangle clipping.
+            geometry.Size=new Vector2(width,height); geometry.CornerRadius=new Vector2(r,r);
+        } else {
+            // Legacy single-sidebar: place right rounded corners outside the sprite.
+            geometry.Size=new Vector2(width+2*r,height); geometry.CornerRadius=new Vector2(r,r);
+        }
         if(visible) {
             // Insert only our HWND immediately below Qt. An owner relationship
             // would cause Windows to destroy Qt when this helper exits.
@@ -153,6 +157,14 @@ class SidecarProgram {
             }
         }
     }
+    internal static bool FullWindowMode(Dictionary<string,object> command) {
+        // Older sidebar clients omit mode; full-window clipping is opt-in.
+        object mode;
+        if(!command.TryGetValue("mode",out mode)) return false;
+        if(!(mode is string)||((string)mode!="sidebar"&&(string)mode!="full_window"))
+            throw new FormatException("mode must be sidebar or full_window");
+        return (string)mode=="full_window";
+    }
     private static void Handle(string line) {
         if(exiting) return; long? seq=null;
         try {
@@ -165,7 +177,8 @@ class SidecarProgram {
             object rawSigma; if(!command.TryGetValue("sigma",out rawSigma)||!(rawSigma is int||rawSigma is long||rawSigma is decimal||rawSigma is double)) throw new FormatException("sigma must be numeric");
             float sigma=Convert.ToSingle(rawSigma); if(float.IsNaN(sigma)||float.IsInfinity(sigma)||sigma<0||sigma>48) throw new FormatException("sigma must be between 0 and 48 DIP");
             bool visible=(bool)visibility&&SidecarNative.IsWindowVisible(qt)&&!SidecarNative.IsIconic(qt);
-            scene.Apply(qt,visible,x,y,width,height,radius,sigma); Emit(new Dictionary<string,object>{{"event","applied"},{"seq",seq.Value}});
+            bool fullWindow=FullWindowMode(command);
+            scene.Apply(qt,visible,x,y,width,height,radius,sigma,fullWindow); Emit(new Dictionary<string,object>{{"event","applied"},{"seq",seq.Value}});
         } catch(Exception ex) { Fail("update_failed",ex.Message,seq); Console.Error.WriteLine(ex); }
     }
     [STAThread] static int Main(string[] arguments) {

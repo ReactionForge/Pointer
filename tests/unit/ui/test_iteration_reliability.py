@@ -1,6 +1,7 @@
 import os
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from dataclasses import replace
@@ -30,7 +31,18 @@ class IterationReliabilityTests(unittest.TestCase):
 
     def tearDown(self):
         self.window.cancel_sidebar_settings(); self.window._draft = self.window.applied
-        self.window.close(); self.temp.cleanup()
+        self.assertEqual(self.window._threads, [])
+        self.assertTrue(self.window.close())
+        self.window.deleteLater()
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+        self.temp.cleanup()
+
+    def wait_for_preview(self, predicate):
+        from PySide6.QtTest import QTest
+        deadline = time.monotonic() + 1
+        while not predicate() and time.monotonic() < deadline:
+            QTest.qWait(5)
+        self.assertTrue(predicate(), 'Preview transition did not reach its final frame and stop')
 
     def test_unedited_saved_appearance_closes_without_confirmation(self):
         w = self.window
@@ -144,27 +156,38 @@ class IterationReliabilityTests(unittest.TestCase):
         self.assertTrue(w._prewarm_timer.isActive())
 
     def test_preview_idle_and_hidden_timers_stop_but_press_and_loading_run(self):
-        from PySide6.QtTest import QTest
         p = self.window.preview
         p.refresh(); self.assertFalse(p.timer.isActive())
         p.set_down(True); self.assertTrue(p.timer.isActive())
-        QTest.qWait(110); self.assertGreater(p.frame, 0); self.assertFalse(p.timer.isActive())
-        p.set_down(False); QTest.qWait(210)
+        self.wait_for_preview(lambda: p.frame > 0 and not p.timer.isActive())
+        self.assertGreater(p.frame, 0); self.assertFalse(p.timer.isActive())
+        p.set_down(False)
+        self.wait_for_preview(lambda: p.frame == 0 and not p.timer.isActive())
         self.assertEqual(p.frame, 0); self.assertFalse(p.timer.isActive())
         p.role.setCurrentIndex(p.role.findData('busy')); self.assertTrue(p.timer.isActive())
         self.window.select_page(3); self.assertFalse(p.timer.isActive())
 
     def test_edit_during_release_never_leaves_a_pressed_frame(self):
-        from PySide6.QtTest import QTest
         p = self.window.preview
-        p.set_down(True); QTest.qWait(110)
-        self.assertEqual(p.frame, 4)
-        p.set_down(False)
-        p.set_settings(replace(p.settings, strength=51))
-        QTest.qWait(220)
-        self.assertFalse(p.down)
-        self.assertEqual(p.frame, 0)
-        self.assertFalse(p.timer.isActive())
+        self.assertTrue(p.isVisible())
+        self.assertFalse(self.window.reduce_motion)
+        # The transition starts at the first timer tick, not at set_down().
+        # Drive that same timeout signal with explicit deadlines to avoid paint latency.
+        with patch('pointer.ui.preview.time.monotonic', return_value=100.0) as clock:
+            p.set_down(True)
+            self.assertTrue(p.timer.isActive())
+            p.timer.timeout.emit()
+            clock.return_value += p.settings.press_ms / 1000
+            p.timer.timeout.emit()
+            self.assertEqual(p.frame, 4)
+            p.set_down(False)
+            p.timer.timeout.emit()
+            p.set_settings(replace(p.settings, strength=51))
+            clock.return_value += p.settings.release_ms / 1000 + 0.001
+            p.timer.timeout.emit()
+            self.assertFalse(p.down)
+            self.assertEqual(p.frame, 0)
+            self.assertFalse(p.timer.isActive())
 
     def test_reset_defaults_keeps_service_preferences_and_requires_apply(self):
         w = self.window

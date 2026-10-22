@@ -136,6 +136,8 @@ class MainWindow(QMainWindow):
         self._threads = []
         self.load_error = None
         self._replace_draft = False
+        self._last_runtime_state = None
+        self._last_runtime_error = ''
         try:
             self.applied = application.settings()
         except Exception as error:
@@ -400,12 +402,7 @@ class MainWindow(QMainWindow):
 
         # System Tray Mini Island
         self.tray_controller = None
-        if getattr(self.applied, 'tray_enabled', True):
-            try:
-                from .tray import TrayController
-                self.tray_controller = TrayController(self)
-            except Exception:
-                self.tray_controller = None
+        self._reconcile_tray()
 
         # Silent update check on startup
         if getattr(self.applied, 'auto_check_update', True):
@@ -504,11 +501,56 @@ class MainWindow(QMainWindow):
         self.discard.setEnabled(dirty and not self.busy)
         self.apply_button.setEnabled(dirty and not self.busy and not self.load_error and not self.pages[0].invalid_fields)
         self.apply_button.setText('处理中…' if self.busy else '应用更改')
-        if getattr(self, 'tray_controller', None):
-            try:
-                self.tray_controller.update_menu()
-            except Exception:
-                pass
+        if hasattr(self, 'tray_controller'):
+            self._reconcile_tray()
+
+    def _reconcile_tray(self):
+        """Reconcile the tray with saved preferences, never with a pending draft."""
+        controller = self.tray_controller
+        if self.applied.tray_enabled:
+            if controller is None:
+                from .tray import TrayController
+                controller = self.tray_controller = TrayController(self)
+            controller.update_menu()
+        elif controller is not None:
+            controller.dispose()
+            self.tray_controller = None
+
+    def save_skipped_update(self, version):
+        """Persist one preference without applying cursor or startup changes."""
+        if self.busy:
+            raise RuntimeError('请等待当前操作完成后再跳过版本。')
+        if not isinstance(version, str) or not version.strip():
+            raise ValueError('更新版本号无效。')
+        store = self.application.store
+        persisted = store.load(startup_enabled=self.applied.startup)
+        store.save(replace(persisted, skip_update_version=version))
+        saved = store.load(startup_enabled=self.applied.startup)
+        if saved.skip_update_version != version:
+            raise OSError('跳过版本的保存结果未通过读回确认，请重试。')
+        self.applied = replace(self.applied, skip_update_version=version)
+        self._draft = replace(self._draft, skip_update_version=version)
+        self.sync()
+
+    def upgrade_block_reason(self):
+        return _upgrade_block_reason(self)
+
+    def _ready_for_upgrade(self):
+        return _ready_for_upgrade(self)
+
+    def _finish_upgrade(self):
+        """Leave the GUI after launch; the installer owns runtime transitions."""
+        if self._threads:
+            QTimer.singleShot(10, self, self._finish_upgrade)
+            return
+        if not self.close():
+            return
+        if self.tray_controller is not None:
+            self.tray_controller.dispose()
+            self.tray_controller = None
+        app = QApplication.instance()
+        if app:
+            app.quit()
 
     def select_page(self, index):
         titles = ['外观', '动效', '光标测试', '应用设置']
@@ -592,20 +634,36 @@ class MainWindow(QMainWindow):
         worker = Worker(operation)
         worker.moveToThread(thread)
         thread.started.connect(worker.run)
-        worker.finished.connect(self.operation_done)
-        worker.failed.connect(self.operation_failed)
+        worker.finished.connect(self._deliver_operation_result, Qt.ConnectionType.QueuedConnection)
+        worker.failed.connect(self._deliver_operation_error, Qt.ConnectionType.QueuedConnection)
         worker.finished.connect(thread.quit)
         worker.failed.connect(thread.quit)
         thread.finished.connect(worker.deleteLater)
-        thread.finished.connect(self.release_thread)
+        thread.finished.connect(self.release_thread, Qt.ConnectionType.QueuedConnection)
         self._threads.append((thread, worker))
         thread.start()
 
     @Slot()
     def release_thread(self):
-        thread = self.sender()
+        self._release_finished_thread(self.sender())
+
+    def _release_finished_thread(self, thread):
+        # finished can precede the worker's deferred C++ deletion. Keep both
+        # wrappers alive until the native thread has fully finished teardown.
+        if not thread.wait(100):
+            QTimer.singleShot(10, self, lambda: self._release_finished_thread(thread))
+            return
         self._threads = [pair for pair in self._threads if pair[0] is not thread]
         thread.deleteLater()
+
+    @Slot(object)
+    def _deliver_operation_result(self, result):
+        # Bind the worker to a stable Qt slot, then dispatch Python overrides.
+        self.operation_done(result)
+
+    @Slot(str)
+    def _deliver_operation_error(self, error):
+        self.operation_failed(error)
 
     @Slot(object)
     def operation_done(self, result):
@@ -641,9 +699,14 @@ class MainWindow(QMainWindow):
 
     def refresh_status(self):
         if self.busy:
+            self._runtime_status_updated()
             return
         try:
             state = self.application.runtime_status()
+            if not isinstance(state, dict):
+                raise ValueError('后台状态返回了无效结果')
+            self._last_runtime_state = dict(state)
+            self._last_runtime_error = ''
             if state.get('last_error'):
                 message = '光标后台异常'
             elif state.get('starting'):
@@ -653,7 +716,7 @@ class MainWindow(QMainWindow):
             elif state.get('running'):
                 message = '光标效果运行中'
             else:
-                message = '光标效果已暂停 · 可在设置中恢复'
+                message = '光标效果已暂停\n可在设置中恢复'
             self.status.setText(message)
             colors = theme_colors(self.ui_dark)
             style = 'color: ' + colors['muted'] + '; font-weight: 500; font-size: 12px;'
@@ -661,9 +724,15 @@ class MainWindow(QMainWindow):
                 self.status.setStyleSheet(style)
             if state.get('last_error'):
                 self.feedback.setText('后台错误：' + state['last_error'])
-        except Exception:
+        except Exception as error:
+            self._last_runtime_state = None
+            self._last_runtime_error = str(error)
             self.status.setText('状态读取失败')
-            self.status.setStyleSheet('color: #ff453a; font-weight: 500; font-size: 11.5px;')
+            self.status.setStyleSheet('color: ' + theme_colors(self.ui_dark)['danger'] + '; font-weight: 500; font-size: 12px;')
+        self._runtime_status_updated()
+
+    def _runtime_status_updated(self):
+        """Allow workspace views to reuse the existing runtime status query."""
 
     def reset_defaults(self):
         if self.load_error and ask_confirmation(self, '重置配置', '现有配置无法读取。保留原文件副本并使用默认配置？', '使用默认配置', '取消') != QMessageBox.StandardButton.Yes:
@@ -818,7 +887,7 @@ class MainWindow(QMainWindow):
             self.run_operation(self.application.restore, '原光标已恢复', replace_draft=True)
 
     def closeEvent(self, event):
-        if self.busy:
+        if self.busy or self._threads:
             event.ignore()
             self.feedback.setText('请等待当前操作完成后关闭窗口。')
             return
@@ -830,8 +899,18 @@ class MainWindow(QMainWindow):
         event.accept()
 
 
+def _upgrade_block_reason(window):
+    if window.busy or getattr(window, '_threads', []):
+        return '当前操作尚未完成，请等待完成后重试升级。'
+    if window.draft() != window.applied:
+        return '光标仍有未应用的修改，请先应用或放弃草稿后再升级。'
+    if getattr(window, 'sidebar_dirty', False):
+        return '工作台外观仍有未保存的修改，请先保存或放弃后再升级。'
+    return ''
+
+
 def _ready_for_upgrade(window):
-    return not window.busy and window.draft() == window.applied and not getattr(window, 'sidebar_dirty', False)
+    return not _upgrade_block_reason(window)
 
 
 def launch(test_page=False):
@@ -878,8 +957,9 @@ def launch(test_page=False):
             if request['token'] != handled:
                 handled = request['token']
                 detached = str(ROOT.resolve()).casefold() != str(request.get('target_root', ROOT)).casefold()
-                ready = detached or _ready_for_upgrade(window)
-                _write_json(REPLY, {'token': handled, 'ready': ready, 'detached': detached, 'error': '请先应用或放弃未应用的修改，并关闭设置窗口。'})
+                reason = '' if detached else _upgrade_block_reason(window)
+                ready = not reason
+                _write_json(REPLY, {'token': handled, 'ready': ready, 'detached': detached, 'error': reason})
                 if ready and not detached:
                     window.close()
                 elif not ready:

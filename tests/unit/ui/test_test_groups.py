@@ -131,6 +131,49 @@ class TestGroupTests(unittest.TestCase):
             self.assertTrue(tile.isVisible())
             self.assertEqual(tile.cursor().shape(), QT_CURSOR_MAP[tile.property('cursorRole')])
 
+    def test_context_distinguishes_runtime_drafts_errors_and_local_loading(self):
+        page = self.page
+        scenarios = [
+            ({'running': True}, False, '', '后台运行中'),
+            ({'running': False}, True, '', '后台已暂停'),
+            ({'starting': True}, True, '', '后台启动中'),
+            ({'effects_paused': True, 'pause_reason': 'fullscreen'}, False, '', '全屏免打扰'),
+            ({'running': True, 'last_error': 'mock backend failure'}, True, '', '后台异常'),
+            (None, True, 'mock read failure', '状态读取失败'),
+        ]
+        for state, dirty, error, expected in scenarios:
+            with self.subTest(expected=expected):
+                page.set_context(state, draft_dirty=dirty, error=error)
+                self.assertIn(expected, page.context_status.text())
+                self.assertEqual(page.context_draft.property('pending'), dirty)
+                self.assertIn('当前系统光标', page.context_title.text())
+                self.assertIn('未应用草稿', page.context_draft.text())
+        page.set_context({'running': True}, draft_dirty=False, busy=True)
+        self.assertIn('正在处理', page.context_status.text())
+        self.assertFalse(page.runtime_link.isEnabled())
+        page.set_wait(True, 'working')
+        self.assertIn('正在处理', page.context_status.text())
+        self.assertEqual(self.application.mock_calls, [])
+
+    def test_context_links_only_request_the_matching_page(self):
+        requested = []
+        self.page.navigate_requested.connect(requested.append)
+        self.page.appearance_link.click()
+        self.page.runtime_link.click()
+        self.assertEqual(requested, [0, 3])
+        self.assertEqual(self.application.mock_calls, [])
+
+    def test_context_chinese_labels_fit_narrow_and_wide_layouts(self):
+        self.page.set_context({'running': False}, draft_dirty=True)
+        for width in (460, 960):
+            self.page.resize(width, 900)
+            APP.processEvents()
+            for label in (self.page.context_title, self.page.context_status, self.page.context_draft):
+                required = label.heightForWidth(label.width()) if label.wordWrap() else label.sizeHint().height()
+                self.assertGreaterEqual(label.height(), required)
+                self.assertTrue(self.page.context.rect().contains(label.geometry()))
+            self.assertLess(self.page.context_title.geometry().right(), self.page.appearance_link.geometry().left())
+
     def test_sandbox_interactions_never_call_the_application(self):
         self.page.brightness.setValue(24)
         self.select_group(1)

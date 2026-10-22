@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt, QEvent
+from PySide6.QtCore import Qt, QEvent, Signal
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QBoxLayout,
     QLabel, QPushButton, QPlainTextEdit, QFrame, QTabBar, QSizePolicy
@@ -112,6 +112,8 @@ class TestSurface(QFrame):
 
 class TestPage(QWidget):
     """Local cursor checks grouped by the interaction being inspected."""
+    navigate_requested = Signal(int)
+
     def __init__(self, application):
         super().__init__()
         self.application, self.down, self.presses = application, False, 0
@@ -123,6 +125,34 @@ class TestPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(16)
+        self.context = QFrame()
+        self.context.setObjectName('testContext')
+        context_layout = QVBoxLayout(self.context)
+        context_layout.setContentsMargins(0, 0, 0, 4)
+        context_layout.setSpacing(6)
+        context_heading = QHBoxLayout()
+        self.context_title = QLabel('测试对象 · 当前系统光标')
+        self.context_title.setObjectName('testContextTitle')
+        context_heading.addWidget(self.context_title, 1)
+        self.appearance_link = QPushButton('查看外观')
+        self.appearance_link.setObjectName('testContextLink')
+        self.appearance_link.clicked.connect(lambda: self.navigate_requested.emit(0))
+        self.runtime_link = QPushButton('运行设置')
+        self.runtime_link.setObjectName('testContextLink')
+        self.runtime_link.clicked.connect(lambda: self.navigate_requested.emit(3))
+        context_heading.addWidget(self.appearance_link)
+        context_heading.addWidget(self.runtime_link)
+        context_layout.addLayout(context_heading)
+        self.context_status = QLabel()
+        self.context_status.setObjectName('testContextStatus')
+        self.context_status.setWordWrap(True)
+        context_layout.addWidget(self.context_status)
+        self.context_draft = QLabel()
+        self.context_draft.setObjectName('testContextDraft')
+        self.context_draft.setWordWrap(True)
+        context_layout.addWidget(self.context_draft)
+        layout.addWidget(self.context)
+        self.set_context(None, draft_dirty=False)
 
         self.group_tabs = QTabBar()
         self.group_tabs.setObjectName('testGroups')
@@ -360,10 +390,47 @@ class TestPage(QWidget):
         self.update_counter()
         self.set_theme(False)
 
+    def set_context(self, snapshot, *, draft_dirty, busy=False, error=''):
+        """Render the owner's existing runtime snapshot; never poll the backend here."""
+        state = snapshot if isinstance(snapshot, dict) else None
+        if busy:
+            status = '正在处理操作；完成前仍测试当前系统光标。'
+        elif error:
+            status = '后台状态读取失败；当前光标以桌面实际显示为准。'
+        elif state is None:
+            status = '后台状态尚未读取；当前光标以桌面实际显示为准。'
+        elif state.get('last_error'):
+            status = '后台异常；可前往运行设置检查。'
+        elif state.get('starting'):
+            status = '后台启动中；请等待应用完成后再测试。'
+        elif state.get('effects_paused') and state.get('pause_reason') == 'fullscreen':
+            status = '全屏免打扰中；光标动效暂时暂停。'
+        elif state.get('running'):
+            status = '后台运行中；在下方检查实际系统光标。'
+        else:
+            status = '后台已暂停；可在运行设置中恢复。'
+        self.context_status.setText(status)
+        self.context_status.setToolTip(error or (str(state.get('last_error', '')) if state else ''))
+        self.context_draft.setText('有未应用草稿；本页仍测试当前系统光标，应用后再检查。'
+                                   if draft_dirty else '没有未应用草稿；左侧外观预览不改变系统光标。')
+        self.context_draft.setProperty('pending', draft_dirty)
+        self.context_draft.style().unpolish(self.context_draft)
+        self.context_draft.style().polish(self.context_draft)
+        self.appearance_link.setEnabled(not busy)
+        self.runtime_link.setEnabled(not busy)
+
     def set_theme(self, dark):
         colors = theme_colors(dark)
         self.gray_parameter.set_theme(dark)
         self.setStyleSheet(f'''
+            QFrame#testContext {{ background: transparent; border: none; }}
+            #testContextTitle {{ color: {colors['text']}; font-size: 13px; font-weight: 600; background: transparent; }}
+            #testContextStatus, #testContextDraft {{ color: {colors['muted']}; font-size: 12px; background: transparent; }}
+            #testContextDraft[pending="true"] {{ color: {'#ffcf81' if dark else '#9a4b00'}; }}
+            QPushButton#testContextLink {{ color: {colors['focus']}; border: 1px solid transparent; border-radius: 6px; background: transparent; padding: 5px 9px; min-height: 22px; }}
+            QPushButton#testContextLink:hover {{ background: {colors['raised']}; }}
+            QPushButton#testContextLink:focus {{ border-color: {colors['focus']}; }}
+            QPushButton#testContextLink:disabled {{ color: {colors['muted']}; }}
             QFrame#testGroup {{ background: {colors['surface']}; border: 1px solid {colors['divider']}; border-radius: 16px; }}
             QTabBar#testGroups {{ background: {colors['raised']}; border-radius: 10px; }}
             QTabBar#testGroups::tab {{ color: {colors['muted']}; background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 8px 12px; min-height: 20px; }}

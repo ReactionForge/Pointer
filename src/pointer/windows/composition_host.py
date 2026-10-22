@@ -47,8 +47,11 @@ class UnderlayState:
     height: int
     radius: int = 0
     sigma: float = 0.0
+    mode: str = 'sidebar'
 
     def __post_init__(self):
+        if type(self.mode) is not str or self.mode not in ('sidebar', 'full_window'):
+            raise ValueError('mode must be sidebar or full_window')
         if type(self.visible) is not bool:
             raise ValueError('visible must be a boolean')
         for name in ('x', 'y', 'width', 'height', 'radius'):

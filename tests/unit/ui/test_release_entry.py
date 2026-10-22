@@ -47,7 +47,7 @@ class ReleaseEntryTests(unittest.TestCase):
                 getattr(application, action).assert_not_called()
 
     def test_upgrade_readiness_includes_saved_window_appearance(self):
-        window = Mock(busy=False, sidebar_dirty=False, applied='cursor-draft')
+        window = Mock(busy=False, sidebar_dirty=False, applied='cursor-draft', _threads=[])
         window.draft.return_value = 'cursor-draft'
         self.assertTrue(main_window._ready_for_upgrade(window))
         window.sidebar_dirty = True

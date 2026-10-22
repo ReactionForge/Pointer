@@ -1,23 +1,42 @@
 import os
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 import importlib.util
+import time
 import unittest
 from unittest.mock import Mock
-from PySide6.QtCore import QEventLoop, QTimer
+from PySide6.QtCore import QCoreApplication, QEvent, QEventLoop, QTimer
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QSlider, QPushButton
 from pointer.cursor.settings import CursorSettings
+from shiboken6 import isValid
 
 QT_APP = QApplication.instance() or QApplication([])
 
 
 class WindowTests(unittest.TestCase):
+    def release_window(self, window):
+        if not isValid(window):
+            return
+        deadline = time.monotonic() + 3
+        while window._threads and time.monotonic() < deadline:
+            QTest.qWait(10)
+        self.assertEqual(window._threads, [], 'Native operation thread did not finish')
+        window._draft = window.applied
+        self.assertTrue(window.close())
+        window.deleteLater()
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+
+    def tearDown(self):
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+
     def make_window(self):
         from pointer.ui.main_window import MainWindow
         application = Mock()
         application.settings.return_value = CursorSettings()
         application.backend.snapshot.return_value = {'running':False,'startup_enabled':False}
-        return MainWindow(application), application
+        window = MainWindow(application)
+        self.addCleanup(self.release_window, window)
+        return window, application
 
     def test_async_failure_keeps_draft_and_restores_controls(self):
         window, application = self.make_window()
@@ -39,6 +58,149 @@ class WindowTests(unittest.TestCase):
         self.assertTrue(window.stack.isEnabled())
         window.discard_changes()
         window.close()
+
+    def test_material_operation_callbacks_run_on_the_gui_thread(self):
+        import tempfile
+        import threading
+        from pathlib import Path
+        from PySide6.QtCore import QThread, Slot
+        from pointer.application import Application
+        from pointer.ui.material_workspace import MaterialWindow
+        from pointer.ui.sidebar_settings import SidebarStore
+
+        class ThreadCheckedWindow(MaterialWindow):
+            @Slot(object)
+            def operation_done(self, result):
+                self.deliveries.append(('done', threading.get_ident()))
+                if QThread.currentThread() == QT_APP.thread():
+                    super().operation_done(result)
+
+            @Slot(str)
+            def operation_failed(self, error):
+                self.deliveries.append(('failed', threading.get_ident()))
+                if QThread.currentThread() == QT_APP.thread():
+                    super().operation_failed(error)
+
+        for failure in (False, True):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                backend = Mock()
+                backend.startup_enabled.return_value = False
+                backend.runtime_status.return_value = {'running': False}
+                if failure:
+                    backend.stop.side_effect = RuntimeError('mock pause failed')
+                application = Application(root / 'data', root / 'install', backend=backend)
+                application.store.save(CursorSettings(tray_enabled=False, auto_check_update=False))
+                saved = application.store.path.read_bytes()
+                window = ThreadCheckedWindow(application, sidebar_store=SidebarStore(root / 'sidebar.json'))
+                window.deliveries = []
+                window.status_timer.stop()
+                window._prewarm_timer.stop()
+                worker_threads = []
+                gui_thread = threading.get_ident()
+
+                def operation():
+                    worker_threads.append(threading.get_ident())
+                    return application.pause()
+
+                try:
+                    window.change(strength=75)
+                    window._prewarm_timer.stop()
+                    window.run_operation(operation, 'paused')
+                    loop = QEventLoop()
+                    poll = QTimer()
+                    poll.setInterval(10)
+                    poll.timeout.connect(lambda: loop.quit() if not window.busy and not window._threads else None)
+                    poll.start()
+                    QTimer.singleShot(3000, loop.quit)
+                    loop.exec()
+                    poll.stop()
+                    self.assertEqual(len(worker_threads), 1)
+                    self.assertNotEqual(worker_threads[0], gui_thread)
+                    self.assertEqual(window.deliveries, [('failed' if failure else 'done', gui_thread)])
+                    self.assertFalse(window.busy)
+                    self.assertEqual(window._threads, [])
+                    self.assertTrue(window.stack.isEnabled())
+                    self.assertEqual(window.draft().strength, 75)
+                    self.assertEqual(application.store.path.read_bytes(), saved)
+                    self.assertIn('mock pause failed' if failure else 'paused', window.feedback.text())
+                    backend.stop.assert_called_once()
+                    backend.apply.assert_not_called()
+                    backend.set_startup.assert_not_called()
+                finally:
+                    for thread, _worker in window._threads:
+                        thread.quit()
+                        thread.wait(3000)
+                    window.busy = False
+                    window._draft = window.applied
+                    window.close()
+                    window.deleteLater()
+                    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+                    QT_APP.processEvents()
+
+    def test_close_and_upgrade_wait_for_native_thread_teardown(self):
+        import threading
+        import time
+        from unittest.mock import patch
+        from PySide6.QtCore import Qt
+        from pointer.ui.main_window import MainWindow
+
+        application = Mock()
+        application.settings.return_value = CursorSettings(tray_enabled=False, auto_check_update=False)
+        application.runtime_status.return_value = {'running': False}
+        window = MainWindow(application)
+        window.status_timer.stop()
+        window._prewarm_timer.stop()
+        window.show()
+        operation_gate, teardown_gate, teardown_entered = (threading.Event() for _ in range(3))
+
+        def operation():
+            operation_gate.wait(3)
+            return {}
+
+        def hold_native_teardown():
+            teardown_entered.set()
+            teardown_gate.wait(3)
+
+        def wait_for(predicate):
+            deadline = time.monotonic() + 2
+            while time.monotonic() < deadline and not predicate():
+                QTest.qWait(10)
+            self.assertTrue(predicate())
+
+        with patch.object(QT_APP, 'quit') as quit_app:
+            try:
+                window.run_operation(operation, 'done')
+                thread, worker = window._threads[0]
+                thread.finished.connect(hold_native_teardown, Qt.ConnectionType.DirectConnection)
+                operation_gate.set()
+                wait_for(lambda: teardown_entered.is_set() and not window.busy)
+                self.assertEqual(window._threads, [(thread, worker)])
+                self.assertFalse(window._ready_for_upgrade())
+                self.assertFalse(window.close())
+                self.assertTrue(window.isVisible())
+                window._finish_upgrade()
+                QTest.qWait(20)
+                quit_app.assert_not_called()
+                self.assertEqual(window._threads, [(thread, worker)])
+                teardown_gate.set()
+                wait_for(lambda: bool(quit_app.call_count))
+                quit_app.assert_called_once()
+                self.assertEqual(window._threads, [])
+                self.assertFalse(window.isVisible())
+                application.pause.assert_not_called()
+                application.backend.stop.assert_not_called()
+            finally:
+                operation_gate.set()
+                teardown_gate.set()
+                for thread, _worker in window._threads:
+                    thread.quit()
+                    thread.wait(3000)
+                QT_APP.processEvents()
+                window.close()
+                window.deleteLater()
+                QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+                QT_APP.processEvents()
 
     def test_normal_close_does_not_pause_background_service(self):
         window, application = self.make_window()
@@ -100,6 +262,39 @@ class WindowTests(unittest.TestCase):
             time.sleep(0.02)
         application.prewarm.assert_called_once_with(window.draft())
         window.close()
+
+    def test_runtime_status_hook_uses_one_query_and_clears_stale_snapshot(self):
+        window, application = self.make_window()
+        window.status_timer.stop()
+        window._runtime_status_updated = Mock()
+        application.runtime_status.reset_mock()
+        application.runtime_status.return_value = {'running': True, 'effects_paused': False}
+        window.refresh_status()
+        application.runtime_status.assert_called_once()
+        self.assertEqual(window._last_runtime_state, {'running': True, 'effects_paused': False})
+        self.assertEqual(window._last_runtime_error, '')
+        window._runtime_status_updated.assert_called_once()
+        application.runtime_status.side_effect = OSError('status unavailable')
+        window.refresh_status()
+        self.assertIsNone(window._last_runtime_state)
+        self.assertEqual(window._last_runtime_error, 'status unavailable')
+        application.runtime_status.reset_mock()
+        window.busy = True
+        window.refresh_status()
+        application.runtime_status.assert_not_called()
+        self.assertEqual(window._runtime_status_updated.call_count, 3)
+        window.busy = False
+        window.close()
+
+    def test_finish_upgrade_only_closes_gui_and_never_stops_runtime(self):
+        from unittest.mock import patch
+        window, application = self.make_window()
+        with patch.object(QT_APP, 'quit') as quit_app:
+            window._finish_upgrade()
+        quit_app.assert_called_once()
+        application.prepare_upgrade.assert_not_called()
+        application.pause.assert_not_called()
+        application.backend.stop.assert_not_called()
 
     def test_scheme_operations_are_silent_by_default(self):
         import io

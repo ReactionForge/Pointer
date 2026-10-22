@@ -185,6 +185,14 @@ class DualWindow(ReferenceWindow):
         self.shape_gallery = shape_gallery
         shape_gallery.columns = 3
         panel(form, '造型', [shape_gallery])
+        size = segmented_combo(page.family_size, ('24', '32', '40', '48', '64'))
+        appearance = segmented_combo(page.family_appearance, ('自动', '浅色', '深色'))
+        for control in (page.family_size, page.family_appearance):
+            for button in control.choice_buttons:
+                button.setMinimumHeight(34)
+                button.setMinimumWidth(24)
+        self.size_adaptation_group = panel(form, None, [row('尺寸 · px', size),
+                                                       row('背景适配', appearance)])
         palette_gallery = QWidget()
         palette_gallery.setObjectName('approvedGallery')
         self.palette_gallery = palette_gallery
@@ -198,17 +206,10 @@ class DualWindow(ReferenceWindow):
             page.preset_grid.addWidget(button, index//4, index%4)
         page._preset_columns = page._reference_palette_columns = 4
         panel(form, '配色', [palette_gallery], page.palette_name)
-        size = segmented_combo(page.family_size, ('24', '32', '40', '48', '64'))
-        appearance = segmented_combo(page.family_appearance, ('自动', '浅色', '深色'))
-        for control in (page.family_size, page.family_appearance):
-            for button in control.choice_buttons:
-                button.setMinimumHeight(34)
-                button.setMinimumWidth(24)
         page.palette_button.setText('编辑配色…')
         page.reset_palette.setText('重置')
         page.legacy_toggle.setText('更多')
-        panel(form, None, [row('尺寸 · px', size), row('背景适配', appearance),
-                           row('自定义', controls([page.reset_palette, page.palette_button, page.legacy_toggle]))])
+        panel(form, None, [row('自定义', controls([page.reset_palette, page.palette_button, page.legacy_toggle]))])
         form.addWidget(page.inline_colors)
         self.history_row = row('历史造型', page.legacy_style)
         self.history_row.hide()

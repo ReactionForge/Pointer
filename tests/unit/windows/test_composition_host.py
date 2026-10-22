@@ -101,7 +101,8 @@ class CompositionHostTests(unittest.TestCase):
         self.readiness = []
         self.host.failed.connect(self.failures.append)
         self.host.ready_changed.connect(self.readiness.append)
-        self.state = dict(visible=True, x=-120, y=20, width=200, height=700, radius=16, sigma=24.0)
+        self.state = dict(visible=True, x=-120, y=20, width=200, height=700, radius=16, sigma=24.0,
+                          mode='sidebar')
 
     def tearDown(self):
         if hasattr(self, 'host'):
@@ -137,7 +138,7 @@ class CompositionHostTests(unittest.TestCase):
         self.assertEqual(len(self.process.writes), 1)
         self.process.feed(dict(event='applied', seq=1))
         self.assertEqual(self.process.messages()[1], dict(visible=True, x=-120, y=20,
-                         width=200, height=700, radius=16, sigma=40.0, seq=3))
+                         width=200, height=700, radius=16, sigma=40.0, mode='sidebar', seq=3))
         self.assertFalse(self.state['visible'])
 
     def test_ready_callback_replaces_pending_state_without_duplicate_write(self):
@@ -297,6 +298,37 @@ class CompositionHostTests(unittest.TestCase):
         finally:
             host.close()
             host.deleteLater()
+
+    def test_legacy_state_defaults_to_sidebar_without_mutating_the_caller(self):
+        from pointer.windows.composition_host import UnderlayState
+        legacy = {name: value for name, value in self.state.items() if name != 'mode'}
+        self.assertEqual(UnderlayState(**legacy).mode, 'sidebar')
+        self.host.start(12345)
+        self.ready()
+        self.host.update(legacy)
+        self.assertEqual(self.process.messages(), [dict(legacy, mode='sidebar', seq=1)])
+        self.assertNotIn('mode', legacy)
+
+    def test_explicit_full_window_and_sidebar_modes_survive_latest_state_queue(self):
+        self.host.start(12345)
+        self.ready()
+        self.host.update(dict(self.state, mode='full_window'))
+        self.host.update(dict(self.state, mode='sidebar'))
+        self.assertEqual(self.process.messages(), [dict(self.state, mode='full_window', seq=1)])
+        self.process.feed(dict(event='applied', seq=1))
+        self.assertEqual(self.process.messages()[1], dict(self.state, mode='sidebar', seq=2))
+
+    def test_invalid_mode_and_unsupported_aliases_never_write_to_helper(self):
+        self.host.start(12345)
+        self.ready()
+        for mode in ('', 'full-window', 'Sidebar', True, 1, None, [], {}):
+            with self.subTest(mode=mode), self.assertRaisesRegex(ValueError, 'mode'):
+                self.host.update(dict(self.state, mode=mode))
+        for alias in ('full_window', 'clip', 'partition'):
+            with self.subTest(alias=alias), self.assertRaisesRegex(ValueError, 'state fields'):
+                self.host.update(dict(self.state, **{alias: True}))
+        self.assertEqual(self.process.writes, [])
+        self.assertTrue(self.host.ready)
 
     def test_invalid_state_is_rejected_before_any_helper_write(self):
         self.host.start(12345)
