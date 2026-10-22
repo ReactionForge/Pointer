@@ -175,7 +175,9 @@ def build_release(version, compiler=None, skip_installer=False, output_root=None
         compiler = Path(compiler or r'C:\Program Files (x86)\Inno Setup 6\ISCC.exe')
         if not compiler.is_file():
             raise FileNotFoundError('Inno Setup compiler missing; use GitHub Windows build or --compiler')
-        subprocess.run([str(compiler),f'/DAppVersion={version}',str(ROOT/'packaging/windows/installer.iss')],check=True,cwd=ROOT)
+        numeric_version = '.'.join(str(value) for value in version_tuple)
+        subprocess.run([str(compiler), f'/DAppVersion={version}', f'/DAppNumericVersion={numeric_version}',
+                        str(ROOT/'packaging/windows/installer.iss')], check=True, cwd=ROOT)
         installer=ROOT/'dist'/f'Pointer-v{version}-setup-x64.exe'
         installer_digest=hashlib.sha256(installer.read_bytes()).hexdigest()
         installer.with_suffix('.exe.sha256').write_text(f'{installer_digest}  {installer.name}\n',encoding='ascii')

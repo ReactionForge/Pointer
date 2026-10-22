@@ -226,5 +226,57 @@ class PackageTests(unittest.TestCase):
             self.assertEqual(original.read_bytes(),b'original startup backup')
 
 
+class InstallerVersionTests(unittest.TestCase):
+    def test_build_passes_numeric_and_display_versions_to_inno(self):
+        from scripts import build_release
+        from pointer.windows import composition_host
+
+        for version, numeric in (('1.3.0-beta.6', '1.3.0.0'), ('2.4.5', '2.4.5.0')):
+            with self.subTest(version=version), tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
+                root = Path(folder)
+                for directory in ('assets/cursors/adaptive', 'assets/cursors/reference',
+                                  'web/cursor-test', 'packaging/windows/licenses'):
+                    (root / directory).mkdir(parents=True)
+                for name, content in {'VERSION': version, 'packaging/windows/README.txt': 'readme',
+                                      'packaging/windows/pointer.ico': 'icon', 'runtime/LICENSE.txt': 'license',
+                                      'helper.exe': 'helper', 'dist/Pointer/Pointer.exe': 'payload',
+                                      'ISCC.exe': 'compiler'}.items():
+                    path = root / name
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text(content, encoding='utf-8')
+                compiler = root / 'ISCC.exe'
+                installer = root / 'dist' / f'Pointer-v{version}-setup-x64.exe'
+                stack.enter_context(patch.object(build_release, 'ROOT', root))
+                stack.enter_context(patch.object(sys, 'base_prefix', str(root / 'runtime')))
+                stack.enter_context(patch.object(build_release, 'verify_executable_icon'))
+                stack.enter_context(patch.object(composition_host, 'prepare_helper', return_value=root / 'helper.exe'))
+                distribution = stack.enter_context(patch.object(build_release.importlib.metadata, 'distribution'))
+                distribution.return_value.files = []
+
+                def compile_or_freeze(command, **kwargs):
+                    if command[0] == str(compiler):
+                        self.assertEqual(command, [str(compiler), f'/DAppVersion={version}',
+                                                   f'/DAppNumericVersion={numeric}',
+                                                   str(root / 'packaging/windows/installer.iss')])
+                        self.assertTrue(kwargs['check'])
+                        installer.write_bytes(b'compiled installer')
+
+                run = stack.enter_context(patch.object(subprocess, 'run', side_effect=compile_or_freeze))
+                result = build_release.build_release(version, compiler=compiler)
+                self.assertEqual(run.call_count, 2)
+                self.assertEqual(result['installer'], str(installer))
+                self.assertEqual(result['installer_sha256'], hashlib.sha256(installer.read_bytes()).hexdigest())
+
+    def test_installer_keeps_preview_text_separate_from_numeric_resources(self):
+        root = Path(__file__).resolve().parents[3]
+        template = (root / 'packaging/windows/installer.iss').read_text(encoding='utf-8')
+        setup = template.split('[Setup]', 1)[1].split('[Languages]', 1)[0]
+        values = dict(line.split('=', 1) for line in setup.splitlines() if '=' in line)
+        for name in ('VersionInfoVersion', 'VersionInfoProductVersion'):
+            self.assertEqual(values[name], '{#AppNumericVersion}')
+        for name in ('AppVersion', 'VersionInfoTextVersion', 'VersionInfoProductTextVersion'):
+            self.assertEqual(values[name], '{#AppVersion}')
+
+
 if __name__ == "__main__":
     unittest.main()

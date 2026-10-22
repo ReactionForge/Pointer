@@ -1,11 +1,18 @@
 #ifndef AppVersion
   #define AppVersion "1.3.0-beta.6"
 #endif
+#ifndef AppNumericVersion
+  #error "AppNumericVersion must be supplied by scripts/build_release.py"
+#endif
 
 [Setup]
 AppId={{B1F1B270-CA18-46B8-9951-437620DA32F8}
 AppName=Pointer
 AppVersion={#AppVersion}
+VersionInfoVersion={#AppNumericVersion}
+VersionInfoProductVersion={#AppNumericVersion}
+VersionInfoTextVersion={#AppVersion}
+VersionInfoProductTextVersion={#AppVersion}
 AppPublisher=ReactionForge
 AppPublisherURL=https://github.com/ReactionForge/Pointer
 DefaultDirName={localappdata}\Pointer\app
