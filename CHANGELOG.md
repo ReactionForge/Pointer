@@ -19,12 +19,13 @@
 - 下载失败、取消或校验不符时保留已有安装包，安装器启动失败保持当前后台状态。（[48ed8cf5](https://github.com/ReactionForge/Pointer/commit/48ed8cf56134f50968887cf92c0cf5278227a81e)）
 - 修复更新弹窗重试与长错误显示、托盘和偏好状态同步，以及异步回调和关闭期间的线程收尾。（[735d717e](https://github.com/ReactionForge/Pointer/commit/735d717e20c1d8440cf65a25031ad6b0290d8b79)）
 - 显式区分侧栏与全窗口背景模式，保留侧栏平直内边缘和兼容默认行为。（[735d717e](https://github.com/ReactionForge/Pointer/commit/735d717e20c1d8440cf65a25031ad6b0290d8b79)）
+- 为安装程序补齐数值版本资源，并在文件属性中保留 beta 版本文本，避免安装包显示 0.0.0.0。（[ef5e2190](https://github.com/ReactionForge/Pointer/commit/ef5e2190e511117f1fc03eec8abf56916583f96a)）
 
 ### 安全修复
 
 - 自动安装绑定安装包长度与SHA-256，启动前复核并持有Windows只读共享句柄，阻止校验至启动期间的改写或替换。（[48ed8cf5](https://github.com/ReactionForge/Pointer/commit/48ed8cf56134f50968887cf92c0cf5278227a81e)）
 
-提交范围：[`c25f0110…735d717e`](https://github.com/ReactionForge/Pointer/compare/c25f0110037e89ff244fcf9b5b6706dea5c72b25...735d717e20c1d8440cf65a25031ad6b0290d8b79)。
+提交范围：[`c25f0110…ef5e2190`](https://github.com/ReactionForge/Pointer/compare/c25f0110037e89ff244fcf9b5b6706dea5c72b25...ef5e2190e511117f1fc03eec8abf56916583f96a)。
 
 ## 主分支发布与推广交付（功能版本仍为 1.3.0-beta.6）
 
