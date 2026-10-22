@@ -5,7 +5,7 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QEvent, QPointF
-from PySide6.QtGui import QColor, QPainter, QPen
+from PySide6.QtGui import QBrush, QColor, QLinearGradient, QPainter, QPen
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QAbstractSpinBox, QStyle, QStyleOptionSlider
 from .input_controls import DragSlider, TypedSpinBox
 from .reference_workspace import row, group, reference_colors
@@ -75,25 +75,56 @@ class SidebarSlider(DragSlider):
         start, end = length / 2, self.width() - length / 2
         center = QPointF(handle.center().x() + .5, self.height() / 2)
         dark = self.owner.ui_dark
-        active = QColor('#9bc2fa' if dark else '#0866d8')
         track = QColor('#656b75' if dark else '#c9ced8')
-        if not self.isEnabled():
-            active = track = QColor('#484d57' if dark else '#dce0e7')
+
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # Inactive track line
         painter.setPen(QPen(track, 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         painter.drawLine(QPointF(start, center.y()), QPointF(end, center.y()))
-        painter.setPen(QPen(active, 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-        painter.drawLine(QPointF(end if option.upsideDown else start, center.y()), center)
+
+        # Active gradient track
+        start_pt = QPointF(end if option.upsideDown else start, center.y())
+        if self.isEnabled():
+            grad = QLinearGradient(start_pt, center)
+            if dark:
+                grad.setColorAt(0.0, QColor('#60a5fa'))
+                grad.setColorAt(1.0, QColor('#2563eb'))
+            else:
+                grad.setColorAt(0.0, QColor('#3b82f6'))
+                grad.setColorAt(1.0, QColor('#0866d8'))
+            active_pen = QPen(QBrush(grad), 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+        else:
+            active_pen = QPen(QColor('#484d57' if dark else '#dce0e7'), 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+        painter.setPen(active_pen)
+        painter.drawLine(start_pt, center)
+
+        # Keyboard focus indicator
+        active = QColor('#9bc2fa' if dark else '#0866d8')
         if self.hasFocus() and self.property('keyboardFocus'):
             painter.setPen(QPen(active, 1.5))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawEllipse(center, 12, 12)
-        painter.setPen(QPen(active if self.isEnabled() else track, 1.5))
-        painter.setBrush(QColor(('#dbe8fa' if dark else '#ffffff') if self.isEnabled()
-                               else ('#717783' if dark else '#edf0f5')))
-        radius = 8.5 if self.isSliderDown() else 8
-        painter.drawEllipse(center, radius, radius)
+
+        # Refined glowing knob
+        radius = 8.5 if self.isSliderDown() else 8.0
+        if self.isEnabled():
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QColor(0, 0, 0, 45))
+            painter.drawEllipse(center + QPointF(0, 1.0), radius, radius)
+
+            fill = ('#dbe8fa' if dark else '#ffffff')
+            if self.underMouse() or self.isSliderDown():
+                fill = '#e9f2ff' if dark else '#eef5ff'
+            painter.setPen(QPen(active, 1.5))
+            painter.setBrush(QColor(fill))
+            painter.drawEllipse(center, radius, radius)
+        else:
+            fill = '#717783' if dark else '#edf0f5'
+            painter.setPen(QPen(QColor('#484d57' if dark else '#dce0e7'), 1.5))
+            painter.setBrush(QColor(fill))
+            painter.drawEllipse(center, radius, radius)
 
     def event(self, event):
         if event.type() in (QEvent.Type.FocusIn, QEvent.Type.FocusOut,

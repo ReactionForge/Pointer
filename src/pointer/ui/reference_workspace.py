@@ -22,6 +22,13 @@ def reference_colors(dark):
 def reference_style(dark):
     c = reference_colors(dark)
     sidebar = '#292b2e' if dark else '#e9ebef'
+    card_bg = 'rgba(255, 255, 255, 0.045)' if dark else 'rgba(255, 255, 255, 0.65)'
+    card_border = 'rgba(255, 255, 255, 0.09)' if dark else 'rgba(0, 0, 0, 0.08)'
+    card_top = 'rgba(255, 255, 255, 0.16)' if dark else 'rgba(255, 255, 255, 0.90)'
+    card_hover_bg = 'rgba(255, 255, 255, 0.065)' if dark else 'rgba(255, 255, 255, 0.85)'
+    card_hover_border = 'rgba(255, 255, 255, 0.16)' if dark else 'rgba(0, 0, 0, 0.14)'
+    card_hover_top = 'rgba(255, 255, 255, 0.26)' if dark else 'rgba(255, 255, 255, 1.00)'
+    divider_color = 'rgba(255, 255, 255, 0.06)' if dark else 'rgba(0, 0, 0, 0.06)'
     return f'''
         #referenceShell, #content {{ background: {c['canvas']}; }}
         #referenceSidebar, #navCapsule {{ background: {sidebar}; border-radius: 0; }}
@@ -33,15 +40,24 @@ def reference_style(dark):
         #navCapsule QPushButton:hover {{ background: {c['raised']}; }}
         #navCapsule QPushButton:checked:hover {{ background: #145fc4; }}
         #pageTitle {{ font-size: 15px; font-weight: 600; color: {c['text']}; }}
-        #referenceGroup {{ background: {c['surface']}; border: 1px solid {c['border']}; border-radius: 10px; }}
+        #referenceGroup, #referencePreview {{
+            background-color: {card_bg};
+            border: 1px solid {card_border};
+            border-top: 1px solid {card_top};
+            border-radius: 14px;
+        }}
+        #referenceGroup:hover, #referencePreview:hover {{
+            background-color: {card_hover_bg};
+            border-color: {card_hover_border};
+            border-top-color: {card_hover_top};
+        }}
         #referenceSection {{ font-size: 12px; color: {c['muted']}; font-weight: 600; }}
         #referenceRow, #referenceRow QLabel {{ background: transparent; border: none; color: {c['text']}; font-size: 14px; }}
         #referenceRow {{ min-height: 40px; }}
         #muted, #feedback, #referenceNote {{ font-size: 12px; color: {c['muted']}; }}
-        #hairlineDivider {{ background: {c['divider']}; border: none; }}
+        #hairlineDivider {{ background: {divider_color}; border: none; }}
         #propertyInspector {{ background: transparent; }}
         #controlBar {{ background: {c['canvas']}; border-top: 1px solid {c['divider']}; border-radius: 0; }}
-        #referencePreview {{ background: {c['surface']}; border: 1px solid {c['border']}; border-radius: 10px; }}
         QToolButton#shapeSpecimen {{ min-height: 44px; padding: 4px; border-radius: 6px; }}
         QToolButton#paletteSpecimen {{ min-height: 44px; padding: 4px; border-radius: 6px; }}
         QToolButton:checked {{ background: {c['raised']}; color: {c['text']}; border-color: {c['selected']}; }}

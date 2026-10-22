@@ -32,6 +32,13 @@ def approved_style(dark):
     c = approved_colors(dark)
     sidebar = '#242a34' if dark else '#e3e8f0'
     selected_fill = '#343f51' if dark else '#e1ebfa'
+    card_bg = 'rgba(255, 255, 255, 0.045)' if dark else 'rgba(255, 255, 255, 0.65)'
+    card_border = 'rgba(255, 255, 255, 0.09)' if dark else 'rgba(0, 0, 0, 0.08)'
+    card_top = 'rgba(255, 255, 255, 0.16)' if dark else 'rgba(255, 255, 255, 0.90)'
+    card_hover_bg = 'rgba(255, 255, 255, 0.065)' if dark else 'rgba(255, 255, 255, 0.85)'
+    card_hover_border = 'rgba(255, 255, 255, 0.16)' if dark else 'rgba(0, 0, 0, 0.14)'
+    card_hover_top = 'rgba(255, 255, 255, 0.26)' if dark else 'rgba(255, 255, 255, 1.00)'
+    divider_color = 'rgba(255, 255, 255, 0.06)' if dark else 'rgba(0, 0, 0, 0.06)'
     return f'''
         #referenceShell, #content, #approvedEditingArea {{ background: {c['canvas']}; }}
         #referenceSidebar, #navCapsule {{ background: {sidebar}; border-radius: 0; }}
@@ -45,13 +52,22 @@ def approved_style(dark):
         #pageTitle {{ color: {c['text']}; font-size: 16px; font-weight: 600; }}
         #approvedHeading {{ color: {c['muted']}; font-size: 13px; font-weight: 500; }}
         #approvedPaletteStatus {{ color: {c['muted']}; font-size: 12px; }}
-        #approvedGroup, #referenceGroup, #referencePreview {{ background: {c['surface']};
-            border: 1px solid {c['border']}; border-radius: 9px; }}
+        #approvedGroup, #referenceGroup, #referencePreview {{
+            background-color: {card_bg};
+            border: 1px solid {card_border};
+            border-top: 1px solid {card_top};
+            border-radius: 14px;
+        }}
+        #approvedGroup:hover, #referenceGroup:hover, #referencePreview:hover {{
+            background-color: {card_hover_bg};
+            border-color: {card_hover_border};
+            border-top-color: {card_hover_top};
+        }}
         #approvedHeadingRow, #approvedGallery {{ background: transparent; border: none; }}
         #referenceRow {{ background: transparent; border: none; min-height: 36px; }}
         #referenceRow QLabel {{ color: {c['text']}; background: transparent; font-size: 13px; }}
         #referenceSection {{ color: {c['muted']}; font-size: 13px; font-weight: 500; }}
-        #hairlineDivider {{ background: {c['divider']}; border: none; }}
+        #hairlineDivider {{ background: {divider_color}; border: none; }}
         QToolButton#approvedShape, QToolButton#paletteSpecimen {{ color: {c['text']};
             background: transparent; border: 1px solid transparent; border-radius: 6px;
             padding: 4px; font-size: 13px; }}

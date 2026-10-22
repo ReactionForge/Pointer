@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from PySide6.QtCore import Qt, QRectF
+from PySide6.QtCore import Qt, QRectF, QEvent
 from PySide6.QtGui import QFontDatabase, QPainter, QColor, QPen
 from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QCheckBox
 from pointer.paths import ROOT
@@ -64,35 +64,56 @@ QMainWindow {
     color: #86868b;
 }
 
-/* macOS Segmented Control Pill Container */
+/* macOS Segmented Control Floating Frosted Capsule */
 #navCapsule {
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    padding: 2px;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+    padding: 4px;
+    margin: 4px 8px;
 }
 
 #navCapsule QPushButton {
-    color: #98989d;
+    color: #b0b5c4;
     background-color: transparent;
-    border: none;
-    border-radius: 6px;
-    padding: 5px 16px;
-    font-size: 12.5px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-size: 13.5px;
     font-weight: 500;
-    text-align: center;
+    text-align: left;
+    min-height: 36px;
+    max-height: 42px;
 }
 
 #navCapsule QPushButton:hover {
     color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.06);
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 #navCapsule QPushButton:checked {
     color: #ffffff;
-    background-color: #3e3e42;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(59, 130, 246, 0.82), stop:1 rgba(29, 78, 216, 0.88));
+    border: 1px solid rgba(169, 206, 255, 0.45);
+    border-top: 1px solid rgba(255, 255, 255, 0.65);
     font-weight: 600;
+}
+
+#navCapsule QPushButton:checked:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(70, 145, 255, 0.88), stop:1 rgba(37, 99, 235, 0.94));
+    border-color: rgba(169, 206, 255, 0.65);
+}
+
+#navCapsule QPushButton:pressed, #navCapsule QPushButton:checked:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(30, 64, 175, 0.90), stop:1 rgba(23, 37, 84, 0.95));
+    border-color: rgba(169, 206, 255, 0.35);
+    color: #ffffff;
+}
+
+#navCapsule QPushButton[keyboardFocus="true"]:focus {
+    border: 2px solid #a9ceff;
 }
 
 #headerStatusChip {
@@ -136,16 +157,19 @@ QMainWindow {
 }
 
 /* ==========================================================================
-   macOS Inset Grouped Cards
+   macOS & Liquid Glass Inset Grouped Cards
    ========================================================================== */
 QFrame#card {
-    background-color: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
+    background-color: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
 }
 
 QFrame#card:hover {
-    border-color: rgba(255, 255, 255, 0.14);
+    background-color: rgba(255, 255, 255, 0.065);
+    border-color: rgba(255, 255, 255, 0.16);
+    border-top-color: rgba(255, 255, 255, 0.26);
 }
 
 #sectionTitle {
@@ -414,6 +438,19 @@ QScrollBar:horizontal {
 '''.replace('__CHECK_ICON__', CHECK_ICON_PATH)
 
 
+def scrollbar_style(dark):
+    """Keep light scroll thumbs visible without requiring a hover."""
+    width = 6 if dark else 8
+    handle = 'rgba(255, 255, 255, 0.16)' if dark else '#7f8998'
+    hover = 'rgba(255, 255, 255, 0.3)' if dark else '#626c7b'
+    return f'''
+        QScrollBar:vertical {{ width: {width}px; background: transparent; margin: 0; }}
+        QScrollBar::handle:vertical {{ background-color: {handle}; border-radius: {width // 2}px; min-height: 36px; }}
+        QScrollBar::handle:vertical:hover {{ background-color: {hover}; }}
+        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
+    '''
+
+
 def initialize_fonts():
     # The offscreen Qt platform has no system font database on Windows.
     # Read the user's installed fonts for checks; never redistribute them.
@@ -489,6 +526,21 @@ class MacSwitch(QCheckBox):
     def hitButton(self, pos):
         return self.rect().contains(pos)
 
+    def event(self, event):
+        kind = event.type()
+        if kind == QEvent.Type.FocusIn:
+            self.setProperty('keyboardFocus', event.reason() in (
+                Qt.FocusReason.TabFocusReason,
+                Qt.FocusReason.BacktabFocusReason,
+                Qt.FocusReason.ShortcutFocusReason,
+            ))
+        elif kind == QEvent.Type.MouseButtonPress:
+            self.setProperty('keyboardFocus', False)
+        if kind in (QEvent.Type.FocusIn, QEvent.Type.FocusOut,
+                    QEvent.Type.Enter, QEvent.Type.Leave):
+            self.update()
+        return super().event(event)
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -526,7 +578,10 @@ class MacSwitch(QCheckBox):
         painter.drawEllipse(QRectF(knob_x, knob_y + 1.0, knob_dia, knob_dia))
 
         # Knob body
-        painter.setBrush(QColor('#ffffff'))
+        if self.isEnabled():
+            painter.setBrush(QColor('#ffffff'))
+        else:
+            painter.setBrush(QColor(colors.get('disabled_text', '#a4a8b2') if checked else '#e5e5ea'))
         painter.drawEllipse(QRectF(knob_x, knob_y, knob_dia, knob_dia))
         if self.hasFocus() and self.property('keyboardFocus'):
             painter.setBrush(Qt.BrushStyle.NoBrush)

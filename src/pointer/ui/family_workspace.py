@@ -801,13 +801,62 @@ def workspace_style(dark=False):
     #topHeader {{ background: {c['canvas']}; border: none; }}
     #brandTitle {{ color: {c['text']}; font-size: 18px; }}
     #brandBadge, #headerVersion, #updateStatusLabel {{ color: {c['muted']}; background: transparent; }}
-    #headerStatusChip {{ background: {c['raised']}; border: none; border-radius: 12px; }}
-    #navCapsule, #controlBar, #familyCard, QFrame#card {{ background: {c['surface']}; border: none; border-radius: 16px; }}
-    #navCapsule {{ border-radius: 12px; background: {c['raised']}; }}
-    #navCapsule QPushButton {{ color: {c['text']}; background: transparent; border: 1px solid transparent; border-radius: 9px; padding: 0 12px; font-size: 14px; }}
-    #navCapsule QPushButton:hover {{ color: {c['text']}; background: {c['surface']}; }}
-    #navCapsule QPushButton:checked {{ color: {c['selected_text']}; background: {c['selected']}; }}
-    #navCapsule QPushButton[keyboardFocus="true"]:focus {{ border: 2px solid {c['focus']}; }}
+    #controlBar, #familyCard {{ background: {c['surface']}; border: none; border-radius: 16px; }}
+    QFrame#card {{
+        background-color: {'rgba(255, 255, 255, 0.045)' if dark else 'rgba(255, 255, 255, 0.65)'};
+        border: 1px solid {'rgba(255, 255, 255, 0.09)' if dark else 'rgba(0, 0, 0, 0.08)'};
+        border-top: 1px solid {'rgba(255, 255, 255, 0.16)' if dark else 'rgba(255, 255, 255, 0.90)'};
+        border-radius: 14px;
+    }}
+    QFrame#card:hover {{
+        background-color: {'rgba(255, 255, 255, 0.065)' if dark else 'rgba(255, 255, 255, 0.85)'};
+        border-color: {'rgba(255, 255, 255, 0.16)' if dark else 'rgba(0, 0, 0, 0.14)'};
+        border-top-color: {'rgba(255, 255, 255, 0.26)' if dark else 'rgba(255, 255, 255, 1.00)'};
+    }}
+    #navCapsule {{
+        background-color: {'rgba(255, 255, 255, 0.05)' if dark else 'rgba(0, 0, 0, 0.04)'};
+        border: 1px solid {'rgba(255, 255, 255, 0.08)' if dark else 'rgba(0, 0, 0, 0.07)'};
+        border-top: 1px solid {'rgba(255, 255, 255, 0.14)' if dark else 'rgba(255, 255, 255, 0.85)'};
+        border-radius: 14px;
+        padding: 4px;
+        margin: 4px 8px;
+    }}
+    #navCapsule QPushButton {{
+        color: {'#b0b5c4' if dark else '#515460'};
+        background-color: transparent;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        padding: 6px 14px;
+        font-size: 13.5px;
+        font-weight: 500;
+        text-align: left;
+        min-height: 36px;
+        max-height: 42px;
+    }}
+    #navCapsule QPushButton:hover {{
+        color: {c['text']};
+        background-color: {'rgba(255, 255, 255, 0.08)' if dark else 'rgba(0, 0, 0, 0.05)'};
+        border: 1px solid {'rgba(255, 255, 255, 0.12)' if dark else 'rgba(0, 0, 0, 0.06)'};
+    }}
+    #navCapsule QPushButton:checked {{
+        color: #ffffff;
+        background: {'qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(59, 130, 246, 0.82), stop:1 rgba(29, 78, 216, 0.88))' if dark else 'qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #0062d2, stop:1 #004ba4)'};
+        border: 1px solid {'rgba(169, 206, 255, 0.45)' if dark else '#0056b8'};
+        border-top: 1px solid {'rgba(255, 255, 255, 0.65)' if dark else 'rgba(255, 255, 255, 0.45)'};
+        font-weight: 600;
+    }}
+    #navCapsule QPushButton:checked:hover {{
+        background: {'qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(70, 145, 255, 0.88), stop:1 rgba(37, 99, 235, 0.94))' if dark else 'qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #0a6ee8, stop:1 #0056b8)'};
+        border-color: {'rgba(169, 206, 255, 0.65)' if dark else '#0056b8'};
+    }}
+    #navCapsule QPushButton:pressed, #navCapsule QPushButton:checked:pressed {{
+        background: {'qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(30, 64, 175, 0.90), stop:1 rgba(23, 37, 84, 0.95))' if dark else '#003e82'};
+        border-color: {'rgba(169, 206, 255, 0.35)' if dark else '#003e82'};
+        color: #ffffff;
+    }}
+    #navCapsule QPushButton[keyboardFocus="true"]:focus {{
+        border: 2px solid {c['focus']};
+    }}
     #pageTitle {{ font-size: 22px; color: {c['text']}; font-weight: 600; }}
     #subtitle, #feedback, #rowSubtitle, #muted, #description, #tileSubtitle, #colorHint {{ color: {c['muted']}; font-size: 13px; }}
     #sectionTitle {{ color: {c['text']}; font-size: 16px; font-weight: 600; }}
@@ -841,9 +890,6 @@ def workspace_style(dark=False):
     QComboBox QAbstractItemView {{ background: {c['surface']}; color: {c['text']}; selection-background-color: {c['selected']}; selection-color: {c['selected_text']}; }}
     #selectedRoleLabel {{ color: {c['accent']}; font-weight: 600; }}
     #colorHint[error="true"] {{ color: {c['danger']}; }}
-    #navCapsule {{ background: {c['canvas']}; border-right: 1px solid {c['divider']}; border-radius: 0; }}
-    #navCapsule QPushButton {{ text-align: left; padding: 0 12px; min-height: 46px; max-height: 46px; border-radius: 9px; }}
-    #navCapsule QPushButton:pressed, #navCapsule QPushButton:checked:pressed,
     QPushButton:checked:pressed, QToolButton:pressed, QToolButton:checked:pressed {{ background: {c['pressed']}; color: white; }}
     #applyButton:pressed {{ background: {c['pressed']}; color: white; }}
     #restoreButton {{ color: {c['danger']}; background: {c['danger_bg']}; border: 1px solid {c['danger']}; }}

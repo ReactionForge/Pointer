@@ -1,6 +1,6 @@
 """Precise slider values with explicit typing and generous pointer targets."""
 from PySide6.QtCore import QEvent, QPointF, Qt, Signal
-from PySide6.QtGui import QColor, QPainter, QPen
+from PySide6.QtGui import QBrush, QColor, QLinearGradient, QPainter, QPen
 from PySide6.QtWidgets import QAbstractSpinBox, QHBoxLayout, QStyle, QStyleOptionSlider, QWidget
 
 from .colors import theme_colors
@@ -32,27 +32,57 @@ class ParameterSlider(DragSlider):
         start, end = handle.width() / 2, self.width() - handle.width() / 2
         center = QPointF(handle.center().x() + .5, self.height() / 2)
         dark = self._dark if self._dark is not None else bool(getattr(self.window(), 'ui_dark', False))
-        active = QColor('#9bc2fa' if dark else '#0866d8')
         track = QColor('#656b75' if dark else '#c9ced8')
-        if not self.isEnabled():
-            active = track = QColor('#484d57' if dark else '#dce0e7')
+
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # 1. Base inactive track line (strictly preserves test_parameter_controls.py:258 pixel assertion)
         painter.setPen(QPen(track, 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         painter.drawLine(QPointF(start, center.y()), QPointF(end, center.y()))
-        painter.setPen(QPen(active, 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-        painter.drawLine(QPointF(end if option.upsideDown else start, center.y()), center)
+
+        # 2. Active gradient track overlay
+        start_pt = QPointF(end if option.upsideDown else start, center.y())
+        if self.isEnabled():
+            grad = QLinearGradient(start_pt, center)
+            if dark:
+                grad.setColorAt(0.0, QColor('#60a5fa'))
+                grad.setColorAt(1.0, QColor('#2563eb'))
+            else:
+                grad.setColorAt(0.0, QColor('#3b82f6'))
+                grad.setColorAt(1.0, QColor('#0866d8'))
+            active_pen = QPen(QBrush(grad), 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+        else:
+            active_pen = QPen(QColor('#484d57' if dark else '#dce0e7'), 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+        painter.setPen(active_pen)
+        painter.drawLine(start_pt, center)
+
+        # 3. Keyboard focus ring
+        active = QColor('#9bc2fa' if dark else '#0866d8')
         if self.hasFocus() and self._keyboard_focus:
             painter.setPen(QPen(active, 1.5))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawEllipse(center, 12, 12)
-        painter.setPen(QPen(active, 1.5))
-        fill = ('#dbe8fa' if dark else '#ffffff') if self.isEnabled() else ('#717783' if dark else '#edf0f5')
-        if self.isEnabled() and self.underMouse():
-            fill = '#e9f2ff' if dark else '#eef5ff'
-        painter.setBrush(QColor(fill))
-        radius = 8.5 if self.isSliderDown() else 8
-        painter.drawEllipse(center, radius, radius)
+
+        # 4. Refined glowing knob
+        radius = 8.5 if self.isSliderDown() else 8.0
+        if self.isEnabled():
+            # Ambient drop shadow
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QColor(0, 0, 0, 45))
+            painter.drawEllipse(center + QPointF(0, 1.0), radius, radius)
+
+            fill = '#dbe8fa' if dark else '#ffffff'
+            if self.underMouse() or self.isSliderDown():
+                fill = '#e9f2ff' if dark else '#eef5ff'
+            painter.setPen(QPen(active, 1.5))
+            painter.setBrush(QColor(fill))
+            painter.drawEllipse(center, radius, radius)
+        else:
+            disabled_fill = '#717783' if dark else '#edf0f5'
+            painter.setPen(QPen(QColor('#484d57' if dark else '#dce0e7'), 1.5))
+            painter.setBrush(QColor(disabled_fill))
+            painter.drawEllipse(center, radius, radius)
 
     def set_theme(self, dark):
         self._dark = dark
@@ -98,17 +128,26 @@ class ParameterSpinBox(TypedSpinBox):
             return
         self._dark = dark
         c = theme_colors(dark)
+        bg = 'rgba(255, 255, 255, 0.055)' if dark else '#ffffff'
+        border_col = 'rgba(255, 255, 255, 0.12)' if dark else c['border']
+        disabled_bg = 'rgba(255, 255, 255, 0.02)' if dark else c['raised']
         self.setStyleSheet(f'''
             QSpinBox#parameterValue {{
-                background: {c['surface']}; color: {c['text']};
-                border: 1px solid {c['border']}; border-radius: 6px;
+                background: {bg}; color: {c['text']};
+                border: 1px solid {border_col}; border-radius: 6px;
                 padding: 4px 6px; font-size: 13px;
             }}
-            QSpinBox#parameterValue:hover:enabled, QSpinBox#parameterValue:focus {{
+            QSpinBox#parameterValue:hover:enabled {{
+                border-color: {'rgba(255, 255, 255, 0.22)' if dark else c['focus']};
+                background: {'rgba(255, 255, 255, 0.08)' if dark else '#ffffff'};
+            }}
+            QSpinBox#parameterValue:focus, QSpinBox#parameterValue:focus:enabled, QSpinBox#parameterValue:hover:focus {{
                 border-color: {c['focus']};
+                background: {'rgba(255, 255, 255, 0.08)' if dark else '#ffffff'};
             }}
             QSpinBox#parameterValue:disabled {{
-                background: {c['raised']}; color: {c['disabled_text']};
+                background: {disabled_bg}; color: {c['disabled_text']};
+                border-color: {'rgba(255, 255, 255, 0.05)' if dark else c['border']};
             }}
             QSpinBox#parameterValue QLineEdit {{
                 background: transparent; border: none; border-radius: 0;
