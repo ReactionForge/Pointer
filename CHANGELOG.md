@@ -1,5 +1,31 @@
 # 更新记录
 
+## 未发布 — DEV（功能版本仍为 1.3.0-beta.6）
+
+本节根据已审查代码提交中的变更说明生成；功能版本保持不变，尚未发布。
+
+### 新增
+
+- 工作台错误支持全文查看、复制和明确重试，组合保存失败准确保留待应用草稿。（[735d717e](https://github.com/ReactionForge/Pointer/commit/735d717e20c1d8440cf65a25031ad6b0290d8b79)）
+
+### 调整
+
+- 沿用经独立审查的工作台、参数控件与侧栏主题改动，并提高浅色滚动条在静止状态下的可见性。（[e1dd68c3](https://github.com/ReactionForge/Pointer/commit/e1dd68c33eb1423624ff665c5cb81878475ec857)）
+- 测试页显示当前光标、缓存后台状态与未应用草稿，并调整参数顺序和快捷键门禁。（[735d717e](https://github.com/ReactionForge/Pointer/commit/735d717e20c1d8440cf65a25031ad6b0290d8b79)）
+
+### 修复
+
+- 升级恢复保留首次运行意图和失败补偿记录，尊重用户后续应用、暂停与恢复操作，保护原始光标备份和未变化启动项。（[48ed8cf5](https://github.com/ReactionForge/Pointer/commit/48ed8cf56134f50968887cf92c0cf5278227a81e)）
+- 下载失败、取消或校验不符时保留已有安装包，安装器启动失败保持当前后台状态。（[48ed8cf5](https://github.com/ReactionForge/Pointer/commit/48ed8cf56134f50968887cf92c0cf5278227a81e)）
+- 修复更新弹窗重试与长错误显示、托盘和偏好状态同步，以及异步回调和关闭期间的线程收尾。（[735d717e](https://github.com/ReactionForge/Pointer/commit/735d717e20c1d8440cf65a25031ad6b0290d8b79)）
+- 显式区分侧栏与全窗口背景模式，保留侧栏平直内边缘和兼容默认行为。（[735d717e](https://github.com/ReactionForge/Pointer/commit/735d717e20c1d8440cf65a25031ad6b0290d8b79)）
+
+### 安全修复
+
+- 自动安装绑定安装包长度与SHA-256，启动前复核并持有Windows只读共享句柄，阻止校验至启动期间的改写或替换。（[48ed8cf5](https://github.com/ReactionForge/Pointer/commit/48ed8cf56134f50968887cf92c0cf5278227a81e)）
+
+提交范围：[`c25f0110…735d717e`](https://github.com/ReactionForge/Pointer/compare/c25f0110037e89ff244fcf9b5b6706dea5c72b25...735d717e20c1d8440cf65a25031ad6b0290d8b79)。
+
 ## 主分支发布与推广交付（功能版本仍为 1.3.0-beta.6）
 
 - 经维护者发布请求，将已满意的 DEV 功能基线同步至 main；不修改 VERSION，不移动历史标签，不将 beta.6 冒充稳定版。
