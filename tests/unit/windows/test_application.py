@@ -192,6 +192,128 @@ class ApplicationTests(unittest.TestCase):
                 self.assertEqual(self.app.store.path.read_bytes(),damaged)
                 self.backend.stop.assert_not_called()
 
+    def test_prepare_upgrade_rejects_gui_before_snapshot_or_stop(self):
+        with patch('pointer.windows.gui_ipc.prepare_gui_upgrade', side_effect=RuntimeError('dirty draft')):
+            with self.assertRaisesRegex(RuntimeError, 'dirty draft'):
+                self.app.prepare_upgrade()
+        self.backend.snapshot.assert_not_called()
+        self.backend.stop.assert_not_called()
+
+    def test_prepare_upgrade_persistence_failure_never_stops_runtime(self):
+        with patch('pointer.windows.gui_ipc.prepare_gui_upgrade'), \
+                patch('pointer.application._write_json', side_effect=OSError('disk full')):
+            with self.assertRaisesRegex(OSError, 'disk full'):
+                self.app.prepare_upgrade()
+        self.backend.stop.assert_not_called()
+        self.backend.restore.assert_not_called()
+
+    def test_cli_prepare_persists_original_intent_before_stop_refreshes_status(self):
+        import json
+        from pointer import cli
+        def stop():
+            state = json.loads((self.app.data_root/'upgrade-state.json').read_text(encoding='utf-8'))
+            self.assertTrue(state['running'])
+            self.assertEqual(state['settings'], self.old.to_dict())
+            self.assertEqual(state['upgrade_install_root'], str(self.app.install_root.resolve()))
+            self.backend.snapshot.return_value['running'] = False
+        self.backend.stop.side_effect = stop
+        with patch('pointer.windows.gui_ipc.prepare_gui_upgrade'), \
+                patch('pointer.application.Application', return_value=self.app):
+            self.assertEqual(cli.dispatch('prepare_upgrade'), {'ready': True, 'previously_running': True})
+        state = json.loads((self.app.data_root/'upgrade-state.json').read_text(encoding='utf-8'))
+        self.assertTrue(state['running'])
+        self.backend.snapshot.assert_called_once()
+        self.backend.set_startup.assert_not_called()
+
+    def test_prepare_stop_failure_restores_original_state_and_removes_own_handoff(self):
+        self.backend.stop.side_effect = RuntimeError('stop failed')
+        with patch('pointer.windows.gui_ipc.prepare_gui_upgrade'):
+            with self.assertRaisesRegex(RuntimeError, 'stop failed'):
+                self.app.prepare_upgrade()
+        restored = self.backend.restore.call_args.args[0]
+        self.assertTrue(restored['running'])
+        self.assertEqual(restored['settings'], self.old.to_dict())
+        self.assertFalse((self.app.data_root/'upgrade-state.json').exists())
+        self.backend.set_startup.assert_not_called()
+
+    def test_prepare_recovery_failure_preserves_both_errors_and_handoff(self):
+        original = RuntimeError('stop failed')
+        self.backend.stop.side_effect = original
+        self.backend.restore.side_effect = OSError('restore failed')
+        with patch('pointer.windows.gui_ipc.prepare_gui_upgrade'):
+            with self.assertRaisesRegex(RuntimeError, 'stop failed.*restore failed') as caught:
+                self.app.prepare_upgrade()
+        self.assertIs(caught.exception.__cause__, original)
+        self.assertTrue((self.app.data_root/'upgrade-state.json').exists())
+
+    def test_user_runtime_actions_invalidate_handoff_before_system_changes(self):
+        path = self.app.data_root/'upgrade-state.json'
+        for action in ('pause', 'resume', 'apply', 'restore'):
+            with self.subTest(action=action):
+                with patch('pointer.windows.gui_ipc.prepare_gui_upgrade'):
+                    self.app.prepare_upgrade()
+                self.assertTrue(path.exists())
+                def verify_invalidated(*args, **kwargs):
+                    self.assertFalse(path.exists())
+                with patch.object(self.backend, 'stop', side_effect=verify_invalidated), \
+                        patch.object(self.backend, 'restore_original', side_effect=verify_invalidated):
+                    result = self.app.apply(self.old) if action == 'apply' else getattr(self.app, action)()
+                self.assertFalse(path.exists())
+                self.assertIsNone(result['last_error'])
+
+    def test_locked_handoff_blocks_user_runtime_changes_before_side_effects(self):
+        path = self.app.data_root/'upgrade-state.json'
+        with patch('pointer.windows.gui_ipc.prepare_gui_upgrade'):
+            self.app.prepare_upgrade()
+        original = path.read_bytes()
+        unlink = Path.unlink
+        def reject_handoff_delete(target, *args, **kwargs):
+            if target == path:
+                raise PermissionError('handoff locked')
+            return unlink(target, *args, **kwargs)
+        for action in ('pause', 'resume', 'apply', 'restore'):
+            with self.subTest(action=action):
+                self.backend.reset_mock()
+                with patch.object(Path, 'unlink', reject_handoff_delete):
+                    with self.assertRaisesRegex(PermissionError, 'handoff locked'):
+                        if action == 'apply':
+                            self.app.apply(self.old)
+                        else:
+                            getattr(self.app, action)()
+                self.backend.stop.assert_not_called()
+                self.backend.start.assert_not_called()
+                self.backend.apply.assert_not_called()
+                self.backend.restore_original.assert_not_called()
+                self.assertEqual(path.read_bytes(), original)
+
+    def test_invalid_configuration_keeps_handoff_and_runtime_untouched(self):
+        path = self.app.data_root/'upgrade-state.json'
+        with patch('pointer.windows.gui_ipc.prepare_gui_upgrade'):
+            self.app.prepare_upgrade()
+        original = path.read_bytes()
+        self.app.store.path.write_bytes(b'broken')
+        for action in ('pause', 'resume', 'apply', 'restore'):
+            with self.subTest(action=action):
+                self.backend.reset_mock()
+                with self.assertRaises(ValueError):
+                    if action == 'apply':
+                        self.app.apply(self.old)
+                    else:
+                        getattr(self.app, action)()
+                self.assertEqual(path.read_bytes(), original)
+                self.backend.stop.assert_not_called()
+                self.backend.restore_original.assert_not_called()
+
+    def test_failed_user_apply_does_not_restore_superseded_upgrade_intent(self):
+        with patch('pointer.windows.gui_ipc.prepare_gui_upgrade'):
+            self.app.prepare_upgrade()
+        self.backend.snapshot.return_value = {'running': False, 'startup_enabled': True}
+        self.backend.start.side_effect = RuntimeError('helper failed')
+        with self.assertRaisesRegex(RuntimeError, 'helper failed'):
+            self.app.apply(self.old)
+        self.assertFalse((self.app.data_root/'upgrade-state.json').exists())
+        self.backend.restore.assert_called_once_with(self.backend.snapshot.return_value)
+
     def test_prewarm_generates_and_caches_bundle_without_starting_or_stopping_service(self):
         bundle = self.app.prewarm(self.old)
         self.assertIsNotNone(bundle)

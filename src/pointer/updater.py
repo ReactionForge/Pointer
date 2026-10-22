@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 import re
 import subprocess
-import sys
 import tempfile
 import time
 import urllib.request
@@ -171,18 +170,22 @@ def check_for_updates(current_version, repo="ReactionForge/Pointer", timeout=8, 
         if match:
             expected_sha256 = match.group(1).lower()
     if expected_sha256 is None and asset_name:
+        name = re.escape(asset_name)
+        checksum_line = re.compile(
+            rf'(?:([0-9a-f]{{64}})\s+\*?{name}'
+            rf'|{name}\s*(?:\||:|=)?\s*(?:sha-?256\s*[:=]?\s*)?([0-9a-f]{{64}})'
+            rf'|sha-?256\s*\({name}\)\s*=\s*([0-9a-f]{{64}}))', re.IGNORECASE)
+        hashes = set()
         for line in body_text.splitlines():
-            match = re.search(r'\b([0-9a-fA-F]{64})\b', line)
-            if asset_name in line and match:
-                expected_sha256 = match.group(1).lower()
-                break
-    if expected_sha256 is None:
-        hashes = re.findall(r'\b([0-9a-fA-F]{64})\b', body_text)
-        named_checksum = any(re.search(r'\b[0-9a-fA-F]{64}\b', line) and
-                             re.search(r'\.(?:zip|exe)\b', line, re.IGNORECASE)
-                             for line in body_text.splitlines())
-        if len(hashes) == 1 and not named_checksum:
-            expected_sha256 = hashes[0].lower()
+            match = checksum_line.fullmatch(line.replace('`', '').strip().strip('|').strip())
+            if match:
+                hashes.add(next(value for value in match.groups() if value).lower())
+        if len(hashes) == 1:
+            expected_sha256 = hashes.pop()
+    can_auto_install = bool(
+        available and isinstance(download_url, str) and download_url.startswith('https://')
+        and asset_name and Path(asset_name).name == asset_name
+        and type(asset_size) is int and asset_size > 0 and expected_sha256)
 
     return {
         "available": available,
@@ -196,77 +199,144 @@ def check_for_updates(current_version, repo="ReactionForge/Pointer", timeout=8, 
         "asset_name": asset_name,
         "asset_size": asset_size,
         "expected_sha256": expected_sha256,
+        "can_auto_install": can_auto_install,
         "html_url": data.get("html_url", f"https://github.com/{repo}/releases"),
     }
 
 
-def download_update_package(url, destination_path, expected_sha256=None, progress_callback=None, cancel_flag=None):
-    """Download update package with progress reporting, atomic write, and SHA256 verification."""
+def _package_metadata(expected_sha256, expected_size, *, required=False):
+    if expected_sha256 is not None and (
+            not isinstance(expected_sha256, str) or
+            re.fullmatch(r'[0-9a-fA-F]{64}', expected_sha256) is None):
+        raise UpdateError('安装包 SHA-256 无效')
+    if expected_size is not None and (type(expected_size) is not int or expected_size <= 0):
+        raise UpdateError('安装包长度无效')
+    if required and (expected_sha256 is None or expected_size is None):
+        raise UpdateError('自动安装需要此安装包的 SHA-256 和长度')
+    return expected_sha256.lower() if expected_sha256 is not None else None
+
+
+def download_update_package(url, destination_path, expected_sha256=None, progress_callback=None,
+                            cancel_flag=None, *, expected_size=None):
+    """Validate a private temporary download before replacing the destination.
+
+    Manual downloads may omit metadata; automatic installation requires both
+    fields again at launch. HTTP Content-Length is checked in either mode.
+    """
+    expected_sha256 = _package_metadata(expected_sha256, expected_size)
     destination = Path(destination_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    temp_path = destination.with_suffix(".download.tmp")
-
+    temp_path = None
     hasher = hashlib.sha256()
     req = urllib.request.Request(url, headers={"User-Agent": "Pointer-Update-Downloader"})
 
     try:
         with urllib.request.urlopen(req, timeout=30) as response:
-            total_size = int(response.headers.get("Content-Length", 0))
+            header = response.headers.get('Content-Length')
+            content_length = None
+            if header is not None:
+                if not re.fullmatch(r'[0-9]+', str(header)):
+                    raise DownloadError('下载响应长度无效')
+                content_length = int(header)
+            if expected_size is not None and content_length is not None and expected_size != content_length:
+                raise DownloadError('下载响应长度与安装包长度不符')
+            total_size = expected_size if expected_size is not None else content_length
             downloaded = 0
-            with open(temp_path, "wb") as out_file:
+            with tempfile.NamedTemporaryFile(mode='wb', dir=destination.parent,
+                                             prefix=destination.name + '.', suffix='.download.tmp',
+                                             delete=False) as out_file:
+                temp_path = Path(out_file.name)
                 while True:
                     if cancel_flag and cancel_flag():
-                        raise DownloadError("下载已由用户取消")
+                        raise DownloadError('下载已由用户取消')
                     chunk = response.read(65536)
                     if not chunk:
                         break
+                    downloaded += len(chunk)
+                    if total_size is not None and downloaded > total_size:
+                        raise DownloadError('下载数据超出安装包长度')
                     out_file.write(chunk)
                     hasher.update(chunk)
-                    downloaded += len(chunk)
                     if progress_callback:
-                        progress_callback(downloaded, total_size)
+                        progress_callback(downloaded, total_size or 0)
+            if not downloaded or (total_size is not None and downloaded != total_size):
+                raise DownloadError('下载不完整，安装包长度不符')
 
-        computed_sha256 = hasher.hexdigest().lower()
-        if expected_sha256 and computed_sha256 != expected_sha256.lower():
-            temp_path.unlink(missing_ok=True)
-            raise ChecksumMismatchError(
-                f"安装包校验失败！期望值：{expected_sha256[:16]}...，计算值：{computed_sha256[:16]}..."
-            )
-
-        if destination.exists():
-            destination.unlink(missing_ok=True)
+        computed_sha256 = hasher.hexdigest()
+        if expected_sha256 is not None and computed_sha256 != expected_sha256:
+            raise ChecksumMismatchError('安装包 SHA-256 校验失败')
+        if cancel_flag and cancel_flag():
+            raise DownloadError('下载已由用户取消')
         os.replace(temp_path, destination)
         return computed_sha256
     except Exception as error:
-        temp_path.unlink(missing_ok=True)
         if isinstance(error, UpdateError):
             raise
-        raise DownloadError(f"下载失败：{error}") from error
+        raise DownloadError(f'下载失败：{error}') from error
+    finally:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
 
 
-def trigger_silent_upgrade(installer_path, application=None):
-    """Call prepare_gui_upgrade to shut down UI gracefully, then invoke installer in silent mode."""
+def _open_locked_installer(installer):
+    """Keep the verified Windows file immutable until CreateProcess returns."""
+    if os.name != 'nt':
+        raise UpdateError('自动安装仅支持 Windows')
+    import ctypes
+    from ctypes import wintypes
+    import msvcrt
+    kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+    create_file = kernel.CreateFileW
+    create_file.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+                            wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    create_file.restype = wintypes.HANDLE
+    close_handle = kernel.CloseHandle
+    close_handle.argtypes = [wintypes.HANDLE]
+    close_handle.restype = wintypes.BOOL
+    # FILE_SHARE_READ permits the loader's read/execute access, but denies both
+    # in-place writes and path replacement while this verification handle lives.
+    handle = create_file(str(installer), 0x80000000, 0x1, None, 3, 0x80, None)
+    if handle == ctypes.c_void_p(-1).value:
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        descriptor = msvcrt.open_osfhandle(handle, os.O_RDONLY | os.O_BINARY)
+    except BaseException:
+        close_handle(handle)
+        raise
+    try:
+        return os.fdopen(descriptor, 'rb')
+    except BaseException:
+        os.close(descriptor)
+        raise
+
+
+def trigger_silent_upgrade(installer_path, application=None, *, expected_sha256=None, expected_size=None):
+    """Verify and launch the installer; only the installer may stop the runtime.
+
+    ``application`` remains accepted for callers of the previous API. It is
+    deliberately unused so a failed launch cannot change runtime state.
+    """
+    expected_sha256 = _package_metadata(expected_sha256, expected_size, required=True)
     installer = Path(installer_path).resolve()
     if not installer.is_file():
-        raise FileNotFoundError(f"升级安装包不存在：{installer}")
+        raise FileNotFoundError(f'升级安装包不存在：{installer}')
+    hasher = hashlib.sha256()
+    size = 0
+    with _open_locked_installer(installer) as source:
+        while chunk := source.read(65536):
+            size += len(chunk)
+            if size > expected_size:
+                raise DownloadError('安装包长度不符')
+            hasher.update(chunk)
+        if size != expected_size:
+            raise DownloadError('安装包长度不符')
+        if hasher.hexdigest() != expected_sha256:
+            raise ChecksumMismatchError('安装包 SHA-256 校验失败')
 
-    if application is not None:
-        application.prepare_upgrade()
-
-    # Launch Inno Setup installer silently
-    # /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
-    cmd = [
-        str(installer),
-        "/VERYSILENT",
-        "/SUPPRESSMSGBOXES",
-        "/NORESTART",
-    ]
-    # Detach process so it outlives caller
-    creation_flags = 0x08000000  # CREATE_NO_WINDOW
-    subprocess.Popen(
-        cmd,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        creationflags=creation_flags,
-    )
+        return subprocess.Popen(
+            [str(installer), '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=0x08000000,  # CREATE_NO_WINDOW
+        )

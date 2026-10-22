@@ -99,16 +99,38 @@ class UpdaterBoundaryTests(unittest.TestCase):
                 with patch('urllib.request.urlopen', return_value=response([metadata])):
                     self.assertEqual(check_for_updates('1.3.0')['expected_sha256'], expected)
 
-    def test_upgrade_preparation_failure_does_not_start_installer(self):
+    def test_unverified_package_cannot_prepare_or_launch_installer(self):
         with tempfile.TemporaryDirectory() as folder:
             installer = Path(folder) / 'setup.exe'
             installer.write_bytes(b'fake installer')
             application = MagicMock()
-            application.prepare_upgrade.side_effect = RuntimeError('upgrade preparation refused')
             with patch('subprocess.Popen') as start:
-                with self.assertRaisesRegex(RuntimeError, 'upgrade preparation refused'):
+                with self.assertRaisesRegex(UpdateError, 'SHA-256'):
                     trigger_silent_upgrade(installer, application)
                 start.assert_not_called()
+                application.prepare_upgrade.assert_not_called()
+
+    def test_unbound_ambiguous_or_similar_filename_checksums_do_not_enable_install(self):
+        name, digest = 'Pointer-setup.exe', 'a' * 64
+        installer = {'name': name, 'browser_download_url': 'https://invalid.example/setup.exe', 'size': 3}
+        for body in (f'SHA256: {digest}', f'{digest}  old-{name}', f'{digest}  {name}.zip',
+                     f'{digest}  {name}\n' + 'b' * 64 + f'  {name}'):
+            with self.subTest(body=body):
+                metadata = dict(release('1.4.0', assets=[installer]), body=body)
+                with patch('urllib.request.urlopen', return_value=response([metadata])):
+                    info = check_for_updates('1.3.0')
+                self.assertIsNone(info['expected_sha256'])
+                self.assertFalse(info['can_auto_install'])
+                self.assertEqual(info['download_url'], installer['browser_download_url'])
+
+    def test_auto_install_requires_a_positive_integer_asset_size(self):
+        for size in (None, 0, -1, True, '3', 3):
+            with self.subTest(size=size):
+                asset = {'name': 'Pointer-setup.exe', 'browser_download_url': 'https://invalid.example/setup.exe',
+                         'digest': 'sha256:' + 'a' * 64, 'size': size}
+                with patch('urllib.request.urlopen', return_value=response([release('1.4.0', assets=[asset])])):
+                    info = check_for_updates('1.3.0')
+                self.assertEqual(info['can_auto_install'], type(size) is int and size > 0)
 
 
 if __name__ == '__main__':

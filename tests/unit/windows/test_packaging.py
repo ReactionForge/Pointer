@@ -44,12 +44,49 @@ class PackageTests(unittest.TestCase):
             stack.enter_context(patch.object(winreg, "CreateKeyEx"))
             stack.enter_context(patch.object(winreg, "QueryValueEx", return_value=("unchanged", winreg.REG_SZ)))
             write = stack.enter_context(patch.object(winreg, "SetValueEx"))
+            delete = stack.enter_context(patch.object(winreg, "DeleteValue"))
             backup = stack.enter_context(patch.object(startup_module, "_atomic_json"))
             for _ in range(5):
                 self.assertFalse(startup_module.enable_startup()["changed"])
             write.assert_not_called()
+            delete.assert_not_called()
             backup.assert_not_called()
             self.assertEqual(startup.read_bytes(), original)
+
+    def test_failed_upgrade_preparation_never_deletes_or_sets_unchanged_startup(self):
+        from pointer.application import Application
+        from pointer.cursor.settings import CursorSettings
+        from pointer.windows import backend as boundary
+        with tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
+            data, target = Path(folder)/'data', Path(folder)/'app'
+            data.mkdir()
+            original = data/'original-cursor-settings.json'
+            original.write_bytes(b'original cursor backup')
+            startup = data/boundary.startup.STARTUP_BACKUP.name
+            startup.write_bytes(b'original startup backup')
+            backend = boundary.WindowsBackend(data, target)
+            stack.enter_context(patch('pointer.windows.gui_ipc.prepare_gui_upgrade'))
+            stack.enter_context(patch.object(backend, 'startup_enabled', return_value=True))
+            stack.enter_context(patch.object(backend, 'previous_installation', return_value=None))
+            stack.enter_context(patch.object(backend, 'runtime_status', return_value={}))
+            stack.enter_context(patch.object(backend, 'stop', side_effect=[RuntimeError('stop failed'), None]))
+            start = stack.enter_context(patch.object(backend, 'start', return_value={'running': True}))
+            stack.enter_context(patch.object(boundary.engine, 'running_directory', return_value=True))
+            stack.enter_context(patch.object(boundary.scheme, 'read_values', return_value={}))
+            stack.enter_context(patch.object(boundary.scheme, 'restore_values'))
+            stack.enter_context(patch.object(boundary.scheme, 'reload_cursors'))
+            stack.enter_context(patch.object(boundary, '_run_value', return_value={'value': 'unchanged', 'type': winreg.REG_SZ}))
+            write = stack.enter_context(patch.object(winreg, 'SetValueEx'))
+            delete = stack.enter_context(patch.object(winreg, 'DeleteValue'))
+            application = Application(data, target, backend)
+            application.store.save(CursorSettings(startup=True))
+            with self.assertRaisesRegex(RuntimeError, 'stop failed'):
+                application.prepare_upgrade()
+            start.assert_called_once()
+            write.assert_not_called()
+            delete.assert_not_called()
+            self.assertEqual(original.read_bytes(), b'original cursor backup')
+            self.assertEqual(startup.read_bytes(), b'original startup backup')
 
     def test_startup_upgrade_keeps_original_backup(self):
         with tempfile.TemporaryDirectory() as folder, ExitStack() as stack:

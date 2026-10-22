@@ -71,14 +71,22 @@ class Application:
                 raise RuntimeError(result.get('error') or 'Cursor resources were not prepared')
             return result
 
-    def apply(self, settings, *, preserve_runtime=False):
+    def _invalidate_upgrade_handoff(self):
+        # User intent supersedes a delayed installer's earlier running intent.
+        # Fail before touching the runtime if this handoff cannot be removed.
+        (self.data_root / 'upgrade-state.json').unlink(missing_ok=True)
+
+    def apply(self, settings, *, preserve_runtime=False, preserve_upgrade_handoff=False):
         settings = CursorSettings.from_dict(settings.to_dict())
         # A supplied draft cannot silently replace a damaged persisted file.
         self.settings()
         from .paths import FROZEN, ROOT
         if FROZEN and ROOT.resolve() != self.install_root.resolve():
             from .windows.installation import apply_portable
-            return apply_portable(settings, preserve_runtime=preserve_runtime)
+            if not preserve_upgrade_handoff:
+                self._invalidate_upgrade_handoff()
+            return apply_portable(settings, preserve_runtime=preserve_runtime,
+                                  preserve_upgrade_handoff=preserve_upgrade_handoff)
         with self._lock:
             bundle = prepare_resources(settings, self.data_root / 'cursor-cache')
             before = self.backend.snapshot()
@@ -90,6 +98,10 @@ class Application:
                        'frames': {f'{theme}:{frame}': {role: str(path) for role, path in bundle.paths(theme, frame).items()
                                                       if role in ('Arrow', 'Hand')}
                                   for theme in ('light', 'dark') for frame in range(5)}}
+            # Only the outer installer consumes its recovery intent, after the
+            # whole deployment or compensation succeeds.
+            if not preserve_upgrade_handoff:
+                self._invalidate_upgrade_handoff()
             try:
                 self.backend.stop()
                 self.store.save(settings)
@@ -125,6 +137,7 @@ class Application:
     def pause(self):
         with self._lock:
             settings = self.settings()
+            self._invalidate_upgrade_handoff()
             self.backend.stop()
             return {'running': False, 'startup_enabled': self.backend.startup_enabled(),
                     'settings': settings.to_dict(), 'last_error': None}
@@ -136,6 +149,7 @@ class Application:
         with self._lock:
             settings = self.settings()
             before = self.backend.snapshot()
+            self._invalidate_upgrade_handoff()
             self.backend.restore_original()
             try:
                 self.store.save(replace(settings, startup=False))
@@ -165,6 +179,16 @@ class Application:
             from .windows.gui_ipc import prepare_gui_upgrade
             prepare_gui_upgrade()
             before = self.snapshot()
-            self.backend.stop()
-            _write_json(self.data_root / 'upgrade-state.json', before)
+            state_path = self.data_root / 'upgrade-state.json'
+            _write_json(state_path, {**before, 'upgrade_install_root': str(self.install_root.resolve()),
+                                     'upgrade_data_root': str(self.data_root.resolve())})
+            try:
+                self.backend.stop()
+            except Exception as error:
+                try:
+                    self.backend.restore(before)
+                    state_path.unlink(missing_ok=True)
+                except Exception as failure:
+                    raise RuntimeError(f'{error}；恢复失败：{failure}') from error
+                raise
             return {'ready': True, 'previously_running': before['running']}

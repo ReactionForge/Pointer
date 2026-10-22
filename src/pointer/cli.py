@@ -69,8 +69,12 @@ def _application():
 
 
 def apply_theme(settings=None, *, preserve_runtime=False):
+    handoff = os.environ.pop('POINTER_UPGRADE_HANDOFF', None)
     application = _application()
-    return application.apply(settings or application.settings(), preserve_runtime=preserve_runtime)
+    preserve_handoff = bool(handoff and Path(handoff).resolve() ==
+                            (application.data_root/'upgrade-state.json').resolve())
+    return application.apply(settings or application.settings(), preserve_runtime=preserve_runtime,
+                             preserve_upgrade_handoff=preserve_handoff)
 
 
 def stop_theme():

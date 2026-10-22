@@ -71,11 +71,20 @@ def deploy_package(source, target, finalize=None):
             package_files(target)
             if finalize:
                 finalize()
-        except Exception:
-            if target.exists():
-                os.replace(target,stage)
-            if rollback.exists():
-                os.replace(rollback,target)
+        except Exception as error:
+            recovery = []
+            try:
+                if target.exists():
+                    os.replace(target, stage)
+            except Exception as failure:
+                recovery.append(str(failure))
+            try:
+                if rollback.exists():
+                    os.replace(rollback, target)
+            except Exception as failure:
+                recovery.append(str(failure))
+            if recovery:
+                raise RuntimeError(f'{error}；恢复失败：' + '；'.join(recovery)) from error
             raise
         _remove_temporary(rollback,target.parent,'.pointer-rollback-')
         return files
@@ -135,9 +144,10 @@ def _migrate_backup(previous):
         previous_data = previous.parent / "data" if (previous / "Pointer.exe").is_file() else previous
     old_backup = previous_data / config.BACKUP.name
     if old_backup.is_file():
-        config.validate_backup(json.loads(old_backup.read_text(encoding="utf-8")))
-        config.BACKUP.parent.mkdir(parents=True,exist_ok=True)
-        shutil.copy2(old_backup,config.BACKUP)
+        from pointer.cursor.settings import _write_bytes
+        content = old_backup.read_bytes()
+        config.validate_backup(json.loads(content.decode('utf-8')))
+        _write_bytes(config.BACKUP, content)
     old_startup = previous_data / switcher.STARTUP_BACKUP.name
     if old_startup.is_file() and not switcher.STARTUP_BACKUP.exists():
         data = json.loads(old_startup.read_text(encoding="utf-8"))
@@ -191,8 +201,12 @@ def remove_obsolete_files(previous_files, current_files, directory):
             pass
 
 
-def _execute(executable, arguments, report):
+def _execute(executable, arguments, report, *, upgrade_resume=False):
+    report.unlink(missing_ok=True)
     environment = os.environ.copy()
+    environment.pop('POINTER_UPGRADE_HANDOFF', None)
+    if upgrade_resume:
+        environment['POINTER_UPGRADE_HANDOFF'] = str((report.parent/'upgrade-state.json').resolve())
     environment['PYINSTALLER_RESET_ENVIRONMENT'] = '1'
     startup_info = subprocess.STARTUPINFO()
     startup_info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -207,80 +221,168 @@ def _execute(executable, arguments, report):
     return result
 
 
+def _upgrade_handoff(data_root, install_root, current, previous=None):
+    """Read a recent matching handoff; previous must be a verified installation."""
+    from pointer.cursor.settings import CursorSettings, _read_json
+    path = data_root/'upgrade-state.json'
+    try:
+        if not 0 <= time.time() - path.stat().st_mtime <= 15 * 60:
+            return None
+        content = path.read_bytes()
+        if len(content) > 65536:
+            return None
+        saved = json.loads(content.decode('utf-8'))
+        saved_previous = saved.get('previous_root')
+        previous_running = bool(previous and isinstance(saved_previous, str)
+                                and Path(saved_previous).resolve() == previous.resolve())
+        if (type(saved.get('running')) is not bool or
+                (saved['running'] is not True and not previous_running) or not all(
+                    key in saved and saved[key] == current.get(key)
+                    for key in ('registry', 'run', 'startup_backup'))):
+            return None
+        config.validate_backup(saved['registry'])
+        if (CursorSettings.from_dict(saved.get('settings')).to_dict() !=
+                CursorSettings.from_dict(_read_json(data_root/'settings.json')).to_dict()):
+            return None
+        # Older snapshots have no directory IDs. Bind their cursor path to the
+        # exact target, or to the separately verified previous install/cache.
+        arrow = saved['registry']['cursor_values'].get('Arrow', {}).get('value')
+        if not isinstance(arrow, str) or not arrow:
+            return None
+        cursor = Path(os.path.expandvars(arrow)).resolve()
+        managed_roots = []
+        if saved.get('running') is True:
+            managed_roots.extend((data_root/'cursor-cache', install_root))
+        if previous_running:
+            managed_roots.extend((previous.parent/'data'/'cursor-cache', previous))
+        if not any(cursor.is_relative_to(root.resolve()) for root in managed_roots):
+            return None
+        for key, root in (('upgrade_install_root', install_root), ('upgrade_data_root', data_root)):
+            if key in saved and Path(saved[key]).resolve() != root.resolve():
+                return None
+        return saved, content
+    except (OSError, ValueError, TypeError, AttributeError):
+        return None
+
+
 def install():
     if not FROZEN:
         raise ValueError('请使用发布包安装；源码模式可直接打开设置界面。')
-    files = package_files(ROOT)
+    package_files(ROOT)
     from .backend import WindowsBackend
-    backend = WindowsBackend(DATA_ROOT,INSTALL_ROOT)
+    from .gui_ipc import prepare_gui_upgrade
+    from pointer.cursor.settings import _write_bytes
+
+    # This IPC gate rejects dirty/busy windows and waits for the installed GUI
+    # to exit. Never call the old executable's --prepare-upgrade a second time.
+    prepare_gui_upgrade()
+    backend = WindowsBackend(DATA_ROOT, INSTALL_ROOT)
     before = backend.snapshot()
     saved_files = {DATA_ROOT/name: (DATA_ROOT/name).read_bytes() if (DATA_ROOT/name).exists() else None
-                   for name in ('settings.json','click-motion-settings.json','active-profile.json',
-                                'original-cursor-settings.json','contrast-switcher-startup-backup.json')}
+                   for name in ('settings.json', 'click-motion-settings.json', 'active-profile.json',
+                                'original-cursor-settings.json', 'contrast-switcher-startup-backup.json')}
     standard = Path(os.environ['LOCALAPPDATA'])/'Pointer'/'app'
     previous = _previous_directory() if INSTALL_ROOT.resolve() == standard.resolve() or not os.environ.get('POINTER_DATA_DIR') else None
-    if previous and previous != INSTALL_ROOT:
-        package_files(previous)
-        previous_data = previous.parent/'data'
-        DATA_ROOT.mkdir(parents=True,exist_ok=True)
-        for name in ('settings.json','click-motion-settings.json','contrast-switcher-startup-backup.json'):
-            source = previous_data/name
-            destination = DATA_ROOT/name
-            if source.exists() and not destination.exists():
-                shutil.copy2(source,destination)
-    _migrate_backup(previous)
-    upgrade_state = None
     if (INSTALL_ROOT/'PACKAGE.json').is_file():
         package_files(INSTALL_ROOT)
-    was_running = switcher.running_directory(INSTALL_ROOT,DATA_ROOT,_legacy=True)
+    previous = previous if previous and previous.resolve() != INSTALL_ROOT.resolve() else None
     if previous:
         package_files(previous)
-        was_running = was_running or switcher.running_directory(previous,previous.parent/'data',_legacy=True)
-    if (INSTALL_ROOT/'PACKAGE.json').is_file() and ROOT != INSTALL_ROOT:
-        package_files(INSTALL_ROOT)
-        version = (INSTALL_ROOT/'VERSION').read_text().strip()
-        if tuple(int(v) for v in version.split('-')[0].split('.')) >= (1,3,0):
-            report = DATA_ROOT/'prepare-install-report.json'
-            upgrade_state = _execute(INSTALL_ROOT/'Pointer.exe',['--prepare-upgrade'],report)
-        else:
-            switcher.stop_directory(INSTALL_ROOT,DATA_ROOT,_legacy=True)
-            upgrade_state={'previously_running':was_running}
-    if previous and previous != INSTALL_ROOT:
-        package_files(previous)
-        switcher.stop_directory(previous,previous.parent/'data',_legacy=True)
-    switcher.stop_directory(INSTALL_ROOT,DATA_ROOT)
+    installed_running = bool(before.get('running') or switcher.running_directory(INSTALL_ROOT, DATA_ROOT, _legacy=True))
+    previous_running = bool(previous and switcher.running_directory(previous, previous.parent/'data', _legacy=True))
+    handoff = _upgrade_handoff(DATA_ROOT, INSTALL_ROOT, before, previous)
+    saved = handoff[0] if handoff else {}
+    handoff_installed = saved.get('running') is True
+    handoff_previous = bool(previous and isinstance(saved.get('previous_root'), str)
+                           and Path(saved['previous_root']).resolve() == previous.resolve())
+    # Live state wins, but consume matching old intent even if it is not needed.
+    runtime_changed = bool((handoff_installed and not installed_running) or
+                           (handoff_previous and not previous_running))
+    installed_running = installed_running or handoff_installed
+    previous_running = previous_running or handoff_previous
+    was_running = installed_running or previous_running
+
+    def consume_handoff():
+        if handoff:
+            path = DATA_ROOT/'upgrade-state.json'
+            try:
+                if path.read_bytes() == handoff[1]:
+                    path.unlink()
+            except FileNotFoundError:
+                pass
+
+    def resume(root, data, report):
+        result = _execute(root/'Pointer.exe', ['--apply', '--install-dir', str(root), '--data-dir', str(data)],
+                          data/report, upgrade_resume=True)
+        if result.get('running') is not True:
+            raise RuntimeError('升级后后台服务未就绪')
+
     def finalize():
         if not os.environ.get('POINTER_INSTALL_DIR'):
             _shortcuts()
-        if previous and previous != INSTALL_ROOT and backend.startup_enabled():
+        if previous and backend.startup_enabled():
             from .startup import enable_startup
             enable_startup()
-        if was_running or (upgrade_state and upgrade_state.get('previously_running')):
-            _execute(INSTALL_ROOT/'Pointer.exe',['--apply'],DATA_ROOT/'upgrade-resume-report.json')
+        if was_running:
+            resume(INSTALL_ROOT, DATA_ROOT, 'upgrade-resume-report.json')
+        consume_handoff()
+
     try:
-        deploy_package(ROOT,INSTALL_ROOT,finalize=finalize)
+        if previous:
+            previous_data = previous.parent/'data'
+            DATA_ROOT.mkdir(parents=True, exist_ok=True)
+            for name in ('settings.json', 'click-motion-settings.json', 'contrast-switcher-startup-backup.json'):
+                source, destination = previous_data/name, DATA_ROOT/name
+                if source.exists() and not destination.exists():
+                    shutil.copy2(source, destination)
+        _migrate_backup(previous)
+        # Keep the first runtime intent in memory; stop may refresh status files.
+        runtime_changed = True
+        for root, data in ([(previous, previous.parent/'data')] if previous else []) + [(INSTALL_ROOT, DATA_ROOT)]:
+            switcher.stop_directory(root, data)
+            if switcher.running_directory(root, data, _legacy=True):
+                switcher.stop_directory(root, data, _legacy=True)
+        deploy_package(ROOT, INSTALL_ROOT, finalize=finalize)
     except Exception as error:
-        from pointer.cursor.settings import _write_bytes
-        try:
-            for path,content in saved_files.items():
+        recovery = []
+        for path, content in saved_files.items():
+            try:
                 if content is None:
-                    path.unlink(missing_ok=True)
-                else:
-                    _write_bytes(path,content)
-            backend.restore({**before,'running':False,'previous_root':None})
-            if was_running:
-                recovery_root = previous if previous and previous != INSTALL_ROOT else INSTALL_ROOT
-                recovery_data = recovery_root.parent/'data'
-                _execute(recovery_root/'Pointer.exe',['--apply','--install-dir',str(recovery_root),'--data-dir',str(recovery_data)],recovery_data/'rollback-resume-report.json')
-        except Exception as failure:
-            raise RuntimeError(f'{error}；恢复失败：{failure}') from error
+                    # A first original-cursor backup remains useful after a failed
+                    # install. Never discard it along with temporary preferences.
+                    if path.name != 'original-cursor-settings.json':
+                        path.unlink(missing_ok=True)
+                elif not path.exists() or path.read_bytes() != content:
+                    _write_bytes(path, content)
+            except Exception as failure:
+                recovery.append(str(failure))
+        if runtime_changed:
+            try:
+                backend.restore({**before, 'running': False, 'previous_root': None})
+            except Exception as failure:
+                recovery.append(str(failure))
+            if not recovery:
+                for root, data, running in ((INSTALL_ROOT, DATA_ROOT, installed_running),
+                                            (previous, previous.parent/'data' if previous else None, previous_running)):
+                    if running:
+                        try:
+                            resume(root, data, 'rollback-resume-report.json')
+                        except Exception as failure:
+                            recovery.append(str(failure))
+        if not recovery:
+            try:
+                consume_handoff()
+            except Exception as failure:
+                recovery.append(str(failure))
+        if recovery:
+            raise RuntimeError(f'{error}；恢复失败：' + '；'.join(recovery)) from error
         raise
-    return {'installed':True,'install_directory':str(INSTALL_ROOT),'backup_directory':str(DATA_ROOT),
-            'startup_enabled':False if not (DATA_ROOT/'settings.json').exists() else
-                json.loads((DATA_ROOT/'settings.json').read_text(encoding='utf-8')).get('startup',False)}
+    return {'installed': True, 'install_directory': str(INSTALL_ROOT), 'backup_directory': str(DATA_ROOT),
+            'startup_enabled': False if not (DATA_ROOT/'settings.json').exists() else
+                json.loads((DATA_ROOT/'settings.json').read_text(encoding='utf-8')).get('startup', False)}
 
 
-def apply_portable(settings, *, preserve_runtime=False):
+def apply_portable(settings, *, preserve_runtime=False, preserve_upgrade_handoff=False):
     from pointer.cursor.settings import _write_json
     if not (INSTALL_ROOT/'PACKAGE.json').exists() or package_files(ROOT) != package_files(INSTALL_ROOT):
         install()
@@ -291,7 +393,7 @@ def apply_portable(settings, *, preserve_runtime=False):
         arguments = ['--apply', '--settings-file', str(desired)]
         if preserve_runtime:
             arguments.append('--preserve-runtime')
-        return _execute(INSTALL_ROOT/'Pointer.exe', arguments, report)
+        return _execute(INSTALL_ROOT/'Pointer.exe', arguments, report, upgrade_resume=preserve_upgrade_handoff)
     finally:
         desired.unlink(missing_ok=True)
         report.unlink(missing_ok=True)
