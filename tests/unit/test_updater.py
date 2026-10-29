@@ -257,7 +257,7 @@ class InstallerFileLockTests(unittest.TestCase):
         replacement.write_bytes(self.changed)
         process = MagicMock()
         def create_process(command, **kwargs):
-            self.assertEqual(Path(command[0]), self.target)
+            self.assertTrue(os.path.samefile(command[0], self.target))
             with self.assertRaises(PermissionError):
                 self.target.write_bytes(self.changed)
             with self.assertRaises(PermissionError):

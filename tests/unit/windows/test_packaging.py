@@ -240,7 +240,7 @@ class InstallerVersionTests(unittest.TestCase):
 
         for version, numeric in (('1.3.0-beta.6', '1.3.0.0'), ('2.4.5', '2.4.5.0')):
             with self.subTest(version=version), tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
-                root = Path(folder)
+                root = Path(folder).resolve()
                 for directory in ('assets/cursors/adaptive', 'assets/cursors/reference',
                                   'web/cursor-test', 'packaging/windows/licenses'):
                     (root / directory).mkdir(parents=True)
