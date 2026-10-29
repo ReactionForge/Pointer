@@ -8,7 +8,11 @@ RUN_VALUE = "PointerAdaptiveContrast"
 
 def _startup_command():
     from .engine import _helper_command
-    return subprocess.list2cmdline(_helper_command())
+    # Windows may restore another cursor scheme during sign-in. Re-apply the
+    # saved profile before starting the helper, which requires our scheme.
+    command = _helper_command()
+    command[-1:] = ["--apply", "--quiet"]
+    return subprocess.list2cmdline(command)
 
 
 def enable_startup():

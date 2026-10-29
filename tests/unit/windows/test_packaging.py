@@ -20,6 +20,13 @@ from pointer.windows import startup as startup_module
 
 
 class PackageTests(unittest.TestCase):
+    def test_login_startup_reapplies_saved_cursor_scheme_before_helper(self):
+        with patch("pointer.windows.engine._helper_command",
+                   return_value=[r"C:\Program Files\Pointer\Pointer.exe", "--run"]):
+            command = startup_module._startup_command()
+        self.assertEqual(command, subprocess.list2cmdline(
+            [r"C:\Program Files\Pointer\Pointer.exe", "--apply", "--quiet"]))
+
     def test_reapplying_preserves_startup_registration(self):
         from pointer.application import Application
         from pointer.cursor.settings import CursorSettings
