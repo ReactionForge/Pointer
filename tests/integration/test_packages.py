@@ -6,6 +6,8 @@ import subprocess
 import tempfile
 import unittest
 
+from pointer.cursor.settings import CursorSettings
+
 
 @unittest.skipUnless(os.environ.get('POINTER_PACKAGE_ROOT'),'Set POINTER_PACKAGE_ROOT for isolated packaged checks')
 class PackageIntegrationTests(unittest.TestCase):
@@ -13,6 +15,10 @@ class PackageIntegrationTests(unittest.TestCase):
         source=Path(os.environ['POINTER_PACKAGE_ROOT']).resolve()
         with tempfile.TemporaryDirectory(prefix='Pointer 安装 验证 ') as folder:
             root=Path(folder);target=root/'app';data=root/'data'
+            data.mkdir(parents=True)
+            settings_path=data/'settings.json'
+            settings_path.write_text(json.dumps(CursorSettings().to_dict(),ensure_ascii=False),encoding='utf-8')
+            original=settings_path.read_bytes()
             def run(exe,action):
                 report=root/'operation.json'
                 report.unlink(missing_ok=True)
@@ -26,12 +32,13 @@ class PackageIntegrationTests(unittest.TestCase):
             self.assertEqual(diagnostic['cursor_resources'],34)
             self.assertEqual(diagnostic['click_resources'],32)
             self.assertTrue(run(source/'Pointer.exe','--install')['installed'])
+            self.assertEqual(settings_path.read_bytes(),original)
             (target/'user-note.txt').write_text('mine')
             self.assertTrue(run(source/'Pointer.exe','--install')['installed'])
+            self.assertEqual(settings_path.read_bytes(),original)
             self.assertEqual((target/'user-note.txt').read_text(),'mine')
-            original=(data/'settings.json').read_bytes()
             self.assertTrue(run(target/'Pointer.exe','--uninstall')['uninstalled'])
-            self.assertEqual((data/'settings.json').read_bytes(),original)
+            self.assertEqual(settings_path.read_bytes(),original)
             self.assertTrue((data/'uninstall-owned-files.txt').exists())
             self.assertTrue((target/'Pointer.exe').exists())
             self.assertEqual((target/'user-note.txt').read_text(),'mine')
