@@ -1,12 +1,11 @@
 # 更新记录
 
-## 未发布 — DEV（功能版本仍为 1.3.0-beta.6）
-
-本节根据已审查代码提交中的变更说明生成；功能版本保持不变，尚未发布。
+## 1.3.0-beta.7 — 2026-10-29
 
 ### 新增
 
 - 工作台错误支持全文查看、复制和明确重试，组合保存失败准确保留待应用草稿。（[735d717e](https://github.com/ReactionForge/Pointer/commit/735d717e20c1d8440cf65a25031ad6b0290d8b79)）
+- 重写中英文项目首页，补充使用、支持、贡献、安全、隐私、商业化与推广指南，并提供可复现演示素材和中英字幕。（[c25f0110](https://github.com/ReactionForge/Pointer/commit/c25f0110037e89ff244fcf9b5b6706dea5c72b25)）
 
 ### 调整
 
@@ -15,6 +14,7 @@
 
 ### 修复
 
+- Windows 登录时重新应用已保存的光标方案，再启动后台助手，修复重启后系统光标回退到旧方案的问题；保留原始光标备份和未改变的启动项。（[6944cfa9](https://github.com/ReactionForge/Pointer/commit/6944cfa94426db645bfdce431ccc365b26f6bafa)）
 - 升级恢复保留首次运行意图和失败补偿记录，尊重用户后续应用、暂停与恢复操作，保护原始光标备份和未变化启动项。（[48ed8cf5](https://github.com/ReactionForge/Pointer/commit/48ed8cf56134f50968887cf92c0cf5278227a81e)）
 - 下载失败、取消或校验不符时保留已有安装包，安装器启动失败保持当前后台状态。（[48ed8cf5](https://github.com/ReactionForge/Pointer/commit/48ed8cf56134f50968887cf92c0cf5278227a81e)）
 - 修复更新弹窗重试与长错误显示、托盘和偏好状态同步，以及异步回调和关闭期间的线程收尾。（[735d717e](https://github.com/ReactionForge/Pointer/commit/735d717e20c1d8440cf65a25031ad6b0290d8b79)）
@@ -25,7 +25,7 @@
 
 - 自动安装绑定安装包长度与SHA-256，启动前复核并持有Windows只读共享句柄，阻止校验至启动期间的改写或替换。（[48ed8cf5](https://github.com/ReactionForge/Pointer/commit/48ed8cf56134f50968887cf92c0cf5278227a81e)）
 
-提交范围：[`c25f0110…ef5e2190`](https://github.com/ReactionForge/Pointer/compare/c25f0110037e89ff244fcf9b5b6706dea5c72b25...ef5e2190e511117f1fc03eec8abf56916583f96a)。
+提交范围：[`v1.3.0-beta.6…v1.3.0-beta.7`](https://github.com/ReactionForge/Pointer/compare/v1.3.0-beta.6...v1.3.0-beta.7)。
 
 ## 主分支发布与推广交付（功能版本仍为 1.3.0-beta.6）
 
